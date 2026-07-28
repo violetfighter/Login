@@ -2,55 +2,57 @@ package com.cfcici.`in`.project
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cfcici.`in`.project.data.database.User
+import androidx.navigation.toRoute
+import com.cfcici.`in`.project.data.database.AppDatabase
+import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.ProfilePage
+import com.cfcici.`in`.project.viewmodel.UserViewModel
+import kotlinx.serialization.Serializable
 
+@Serializable
+object LoginRoute
 
+@Serializable//?
+data class ProfileRoute(
+    val username: String,
+    val password: String
+)
 
 @Composable
-@Preview
-fun App() {
+
+fun App(db: AppDatabase) {
+    val repository = UserRepository(db.userDao())
+    val viewModel = UserViewModel(repository)
     MaterialTheme {
-
         val navController = rememberNavController()
-
-        // These variables temporarily store the username and password.
-        // They are NOT saved to a database.
-        var username by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-
         NavHost(
             navController = navController,
-            startDestination = "login"
+            startDestination = LoginRoute
         ) {
-
-            composable("login") {
-
+            composable<LoginRoute> {
                 LoginPage(
-                    onLoginClick = { user, pass ->
-
-                        username = user
-                        password = pass
-
-                        navController.navigate("profile")
+                    onLoginClick = { username, password ->
+                        viewModel.insertUser(username, password)
+                        navController.navigate(
+                            ProfileRoute(
+                                username = username,
+                                password = password
+                            )
+                        )
                     }
                 )
             }
 
-            composable("profile") {
-
+            composable<ProfileRoute> { backStackEntry ->
+                // takes serialization data and reconstructs the ProfileRoute object
+                val profile: ProfileRoute = backStackEntry.toRoute()
                 ProfilePage(
-                    usernamePP = username,
-                    passwordPP = password
+                    usernamePP = profile.username,
+                    passwordPP = profile.password
                 )
             }
         }

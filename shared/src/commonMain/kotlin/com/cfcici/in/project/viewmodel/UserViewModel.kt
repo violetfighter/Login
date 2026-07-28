@@ -8,24 +8,29 @@ import kotlinx.coroutines.launch
 
 class UserViewModel(val repository: UserRepository): ViewModel()
 {
-    suspend fun insertUser(usernameFromVM: String, passwordFromVM: String){
-        repository.insertUserRepo(
-            User(
-                // Create new object when we add new users
-                username = usernameFromVM,// we need to use username from User
-                password = passwordFromVM
+    //ViewModel should not have suspended functions
+    fun insertUser(usernameFromVM: String, passwordFromVM: String){
+        viewModelScope.launch {
+            repository.insertUserRepo(
+                User(
+                    // Create new object when we add new users
+                    username = usernameFromVM,// we need to use username from User
+                    password = passwordFromVM
+                )
             )
-        )
+        }
+
     }
 
-    suspend fun getAllUser(): List<User> {
-        return repository.getUserRepo()
-        // Add later
-    }
+    //fun getAllUser(): List<User> {
+        //return repository.getUserRepo()
 
-    suspend fun deleteUser(user: User){
-        repository.deleteUserRepo(user)
         // Add later
-    }
+    //}
+
+    //fun deleteUser(user: User){
+       // repository.deleteUserRepo(user)
+        // Add later
+    //}
 
 }

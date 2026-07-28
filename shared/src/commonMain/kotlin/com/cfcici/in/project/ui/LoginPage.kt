@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cfcici.`in`.project.data.database.User
+import com.cfcici.`in`.project.viewmodel.UserViewModel
 
 @Composable
 fun LoginPage(onLoginClick: (String, String) -> Unit) {
@@ -86,13 +87,14 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
             //placeholder = { Text("Enter Your Password")},
             //inputTransformation = InputTransformation.maxLength(16),
             //)
+
             PasswordPage(state = userPassword)
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    onLoginClick(
+                    onLoginClick(// Send the username and password ro App
                         userName.text.toString(),
                         userPassword.text.toString()
                     )
