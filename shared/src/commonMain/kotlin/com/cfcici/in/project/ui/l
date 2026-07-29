@@ -1,0 +1,1144 @@
+package `in`.co.cfcici.screens.change_password
+
+import APIRequest
+import SaveResponse
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
+import `in`.co.cfcici.Constants.KEY_EMPLOYEE_CODE
+import `in`.co.cfcici.Constants.isReady
+import `in`.co.cfcici.Constants.showAPISuccessPopup
+import `in`.co.cfcici.Constants.triggerChangePasswordAPI
+import `in`.co.cfcici.getData
+import `in`.co.cfcici.getDecryptedText
+import `in`.co.cfcici.getEncryptedRequest
+import `in`.co.cfcici.models.request.ChangePasswordRequest
+import `in`.co.cfcici.res.Colors.black
+import `in`.co.cfcici.res.Colors.blaze_orange_f96606
+import `in`.co.cfcici.res.Colors.grey_300
+import `in`.co.cfcici.res.Colors.grey_500
+import `in`.co.cfcici.res.Colors.grey_700
+import `in`.co.cfcici.res.Colors.pure_white
+import `in`.co.cfcici.res.Colors.red
+import `in`.co.cfcici.res.Colors.red_fe1004
+import `in`.co.cfcici.res.Colors.vermilion_fb4a05
+import `in`.co.cfcici.res.Colors.white
+import androidx.compose.ui.platform.SoftwareKeyboardController
+import `in`.co.cfcici.Constants.KEY_JWT_TOKEN
+import `in`.co.cfcici.Constants.gotApiChangePasswordAPIResponse
+import `in`.co.cfcici.Constants.gotGetValidateTokenAPIResponse
+import `in`.co.cfcici.Constants.isAPIProcessedFetchTrackedLocation
+import `in`.co.cfcici.Constants.isListInvokedFetchTrackedLocation
+import `in`.co.cfcici.Constants.triggerFetchTrackedLocation
+import `in`.co.cfcici.Constants.triggerValidateTokenResponseAPI
+import `in`.co.cfcici.models.request.ValidateTokenRequest
+import `in`.co.cfcici.screens.credit_enquiry.isSuccess
+import `in`.co.cfcici.screens.credit_enquiry.popupMessage
+import `in`.co.cfcici.screens.pop_up.APISuccessDialog
+
+import `in`.co.cfcici.showToast
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.getKoin
+import svllos.composeapp.generated.resources.Res
+import svllos.composeapp.generated.resources.font_google_sans_regular
+import svllos.composeapp.generated.resources.font_medium
+import svllos.composeapp.generated.resources.ic_back
+import svllos.composeapp.generated.resources.ic_pass_lock
+import svllos.composeapp.generated.resources.ic_password_hide
+import svllos.composeapp.generated.resources.ic_password_view
+import svllos.composeapp.generated.resources.ic_save
+
+
+/**
+ * @Author: Silpa VP 07-08-2025
+ */
+
+var changePasswordClicked = false
+var finalValidateTokenJsonRequest: String = ""
+var responseValidateToken: SaveResponse? = null
+var encResponseValidateToken = StringBuilder()
+
+var viewModel: ChangePasswordViewModel? = null
+var textUsername: MutableState<String> = mutableStateOf("")
+var textExistingPassword: MutableState<String> = mutableStateOf("")
+var textNewPassword: MutableState<String> = mutableStateOf("")
+var textConfirmPassword: MutableState<String> = mutableStateOf("")
+
+val maxNumbersExistingPassword = 20
+val maxNumbersNewPassword = 20
+val maxNumbersConfirmPassword = 20
+
+var existingPasswordVisible: MutableState<Boolean> = mutableStateOf(false)
+var newPasswordVisible: MutableState<Boolean> = mutableStateOf(false)
+var confirmPasswordVisible: MutableState<Boolean> = mutableStateOf(false)
+
+var isValidExistingPassword: MutableState<Boolean> = mutableStateOf(true)
+var isValidNewPassword: MutableState<Boolean> = mutableStateOf(true)
+var isValidConfirmPassword: MutableState<Boolean> = mutableStateOf(true)
+
+var errorMsgExistingPassword: MutableState<String> = mutableStateOf("")
+var errorMsgNewPassword: MutableState<String> = mutableStateOf("")
+var errorMsgConfirmPassword: MutableState<String> = mutableStateOf("")
+var responseChangePassword: SaveResponse? = null
+var finalJsonRequest: String = ""
+var isLoadingAPI: MutableState<Boolean> = mutableStateOf(false)
+var isSuccess:Boolean = true
+var popupMessage:String = ""
+var encResponseApiChangePassword = StringBuilder()
+
+@Preview
+@Composable
+fun ChangePasswordScreen(navigateBack: () -> Unit,
+                         navigateLoginDestination: () -> Unit
+) {
+
+    viewModel = getKoin().get()
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+
+    val changePasswordSave by viewModel?.responseGetChangePassword?.collectAsState()!!
+
+//    addListenerChangePasswordAPI(changePasswordSave, viewModel!!,navigateLoginDestination)
+
+    if (gotApiChangePasswordAPIResponse.value) {
+        gotApiChangePasswordAPIResponse.value = false
+        isLoadingAPI.value = false
+        if (encResponseApiChangePassword.toString().trim().isNullOrEmpty() ||
+            encResponseApiChangePassword.toString().trim().equals("", ignoreCase = true) ||
+            encResponseApiChangePassword.toString().trim().equals("null", ignoreCase = true)
+        ) {
+            showToast("API response is empty, Try again")
+        } else {
+
+//            is ChangePasswordViewModel.APIStateGetChangePassword.Success -> {
+                println("testlog" + "APIStateSaveGroup Success  ----")
+
+//                triggerChangePasswordAPI.value = false
+
+//                val respSaveGroup = changePasswordSave.responseData
+
+                val encryptedResponse = encResponseApiChangePassword.toString()
+
+                val decryptedJSONString = getDecryptedText(encryptedResponse)
+
+                println("testlog" + "addListenerSaveGroupAPI  decryptedJSONString ----" + decryptedJSONString)
+
+                responseChangePassword = parseJsonSaveChangePassword(decryptedJSONString.toString())
+
+                println("testlog" + "vvvvvvvvvvvv  responseSaveGroup ----" + responseChangePassword.toString())
+
+
+                if (responseChangePassword != null) {
+
+                    when (responseChangePassword?.status) {
+                        1 -> {
+                            popupMessage = ""+ responseChangePassword?.statusMsg
+                            isSuccess = true // Determines the popup is for success or failure
+                            showAPISuccessPopup.value = false
+                            showAPISuccessPopup.value = true
+                            clearErrorMessages()
+//                        navigateLoginDestination()
+
+//                        showToast("" + responseChangePassword?.statusMsg.toString())
+                        }
+
+                        0 -> {
+                            popupMessage = ""+ responseChangePassword?.statusMsg
+                            isSuccess = false // Determines the popup is for success or failure
+                            showAPISuccessPopup.value = false
+                            showAPISuccessPopup.value = true
+                            clearErrorMessages()
+
+//                        showToast("" + responseChangePassword?.statusMsg.toString())
+
+                        }
+
+                        else -> {
+                            showToast("" + responseChangePassword?.statusMsg.toString())
+                        }
+                    }
+                } else {
+                    showToast("Change password failed, try again..")
+                }
+                //  }
+//            }
+        }
+
+
+        }
+
+    addListenerVerifyToken(navigateLoginDestinationAction = {
+        navigateLoginDestination()
+    }, keyboardController)
+
+    if (showAPISuccessPopup.value) {
+        println("testlog"+"dialog showingggggg ifff")
+        Dialog(
+            onDismissRequest = { /* do nothing so we control dismissal explicitly */ },
+            properties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
+        )
+        { APISuccessDialog(isSuccess, popupMessage, onContinue = {
+                println("testlog"+"dialog showingggggg 2")
+                showAPISuccessPopup.value = false
+            if (isSuccess){
+                navigateLoginDestination()
+            }
+
+                // Navigate or reset state
+            })
+        }
+    }
+    if (triggerChangePasswordAPI.value) {
+        triggerChangePasswordAPI.value = false
+        viewModel?.apiGetChangePassword(finalJsonRequest)
+    }
+
+    if (isReady.value) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize().background(color = Color(pure_white))
+                .padding(0.dp, 0.dp, 0.dp, 0.dp)
+        ) {
+            /** Top action bar with title **/
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(5.dp, 25.dp, 5.dp, 0.dp).fillMaxWidth()
+                    .wrapContentHeight()
+
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(blaze_orange_f96606),
+                                Color(vermilion_fb4a05),
+                                Color(red_fe1004),
+                            )
+
+                        ), shape = RoundedCornerShape(5.dp)
+                    )
+            ) {
+
+                // Page title
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "CHANGE PASSWORD",
+                        textAlign = TextAlign.Center,
+                        fontSize = 13.sp,
+                        color = Color(white),
+                        fontFamily = FontFamily(
+                            Font(
+                                Res.font.font_medium, FontWeight.Normal
+                            )
+                        ),
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).fillMaxWidth()
+                            .zIndex(90f)
+                            .wrapContentHeight()
+                    )
+                    Text(
+                        text = "",
+                        color = Color(black),
+//                    textAlign = TextAlign.End,
+                        modifier = Modifier.padding(2.dp, 4.dp, 2.dp, 0.dp)
+                            .background(color = Color(pure_white)).fillMaxWidth()
+                            .requiredHeight(1.dp)
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).fillMaxWidth()
+                        //   .background(color = Color(red))
+                        .wrapContentWidth()
+                ) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.fillMaxWidth()
+                            //    .background(color = Color(green_lite))
+                            .weight(1f)
+                    ) {
+
+                        Image(
+                            colorFilter = ColorFilter.tint(Color.White),
+                            contentScale = ContentScale.Crop, painter = painterResource(
+                                Res.drawable.ic_back
+                            ), modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp)
+                                //    .background(color = Color(yellow_ffd400))
+                                // .weight(1f)
+                                .clickable(onClick = {
+                                    // TODO
+
+                                    clearErrorMessages()
+                                    navigateBack()
+                                })
+                                // .wrapContentSize(),
+                                .requiredSize(40.dp), contentDescription = null
+                        )
+                    }
+                }
+            }
+            /** Parent Column **/
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(5.dp, 10.dp, 5.dp, 50.dp).fillMaxWidth()
+                    .fillMaxHeight().background(
+                        color = Color(pure_white), shape = RoundedCornerShape(10.dp)
+                    )
+            ) {
+//                    Box {
+
+                Column(
+                    modifier = Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp).zIndex(90f)
+                ) {
+                    Text(
+                        fontSize = 13.sp,
+                        color = Color(black),
+                        fontFamily = FontFamily(
+                            Font(Res.font.font_medium, FontWeight.Normal)
+                        ),
+                        lineHeight = 10.sp,
+//                            text = "Branch",
+                        text = buildAnnotatedString {
+                            append("Existing Password")
+                            pushStyle(
+                                SpanStyle(
+                                    color = Color(red), fontFamily = FontFamily(
+                                        Font(
+                                            Res.font.font_medium, FontWeight.Normal
+                                        )
+                                    )
+                                )
+                            )
+                            append("*")
+                            pop()
+                        },
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 0.dp).wrapContentWidth()
+                            // .zIndex(90f)
+                            .wrapContentHeight()
+                    )
+
+                    // Password Field
+                    Box(
+                        modifier = Modifier
+                            .padding(10.dp, 10.dp, 10.dp, 0.dp)
+                            .fillMaxWidth()
+                            .border(0.5.dp, Color(grey_300), shape = RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+//                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(Res.drawable.ic_pass_lock),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(5.dp))
+
+                            BasicTextField(
+                                maxLines = 1,
+                                value = textExistingPassword.value,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp)
+                                    .weight(1f)
+                                    .wrapContentHeight(),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    keyboardController?.hide()
+                                }),
+                                onValueChange = {
+                                    var text = it
+                                    if (text.length <= maxNumbersExistingPassword) textExistingPassword.value =
+                                        it
+                                    isValidExistingPassword.value = true
+                                    errorMsgExistingPassword.value = ""
+//                                    if (it.isEmpty()){
+//                                        // Hide the error if the field is empty
+//                                        isValidExistingPassword.value = true
+//                                        errorMsgExistingPassword.value = ""
+//                                    }
+//                                    else{
+//                                        val valid = isPasswordValid(
+//                                            password = textExistingPassword.value,
+//                                            userId = getData(KEY_EMPLOYEE_CODE).toString()
+//                                        )
+//                                        isValidExistingPassword.value = valid
+//                                        errorMsgExistingPassword.value = if (!valid) {
+//                                            "Password must be 8+ chars, mix of upper/lower case, numbers & symbols, and not contain your UserID."
+//                                        } else {
+//                                            ""
+//                                        }
+//                                    }
+
+
+                                },
+                                visualTransformation = if (existingPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+
+                                keyboardOptions = KeyboardOptions(
+//                                    capitalization = KeyboardCapitalization.Characters,
+//                    keyboardType = KeyboardType.NumberPassword,
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                textStyle = TextStyle(
+                                    color = Color(grey_700),
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily(
+                                        Font(Res.font.font_medium, FontWeight.Normal)
+                                    ),
+                                    lineHeight = 10.sp
+                                ),
+
+                                decorationBox = { innerTextField ->
+                                    if (textExistingPassword.value.toString().isEmpty()) {
+                                        Text(
+                                            fontSize = 13.sp,
+                                            fontFamily = FontFamily(
+                                                Font(
+                                                    Res.font.font_medium, FontWeight.Normal
+                                                )
+                                            ),
+                                            lineHeight = 10.sp,
+                                            text = "Enter Existing Password",
+                                            color = Color(grey_500)
+                                        )
+                                    }
+                                    innerTextField()
+                                },
+                            )
+
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(
+                                    if (existingPasswordVisible.value) Res.drawable.ic_password_view
+                                    else Res.drawable.ic_password_hide
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+                                    .clickable {
+                                        existingPasswordVisible.value =
+                                            !existingPasswordVisible.value
+                                    }
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+                        }
+                    }
+                    if (!isValidExistingPassword.value) {
+                        Text(
+                            color = Color(red),
+                            letterSpacing = 0.2.sp,
+                            text = errorMsgExistingPassword.value,
+                            textAlign = TextAlign.Start,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily(
+                                Font(
+                                    Res.font.font_google_sans_regular, FontWeight.Normal
+                                )
+                            ),
+                            // lineHeight = 10.sp,
+                            modifier = Modifier.padding(14.dp, 0.dp, 0.dp, 0.dp).fillMaxWidth()
+//                                                            .alpha(if (isValidGender.value) 0f else 9f)
+                                .zIndex(90f).wrapContentHeight()
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp).zIndex(90f)
+                ) {
+                    Text(
+                        fontSize = 13.sp,
+                        color = Color(black),
+                        fontFamily = FontFamily(
+                            Font(Res.font.font_medium, FontWeight.Normal)
+                        ),
+                        lineHeight = 10.sp,
+//                            text = "Branch",
+                        text = buildAnnotatedString {
+                            append("New Password")
+                            pushStyle(
+                                SpanStyle(
+                                    color = Color(red), fontFamily = FontFamily(
+                                        Font(
+                                            Res.font.font_medium, FontWeight.Normal
+                                        )
+                                    )
+                                )
+                            )
+                            append("*")
+                            pop()
+                        },
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 0.dp).wrapContentWidth()
+                            // .zIndex(90f)
+                            .wrapContentHeight()
+                    )
+
+                    // Password Field
+                    Box(
+                        modifier = Modifier
+                            .padding(10.dp, 10.dp, 10.dp, 0.dp)
+                            .fillMaxWidth()
+                            .border(0.5.dp, Color(grey_300), shape = RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+//                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(Res.drawable.ic_pass_lock),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(5.dp))
+
+                            BasicTextField(
+                                maxLines = 1,
+                                value = textNewPassword.value,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp)
+                                    .weight(1f)
+                                    .wrapContentHeight(),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    keyboardController?.hide()
+                                }),
+                                onValueChange = {
+                                    var text = it
+                                    if (text.length <= maxNumbersNewPassword) textNewPassword.value =
+                                        it
+
+                                    if (it.isEmpty()){
+                                        // Hide the error if the field is empty
+                                        isValidNewPassword.value = true
+                                        errorMsgNewPassword.value = ""
+                                    }
+                                    else{
+                                        val valid = isPasswordValid(
+                                            password = textNewPassword.value,
+                                            userId = getData(KEY_EMPLOYEE_CODE).toString()
+                                        )
+                                        isValidNewPassword.value = valid
+                                        errorMsgNewPassword.value = if (!valid) {
+                                            "Password must be 8+ chars, mix of upper/lower case, numbers & symbols, and not contain your UserID."
+                                        } else {
+                                            ""
+                                        }
+                                    }
+                                    if (textConfirmPassword.value.isNotEmpty()) {
+                                        val matches = textConfirmPassword.value == textNewPassword.value
+                                        if (!matches) {
+                                            isValidConfirmPassword.value = false
+                                            errorMsgConfirmPassword.value = "Passwords do not match."
+                                        } else {
+                                            isValidConfirmPassword.value = true
+                                            errorMsgConfirmPassword.value = ""
+                                        }
+                                    }
+
+                                },
+                                visualTransformation = if (newPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+
+                                keyboardOptions = KeyboardOptions(
+//                                    capitalization = KeyboardCapitalization.Characters,
+//                    keyboardType = KeyboardType.NumberPassword,
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                textStyle = TextStyle(
+                                    color = Color(grey_700),
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily(
+                                        Font(Res.font.font_medium, FontWeight.Normal)
+                                    ),
+                                    lineHeight = 10.sp
+                                ),
+
+                                decorationBox = { innerTextField ->
+                                    if (textNewPassword.value.toString().isEmpty()) {
+                                        Text(
+                                            fontSize = 13.sp,
+                                            fontFamily = FontFamily(
+                                                Font(
+                                                    Res.font.font_medium, FontWeight.Normal
+                                                )
+                                            ),
+                                            lineHeight = 10.sp,
+                                            text = "Enter New Password",
+                                            color = Color(grey_500)
+                                        )
+                                    }
+                                    innerTextField()
+                                },
+                            )
+
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(
+                                    if (newPasswordVisible.value) Res.drawable.ic_password_view
+                                    else Res.drawable.ic_password_hide
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+                                    .clickable {
+                                        newPasswordVisible.value = !newPasswordVisible.value
+                                    }
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+                        }
+                    }
+                    if (!isValidNewPassword.value) {
+                        Text(
+                            color = Color(red),
+                            letterSpacing = 0.2.sp,
+                            text = errorMsgNewPassword.value,
+                            textAlign = TextAlign.Start,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily(
+                                Font(
+                                    Res.font.font_google_sans_regular, FontWeight.Normal
+                                )
+                            ),
+                            // lineHeight = 10.sp,
+                            modifier = Modifier.padding(14.dp, 0.dp, 0.dp, 0.dp).fillMaxWidth()
+//                                                            .alpha(if (isValidGender.value) 0f else 9f)
+                                .zIndex(90f).wrapContentHeight()
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp).zIndex(90f)
+                ) {
+                    Text(
+                        fontSize = 13.sp,
+                        color = Color(black),
+                        fontFamily = FontFamily(
+                            Font(Res.font.font_medium, FontWeight.Normal)
+                        ),
+                        lineHeight = 10.sp,
+//                            text = "Branch",
+                        text = buildAnnotatedString {
+                            append("Confirm New Password")
+                            pushStyle(
+                                SpanStyle(
+                                    color = Color(red), fontFamily = FontFamily(
+                                        Font(
+                                            Res.font.font_medium, FontWeight.Normal
+                                        )
+                                    )
+                                )
+                            )
+                            append("*")
+                            pop()
+                        },
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.padding(15.dp, 0.dp, 15.dp, 0.dp).wrapContentWidth()
+                            // .zIndex(90f)
+                            .wrapContentHeight()
+                    )
+
+                    // Password Field
+                    Box(
+                        modifier = Modifier
+                            .padding(10.dp, 10.dp, 10.dp, 0.dp)
+                            .fillMaxWidth()
+                            .border(0.5.dp, Color(grey_300), shape = RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+//                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(Res.drawable.ic_pass_lock),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(5.dp))
+
+                            BasicTextField(
+                                maxLines = 1,
+                                value = textConfirmPassword.value,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp)
+                                    .weight(1f)
+                                    .wrapContentHeight(),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    keyboardController?.hide()
+                                }),
+                                onValueChange = {
+                                    var text = it
+                                    if (text.length <= maxNumbersConfirmPassword) textConfirmPassword.value =
+                                        it
+
+                                    if (text.isEmpty()) {
+                                        // Hide the error if the field is empty
+                                        isValidConfirmPassword.value = true
+                                        errorMsgConfirmPassword.value = ""
+                                    } else {
+                                        val validPolicy = isPasswordValid(
+                                            password = textConfirmPassword.value,
+                                            userId = getData(KEY_EMPLOYEE_CODE).toString()
+                                        )
+
+                                        val matchesNewPassword = textConfirmPassword.value == textNewPassword.value
+
+                                        isValidConfirmPassword.value = validPolicy && matchesNewPassword
+
+                                        errorMsgConfirmPassword.value = when {
+                                            !validPolicy -> "Password must be 8+ chars, mix of upper/lower case, numbers & symbols, and not contain your UserID."
+                                            !matchesNewPassword -> "Passwords do not match."
+                                            else -> ""
+                                        }
+                                    }
+//                                    isValidConfirmPassword.value = true
+                                },
+                                visualTransformation = if (confirmPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+
+                                keyboardOptions = KeyboardOptions(
+//                                    capitalization = KeyboardCapitalization.Characters,
+//                    keyboardType = KeyboardType.NumberPassword,
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                textStyle = TextStyle(
+                                    color = Color(grey_700),
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily(
+                                        Font(Res.font.font_medium, FontWeight.Normal)
+                                    ),
+                                    lineHeight = 10.sp
+                                ),
+
+                                decorationBox = { innerTextField ->
+                                    if (textConfirmPassword.value.toString().isEmpty()) {
+                                        Text(
+                                            fontSize = 13.sp,
+                                            fontFamily = FontFamily(
+                                                Font(
+                                                    Res.font.font_medium, FontWeight.Normal
+                                                )
+                                            ),
+                                            lineHeight = 10.sp,
+                                            text = "Enter Confirm Password",
+                                            color = Color(grey_500)
+                                        )
+                                    }
+                                    innerTextField()
+                                },
+                            )
+
+                            Image(
+                                contentScale = ContentScale.Crop,
+                                painter = painterResource(
+                                    if (confirmPasswordVisible.value) Res.drawable.ic_password_view
+                                    else Res.drawable.ic_password_hide
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 0.dp).size(20.dp)
+                                    .clickable {
+                                        confirmPasswordVisible.value = !confirmPasswordVisible.value
+                                    }
+//                                            .clip(CircleShape)
+//                                            .padding(9.dp)
+                            )
+                        }
+                    }
+                    if (!isValidConfirmPassword.value) {
+                        Text(
+                            color = Color(red),
+                            letterSpacing = 0.2.sp,
+                            text = errorMsgConfirmPassword.value,
+                            textAlign = TextAlign.Start,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily(
+                                Font(
+                                    Res.font.font_google_sans_regular, FontWeight.Normal
+                                )
+                            ),
+                            // lineHeight = 10.sp,
+                            modifier = Modifier.padding(14.dp, 0.dp, 0.dp, 0.dp).fillMaxWidth()
+//                                                            .alpha(if (isValidGender.value) 0f else 9f)
+                                .zIndex(90f).wrapContentHeight()
+                        )
+                    }
+                }
+
+
+//                    }
+
+                Card(
+                    shape = RoundedCornerShape(5.dp),
+                    modifier = Modifier.padding(5.dp,50.dp, 5.dp, 45.dp)
+                        .requiredWidth(175.dp)
+                        .wrapContentHeight()
+                        .clip(RoundedCornerShape(5.dp))
+                        .clickable(onClick = {})
+                ) {
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.height(40.dp).background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(red_fe1004),
+                                    Color(red_fe1004),
+                                    Color(red_fe1004),
+                                )
+                            )
+                        ).fillMaxWidth().clickable(
+                            onClick = {
+                                changePasswordClicked = true
+                                val validateTokenRequest = ValidateTokenRequest(getData(
+                                    KEY_JWT_TOKEN
+                                ).toString())
+                                val jsonRequest: String = Json.encodeToString(validateTokenRequest)
+                                val encryptedRequest = getEncryptedRequest(jsonRequest)
+
+                                val request = APIRequest(encryptedRequest)
+                                finalValidateTokenJsonRequest = Json.encodeToString(request)
+                                println("testlog"+"loginRequest"+ validateTokenRequest)
+                                println("testlog"+"loginRequest"+ jsonRequest)
+
+                                println("testlog"+"loginRequest"+ finalValidateTokenJsonRequest)
+
+                                viewModel?.apiValidateToken(
+                                    finalValidateTokenJsonRequest
+                                )
+                            },
+                        )
+                    ) {
+                        Text(
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily(
+                                Font(
+                                    Res.font.font_medium, FontWeight.Normal
+                                )
+                            ),
+                            lineHeight = 10.sp,
+                            color = Color(pure_white),
+                            textAlign = TextAlign.Center,
+                            text = "Change Password",
+                            modifier = Modifier.fillMaxWidth().zIndex(90f)
+                                //.background(color = Color(red))
+                                .padding(end = 8.dp)  // Add spacing before the icon
+                        )
+
+                        if (isLoadingAPI.value) {
+                            CircularProgressIndicator(
+                                color = Color(pure_white), // Change color
+                                strokeWidth = 1.5.dp, // Set thickness
+                                modifier = Modifier.padding(0.dp, 0.dp, 10.dp, 0.dp)
+                                    .align(Alignment.CenterEnd)
+                                    //  .zIndex(90f)
+                                    .size(20.dp)  // Icon size
+                            )
+                        }
+                        else{
+                            Icon(
+                                tint = Color(pure_white),
+                                painter = painterResource(Res.drawable.ic_save),
+                                contentDescription = "Save Icon",
+                                modifier = Modifier.padding(0.dp, 0.dp, 10.dp, 0.dp)
+                                    .align(Alignment.CenterEnd)
+                                    //  .zIndex(90f)
+                                    .size(20.dp)  // Icon size
+                            )
+                        }
+
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+fun addListenerChangePasswordAPI(
+    changePasswordSave: ChangePasswordViewModel.APIStateGetChangePassword,
+    viewModel: ChangePasswordViewModel,
+    navigateLoginDestination: () -> Unit
+) {
+    when (changePasswordSave) {
+        is ChangePasswordViewModel.APIStateGetChangePassword.Loading -> {
+        }
+
+        is ChangePasswordViewModel.APIStateGetChangePassword.Success -> {
+            println("testlog" + "APIStateSaveGroup Success  ----")
+            isLoadingAPI.value = false
+            triggerChangePasswordAPI.value = false
+
+            val respSaveGroup = changePasswordSave.responseData
+
+            val encryptedResponse = respSaveGroup.response.toString()
+
+            val decryptedJSONString = getDecryptedText(encryptedResponse)
+
+            println("testlog" + "addListenerSaveGroupAPI  decryptedJSONString ----" + decryptedJSONString)
+
+            responseChangePassword = parseJsonSaveChangePassword(decryptedJSONString.toString())
+
+            println("testlog" + "vvvvvvvvvvvv  responseSaveGroup ----" + responseChangePassword.toString())
+
+
+            if (responseChangePassword != null) {
+
+                when (responseChangePassword?.status) {
+                    1 -> {
+                        popupMessage = ""+ responseChangePassword?.statusMsg
+                        isSuccess = true // Determines the popup is for success or failure
+                        showAPISuccessPopup.value = false
+                        showAPISuccessPopup.value = true
+                        clearErrorMessages()
+//                        navigateLoginDestination()
+
+//                        showToast("" + responseChangePassword?.statusMsg.toString())
+                    }
+
+                    0 -> {
+                        popupMessage = ""+ responseChangePassword?.statusMsg
+                        isSuccess = false // Determines the popup is for success or failure
+                        showAPISuccessPopup.value = false
+                        showAPISuccessPopup.value = true
+                        clearErrorMessages()
+
+//                        showToast("" + responseChangePassword?.statusMsg.toString())
+
+                    }
+
+                    else -> {
+                        showToast("" + responseChangePassword?.statusMsg.toString())
+                    }
+                }
+            } else {
+                showToast("Change password failed, try again..")
+            }
+            //  }
+        }
+
+        is ChangePasswordViewModel.APIStateGetChangePassword.Error -> {
+            isLoadingAPI.value = false
+        }
+    }
+
+}
+
+private fun addListenerVerifyToken(
+    navigateLoginDestinationAction: () -> Unit,
+    keyboardController: SoftwareKeyboardController?
+) {
+    if (gotGetValidateTokenAPIResponse.value) {
+        gotGetValidateTokenAPIResponse.value = false
+        triggerValidateTokenResponseAPI.value = false
+        if (encResponseValidateToken.toString().trim().isNullOrEmpty() ||
+            encResponseValidateToken.toString().trim().equals("", ignoreCase = true) ||
+            encResponseValidateToken.toString().trim().equals("null", ignoreCase = true)
+        ) {
+            showToast("API response is empty, Try again")
+        } else {
+            val decryptedJSONString = getDecryptedText(encResponseValidateToken.toString())
+
+            println("testlog" + "addListenerresponseJWTTokenAPI  decryptedJSONString ----" + decryptedJSONString)
+            responseValidateToken =
+                parseJsonValidateToken(decryptedJSONString.toString())
+
+            println("testlog" + "vvvvvvvvvvvv  responseJWTToken ----" + responseValidateToken)
+
+            if (responseValidateToken != null) {
+//                println("testlog" + "vvvvvvvvvvvv  responseJWTToken != null ----")
+//                println("testlog" + "vvvvvvvvvvvv  responseJWTToken?.status ----" + responseJWTToken)
+
+                when (responseValidateToken?.status) {
+                    1 -> {
+                        if(changePasswordClicked) {
+                            changePasswordClicked = false
+                            validatePasswordFields()
+                        }
+                    }
+
+                    0 -> {
+                        navigateLoginDestinationAction()
+                        showToast(responseValidateToken?.statusMsg.toString())
+                    }
+
+                    else -> {
+                    }
+                }
+
+            } else {
+                showToast("Unable to fetch customers list, try again..")
+            }
+
+        }
+    }
+}
+
+fun validatePasswordFields() {
+    if (textExistingPassword.value?.toString()?.trim()
+            .isNullOrEmpty() || textExistingPassword.value?.toString()?.trim().toString()
+            .equals("", ignoreCase = true) || textExistingPassword.value?.toString()?.trim().toString()
+            .equals("null", ignoreCase = true)
+    ) {
+        errorMsgExistingPassword.value = "This field is required."
+        isValidExistingPassword.value = false
+        return
+    }
+    if (textNewPassword.value?.toString()?.trim()
+            .isNullOrEmpty() || textNewPassword.value?.toString()?.trim().toString()
+            .equals("", ignoreCase = true) || textNewPassword.value?.toString()?.trim().toString()
+            .equals("null", ignoreCase = true)
+    ) {
+        errorMsgNewPassword.value = "This field is required."
+        isValidNewPassword.value = false
+        return
+    }
+
+    if (textConfirmPassword.value?.toString()?.trim()
+            .isNullOrEmpty() || textConfirmPassword.value?.toString()?.trim().toString()
+            .equals("", ignoreCase = true) || textConfirmPassword.value?.toString()?.trim().toString()
+            .equals("null", ignoreCase = true)
+    ) {
+        errorMsgConfirmPassword.value = "This field is required."
+        isValidConfirmPassword.value = false
+        return
+    }
+
+    val getChangePasswordRequest = ChangePasswordRequest(getData(KEY_EMPLOYEE_CODE).toString(),
+        textExistingPassword.value, textNewPassword.value, textConfirmPassword.value)
+    val jsonRequest: String = Json.encodeToString(getChangePasswordRequest)
+    val encryptedRequest = getEncryptedRequest(jsonRequest)
+
+    val request = APIRequest(encryptedRequest)
+    finalJsonRequest = Json.encodeToString(request)
+    println("testlog" + "finalJsonRequest" + finalJsonRequest)
+    println("testlog" + "jsonRequest" + jsonRequest)
+    println("testlog" + "getChangePasswordRequest" + getChangePasswordRequest)
+    println("testlog" + "encryptedRequest" + encryptedRequest)
+
+
+    isLoadingAPI.value = true
+    triggerChangePasswordAPI.value = true
+
+}
+fun clearErrorMessages() {
+    isValidExistingPassword.value = true
+    isValidNewPassword.value = true
+    isValidConfirmPassword.value = true
+    textNewPassword.value = ""
+    textConfirmPassword.value = ""
+    textExistingPassword.value = ""
+}
+
+fun isPasswordValid(password: String, userId: String): Boolean {
+    val regex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#\$%^&*()_+|~\\-=`{}\\[\\]:\";'<>?,./]).{8,}$")
+    if (!regex.matches(password)) return false
+    if (password.contains(userId, ignoreCase = true)) return false
+    if (password.contains(userId.reversed(), ignoreCase = true)) return false
+    return true
+}
+fun parseJsonSaveChangePassword(jsonString: String): SaveResponse? {
+    return try {
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            isLenient = true
+        }
+        json.decodeFromString<SaveResponse>(jsonString)
+    } catch (e: Exception) {
+        println("testlog" + "aaaaaaa  SaveChangePassword ----" + e.toString())
+        println("testlog" + "aaaaaaa  SaveChangePassword ----" + e.message)
+        null // Or handle the error as appropriate
+    }
+}
+
+fun parseJsonValidateToken(jsonString: String): SaveResponse? {
+    return try {
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            isLenient = true
+        }
+        json.decodeFromString<SaveResponse>(jsonString)
+    } catch (e: Exception) {
+        println("testlog" + "Exception  JWTtokenResponse ----" + e.toString())
+        println("testlog" + "Exception  JWTtokenResponse ----" + e.message)
+        null
+    }
+}

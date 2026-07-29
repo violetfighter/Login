@@ -1,0 +1,212 @@
+package `in`.co.cfcici.screens.change_password
+
+import APIResponse
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import `in`.co.cfcici.Constants.gotApiChangePasswordAPIResponse
+import `in`.co.cfcici.Constants.gotGetValidateTokenAPIResponse
+import `in`.co.cfcici.Constants.gotSaveLocationAPIResponse
+import `in`.co.cfcici.screens.network.ApiStatus
+import `in`.co.cfcici.screens.network.NetworkRepository
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+
+
+/**
+ * @Author: Silpa VP 07-08-2025
+ */
+class ChangePasswordViewModel (private val networkRepository: NetworkRepository) : ViewModel(),
+    KoinComponent {
+
+    /** ValidateToken api */
+    private val apiStateValidateToken: MutableStateFlow<APIStateValidateToken> =
+        MutableStateFlow(APIStateValidateToken.Loading)
+    private val apiResponseStateValidateToken = MutableStateFlow(APIResponseStateValidateToken())
+    var responseValidateToken = apiStateValidateToken.asStateFlow()
+
+    // Change password
+    private var apiStateChangePassword: MutableStateFlow<APIStateGetChangePassword> =
+        MutableStateFlow(APIStateGetChangePassword.Loading)
+    private val apiResponseGetChangePassword = MutableStateFlow(
+        APIResponseGetChangePassword()
+    )
+    var responseGetChangePassword = apiStateChangePassword.asStateFlow()
+
+
+    fun apiGetChangePassword(request: String?) {
+//        isLoading.value = true
+        println("testlog"+"..apiGetChangePassword..1"+request)
+        val handler = CoroutineExceptionHandler { _, exception ->
+        }
+
+//        CoroutineScope(Dispatchers.IO + handler).launch {
+        viewModelScope.launch {
+            try {
+                networkRepository.apiGetChangePassword(request!!).collect { response ->
+                    when (response.status) {
+                        ApiStatus.LOADING -> {
+//                            apiResponseGetChangePassword.update { it.copy(isLoading = true) }
+                            println("testlog"+"response.message.....1"+response.message)
+
+                        }
+
+                        ApiStatus.SUCCESS -> {
+                            encResponseApiChangePassword.clear()
+                            encResponseApiChangePassword.append(response.data?.response.toString())
+                            gotApiChangePasswordAPIResponse.value = true
+//                            isLoading.value = false
+//                            apiResponseGetChangePassword.update {
+//                                it.copy(
+//                                    isLoading = false,
+//                                    errorMessage = "",
+//                                    response.data
+//
+//                                )
+//
+//                            }
+                            println("testlog"+"response.message.....2"+response.data)
+
+                        }
+
+                        ApiStatus.ERROR -> {
+                            encResponseApiChangePassword.clear()
+                            encResponseApiChangePassword.append(response.message.toString())
+                            gotApiChangePasswordAPIResponse.value = true
+//                            isLoading.value = false
+
+//                            apiResponseGetChangePassword.update {
+//                                it.copy(
+//                                    isLoading = false,
+//                                    errorMessage = response.message
+//                                )
+//                            }
+                            println("testlog"+"response.message.....3"+response.message)
+                        }
+                    }
+//                    apiStateChangePassword.value = apiResponseGetChangePassword.value.toUiState()
+                }
+            } catch (e: Exception) {
+//                isLoading.value = false
+//                apiResponseGetChangePassword.update {
+//                    it.copy(
+//                        isLoading = false,
+//                        errorMessage = "Failed to fetch data"
+//                    )
+//                }
+            }
+        }
+    }
+
+    sealed class APIStateGetChangePassword {
+        data object Loading : APIStateGetChangePassword()
+        data class Error(val errorMessage: String) : APIStateGetChangePassword()
+        data class Success(val responseData: APIResponse) : APIStateGetChangePassword()
+    }
+
+    private data class APIResponseGetChangePassword(
+        val isLoading: Boolean = false,
+        val errorMessage: String? = null,
+        val responseData: APIResponse? = null
+    ) {
+        fun toUiState(): APIStateGetChangePassword {
+            return if (isLoading) {
+                APIStateGetChangePassword.Loading
+            } else if (errorMessage?.isNotEmpty() == true) {
+                APIStateGetChangePassword.Error(errorMessage)
+            } else {
+                APIStateGetChangePassword.Success(responseData!!)
+            }
+        }
+    }
+
+    fun apiValidateToken(request: String?) {
+//        isLoading.value = true
+        println("testlog"+"..apiGetAadhaarOtp..1"+request)
+        val handler = CoroutineExceptionHandler { _, exception ->
+        }
+
+        CoroutineScope(Dispatchers.IO + handler).launch {
+            try {
+                networkRepository.apiValidateToken(request!!).collect { response ->
+                    when (response.status) {
+                        ApiStatus.LOADING -> {
+                            apiResponseStateValidateToken.update { it.copy(isLoading = true) }
+                            println("testlog"+"response.message.....1"+response.message)
+
+                        }
+
+                        ApiStatus.SUCCESS -> {
+//                            isLoading.value = false
+                            encResponseValidateToken.clear()
+                            encResponseValidateToken.append(response.data?.response.toString())
+                            gotGetValidateTokenAPIResponse.value = true
+                            apiResponseStateValidateToken.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = "",
+                                    response.data
+
+                                )
+
+                            }
+                            println("testlog"+"response.message.....2"+response.data)
+
+                        }
+
+                        ApiStatus.ERROR -> {
+//                            isLoading.value = false
+                            encResponseValidateToken.clear()
+                            encResponseValidateToken.append(response.message.toString())
+                            gotGetValidateTokenAPIResponse.value = true
+                            apiResponseStateValidateToken.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = response.message
+                                )
+                            }
+                            println("testlog"+"response.message.....3"+response.message)
+                        }
+                    }
+                    apiStateValidateToken.value = apiResponseStateValidateToken.value.toUiState()
+                }
+            } catch (e: Exception) {
+//                isLoading.value = false
+                apiResponseStateValidateToken.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to fetch data"
+                    )
+                }
+            }
+        }
+    }
+
+    sealed class APIStateValidateToken {
+        data object Loading : APIStateValidateToken()
+        data class Error(val errorMessage: String) : APIStateValidateToken()
+        data class Success(val responseData: APIResponse) : APIStateValidateToken()
+    }
+
+    private data class APIResponseStateValidateToken(
+        val isLoading: Boolean = false,
+        val errorMessage: String? = null,
+        val responseData: APIResponse? = null
+    ) {
+        fun toUiState(): APIStateValidateToken {
+            return if (isLoading) {
+                APIStateValidateToken.Loading
+            } else if (errorMessage?.isNotEmpty() == true) {
+                APIStateValidateToken.Error(errorMessage)
+            } else {
+                APIStateValidateToken.Success(responseData!!)
+            }
+        }
+    }
+}
