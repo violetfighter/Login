@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "dbdff753399c10ed3f594920e2251b9b",
+    "identityHash": "7c03d5da0262f5fdf07f3d5b589716d1",
     "entities": [
       {
         "tableName": "users",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `usernameUser` TEXT NOT NULL, `passwordUser` TEXT NOT NULL, `dateOfBirthUser` TEXT NOT NULL, `emailIdUser` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,14 +15,26 @@
             "notNull": true
           },
           {
-            "fieldPath": "username",
-            "columnName": "username",
+            "fieldPath": "usernameUser",
+            "columnName": "usernameUser",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "password",
-            "columnName": "password",
+            "fieldPath": "passwordUser",
+            "columnName": "passwordUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateOfBirthUser",
+            "columnName": "dateOfBirthUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emailIdUser",
+            "columnName": "emailIdUser",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -37,7 +49,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dbdff753399c10ed3f594920e2251b9b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7c03d5da0262f5fdf07f3d5b589716d1')"
     ]
   }
 }

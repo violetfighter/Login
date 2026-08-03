@@ -7,14 +7,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 
-@Database(entities = [User::class], version = 1)
+@Database(entities = [User::class], version = 2)
+
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 }
 
 // The Room compiler generates the `actual` implementations.
-@Suppress("KotlinNoActualForExpect")// Waring signs
+@Suppress("KotlinNoActualForExpect")// Warning signs
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }

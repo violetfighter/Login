@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 
@@ -21,15 +22,24 @@ fun ProfilePage(usernamePP: String,
         .padding(top = 40.dp)
         .background(Color.White)
 
+
     ){
         Text(
-            text = "Username: ${usernamePP}",
+            text = "Username: $usernamePP",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start)
 
         Text(
-            text = "PassWord: ${passwordPP}",
+            text = "PassWord: $passwordPP",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start)
     }
+}
+
+@Preview
+@Composable
+fun ProfilePagePreview(){
+    ProfilePage(
+        usernamePP = "parvathi",
+    passwordPP = "PaaQQ!!!123")
 }

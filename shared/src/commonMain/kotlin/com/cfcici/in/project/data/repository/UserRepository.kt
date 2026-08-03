@@ -15,4 +15,12 @@ class UserRepository (
     suspend fun getUserRepo(): List<User>{
         return userDaoFromRepo.getAll()
     }
+    suspend fun  emailExistsRepo(email: String): Boolean{
+        val existingUser = userDaoFromRepo.getUserByEmail(email)
+        return existingUser != null
+    }
+    suspend fun loginCheckerRepo(username: String, password: String): Boolean{
+        val loginUser = userDaoFromRepo.loginChecker(username, password)
+        return loginUser != null
+    }
 }

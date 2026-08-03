@@ -1,13 +1,17 @@
 package com.cfcici.`in`.project.data.database
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "users")
+@Entity(tableName = "users",
+    indices = [Index(value = ["usernameUser"], unique = true)]) // it checks if the user is in the database before
 data class User(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val username: String,
-    val password: String
+    val usernameUser: String,
+    val passwordUser: String,
+    val dateOfBirthUser: String,
+    val emailIdUser: String,
+
 )
