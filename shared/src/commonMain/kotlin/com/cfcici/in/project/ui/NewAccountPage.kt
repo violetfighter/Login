@@ -271,8 +271,8 @@ fun NewAccountPage(
                                 )
                                 if (showCalendar){
                                     Calender(
-                                        onDateSelected = { date ->
-                                            selectedDate = date
+                                        onDateSelected = {
+                                            date -> selectedDate = date
                                             newDOB.edit {//edit { } is the API for programmatically changing what's inside a TextFieldState as opposed to the user typing into it
                                                 replace(0, length, formatDate(date))/////?????
                                             }

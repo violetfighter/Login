@@ -1,6 +1,12 @@
 package com.cfcici.`in`.project.ui
 
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -48,14 +55,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import login.shared.generated.resources.Res
+import login.shared.generated.resources.neonderthaw
+import org.jetbrains.compose.resources.Font
 
 
 @Composable
+
 fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
     val userName = rememberTextFieldState()
     var userPassword by remember { mutableStateOf("") }
@@ -65,6 +79,16 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
     val gradientColors = listOf( Red, Blue)
     var usernameError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    val hotWheelsFont = FontFamily(Font(Res.font.neonderthaw, FontWeight.Normal))
+    val infiniteTransition = rememberInfiniteTransition(label = "newoFlicker")
+    val flickerAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.20f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+        ),
+        label = "flickerAlpha"
+    )
 
     Scaffold(
             snackbarHost = {
@@ -84,17 +108,54 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Hot Wheels",
-                        modifier = Modifier.padding(10.dp),
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(
-                            brush = Brush.linearGradient(
-                                colors = gradientColors
-                            )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(10.dp)
+                    ){
+                        // Large soft glow
+                        Text(
+                            text = "Hot Wheels",
+                            fontFamily = hotWheelsFont,
+                            fontSize = 60.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = TextStyle(
+                                brush = Brush.linearGradient(colors = gradientColors)),
+                            //color = Color.Magenta.copy(alpha = 0.7f),
+                            modifier = Modifier
+                                .blur(radius = 10.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                                .graphicsLayer(alpha = flickerAlpha)
+                                .padding(24.dp)
                         )
-                    )
+                        //  Small soft glow
+                        Text(
+                            text = "Hot Wheels",
+                            fontFamily = hotWheelsFont,
+                            fontSize = 60.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = TextStyle(
+                                brush = Brush.linearGradient(
+                                    colors = gradientColors)),
+                            //color = Color(0xFFFF1493).copy(alpha = 0.6f),
+                            modifier = Modifier
+                                .blur(90.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                                .graphicsLayer(alpha = flickerAlpha * 0.85f)
+                                .padding(24.dp)
+                        )
+                        Text(
+                            text = "Hot Wheels",
+                            //modifier = Modifier
+                                //.fillMaxHeight()
+                                //.padding(10.dp),
+                            fontFamily = hotWheelsFont,
+                            fontSize = 60.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = TextStyle(
+                                brush = Brush.linearGradient(
+                                    colors = gradientColors
+                                )
+                            ),
+                        )
+                    }
 
                     Text(
                         text = "Log in to your account",
