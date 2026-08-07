@@ -182,8 +182,8 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                         inputTransformation = InputTransformation.maxLength(16),
                         textStyle = TextStyle(fontSize = 20.sp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.DarkGray,
-                            unfocusedBorderColor = Color.DarkGray,
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             unfocusedLabelColor = Color.DarkGray,
@@ -191,6 +191,7 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                             errorTextColor = Color.White,
                             cursorColor = Color.White
                         ),
+
                         shape = RoundedCornerShape(50.dp),
                         modifier = Modifier
                             .padding(top = 20.dp)
@@ -248,10 +249,18 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                                 userViewModel.loginCheckerVM( userName.text.toString(), userPassword){
                                     exists ->
                                     if (exists){
-                                        onLoginClick(// Send the username and password to App
-                                            userName.text.toString(),
-                                            userPassword
-                                        )
+                                        userViewModel.getUserByUsernameVM(getUserByUsernameFromVM = userName.text.toString()){
+                                            user -> if(user != null)
+                                            {
+                                                val email = user.emailIdUser// to get emailId from room
+                                                val userId = user.userId // userid will be helpful to get user car details
+
+                                                onLoginClick(// Send the username and password to App
+                                                    userName.text.toString(),
+                                                    email
+                                                )
+                                            }
+                                        }
                                     }else{
                                         scope.launch {
                                             snackbarHostState.showSnackbar(

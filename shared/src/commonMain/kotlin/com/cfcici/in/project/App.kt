@@ -20,10 +20,7 @@ object LoginRoute // Object means it doesn't accept any values
 @Serializable//?
 data class ProfileRoute(
     val username: String,
-    val password: String,
-    //val dateOfBirthApp: String,
-    //val emailIdAPP: String
-)
+    val email: String, )
 
 @Serializable
 object NewAccountRoute
@@ -38,35 +35,42 @@ fun App(db: AppDatabase) {
         NavHost(
             navController = navController,
             startDestination = LoginRoute
-        ) {
+        )
+//________________________________________________________________________________________________//
+        {
             composable<LoginRoute> {
                 LoginPage(
                     //onLoginClick goes to Login
-                    onLoginClick = { username, password ->
+                    onLoginClick = { username, email ->
                         //viewModel.insertUser(usernameFromVM = username, passwordFromVM = password)
                         navController.navigate(
                             ProfileRoute(
                                 username = username,
-                                password = password
+                                email = email
                             )
                         )
-                    },// When user click here in Login Page
+                    },// When user 'click here' in Login Page
                     onGoToNewAccount = {
                         navController.navigate(NewAccountRoute)
                     },
                     userViewModel = viewModel
                 )
             }
+//________________________________________________________________________________________________//
 // backStack Entry represent the current values of username, password...
-
             composable<ProfileRoute> { backStackEntry ->
                 // takes serialization data and reconstructs the ProfileRoute object
                 val profile: ProfileRoute = backStackEntry.toRoute()
                 ProfilePage(
                     usernamePP = profile.username,
-                    passwordPP = profile.password
+                    emailPP = profile.email,
+
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute)
+                    }
                 )
             }
+//________________________________________________________________________________________________//
             // So you don't want the get or give the values to any other page
             // just when user click button go back to login page
             composable <NewAccountRoute>{

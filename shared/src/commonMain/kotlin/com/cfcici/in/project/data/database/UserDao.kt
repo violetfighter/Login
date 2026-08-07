@@ -16,14 +16,31 @@ interface UserDao {
     @Delete
     suspend fun delete(user: User)
 
-    //Asynchronously check my user table for this email and return true if it exists,  otherise return false
+    //Asynchronously check my user table for this email and return true if it exists, otherwise return false
     // Means look inside  the user table and find the email already exist
-    @Query("SELECT * FROM users WHERE emailIdUser = :email LIMIT 1")// email is a parameter
-    suspend fun getUserByEmail(email: String): User?
+    @Query("SELECT * FROM users WHERE emailIdUser = :emailUserDao LIMIT 1")// email is a parameter
+    suspend fun getEmailIdDuplication(emailUserDao: String): User?
+
+    @Query("SELECT * FROM users WHERE usernameUser = :usernameUserDao LIMIT 1")
+    suspend fun getUserByUsername(usernameUserDao: String): User?
 
     //AND guarantees that both conditions have to be true for the same row at the same time,
     // so there's no way for SQL to accidentally pair a username from one row with a password from a different row.
     // Either one single row satisfies both conditions together, or no row does — there's no in-between, no mixing.
     @Query("SELECT * FROM users WHERE usernameUser = :username AND passwordUser = :password LIMIT 1")
     suspend fun loginChecker(username: String, password: String): User?
+
+    //########################################################################################################################################################################
+
+    @Insert
+    suspend fun insertUserCar(vararg userCar: UserCar)
+
+    @Delete
+    suspend fun deleteUserCar(userCar: UserCar)
+
+/*in SQLLite, || means join like +
+% -> anything before or before the search text. that we put on both side so it will give the models that have that particular name on it
+the reason we used userIdUser = :userIdDao, when the app used by many people and search particular model it might show other people's mode car too we don't need that to happen*/
+    @Query("""SELECT * FROM usercar WHERE userIdUser = :userIdDao AND modelUser LIKE '%' || :modelUserDao || '%' """)
+    suspend fun getCarOnSearchBar(userIdDao:Int, modelUserDao: String): List<UserCar>
 }
