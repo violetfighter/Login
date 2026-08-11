@@ -3,6 +3,7 @@ package com.cfcici.`in`.project.data.repository
 import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserDao
+import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 
 class UserRepository (
     private val userDaoFromRepo: UserDao){
@@ -33,15 +34,43 @@ class UserRepository (
         return loginUser != null
     }
 
-    suspend fun insertUserCarRepo(userCarRepo: UserCar){
-         userDaoFromRepo.insertUserCar(userCarRepo)
+    //########################################################################################################################################################################
+
+    suspend fun insertUserOwnedCarRepo(userOwnedCarRepo: UserCar){
+         userDaoFromRepo.insertUserOwnedCar(userOwnedCarRepo)
     }
 
-    suspend fun deleteUserCarRepo(userCarRepo: UserCar){
-        userDaoFromRepo.deleteUserCar(userCarRepo)
+    suspend fun deleteUserOwnedCarRepo(userCarRepo: UserCar){
+        userDaoFromRepo.deleteUserOwnedCar(userCarRepo)
     }
+
+    // Get ALL cars owned by the user
+    suspend fun getUserOwnedCarRepo(userIdRepo: Int): List<UserCar>{
+        return userDaoFromRepo.getUserOwnedCar(userIdRepo)
+    }
+
+    // Get cars belonging to one specific brand
+    suspend fun getUserOwnedCarsByBrandsRepo(userIdRepo: Int, brandRepo: String): List<UserCar>{
+        return userDaoFromRepo.getUserOwnedCarsByBrands(userIdRepo, brandRepo)
+    }
+
+    //########################################################################################################################################################################
 
     suspend fun getCarOnSearchBarRepo(userIdUserRepo: Int, modelUserRepo: String): List<UserCar>{
         return userDaoFromRepo.getCarOnSearchBar(userIdUserRepo, modelUserRepo)
+    }
+
+    suspend fun insertSelectedCarBrandRepo(selectedBrandCarsRepo: UserSelectedBrandCars){
+        userDaoFromRepo.insertSelectedCarBrand(selectedBrandCarsRepo)
+    }
+
+    //get selected brands
+    suspend fun getSelectedCarBrandsRepo(userIdRepo: Int): List<UserSelectedBrandCars> {
+        return userDaoFromRepo.getSelectedCarBrands(userIdRepo)
+    }
+
+    //delete selected brand
+    suspend fun  deleteSelectedCarBrandRepo(selectedBrandCarsRepo: UserSelectedBrandCars){
+        userDaoFromRepo.deleteUserSelectedBrand(selectedBrandCarsRepo)
     }
 }

@@ -11,6 +11,7 @@ import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
 import com.cfcici.`in`.project.ui.ProfilePage
+import com.cfcici.`in`.project.ui.UserCarCollectionPage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
 
@@ -20,13 +21,19 @@ object LoginRoute // Object means it doesn't accept any values
 @Serializable//?
 data class ProfileRoute(
     val username: String,
-    val email: String, )
+    val email: String,
+    val userId: Int)
 
 @Serializable
 object NewAccountRoute
 
-@Composable
+@Serializable
+data class UserCarCollectionRoute(
+    val brand: String,
+    val userId: Int
+)
 
+@Composable
 fun App(db: AppDatabase) {
     val repository = UserRepository(db.userDao())
     val viewModel = UserViewModel(repository)
@@ -41,12 +48,13 @@ fun App(db: AppDatabase) {
             composable<LoginRoute> {
                 LoginPage(
                     //onLoginClick goes to Login
-                    onLoginClick = { username, email ->
+                    onLoginClick = { username, email, userId ->
                         //viewModel.insertUser(usernameFromVM = username, passwordFromVM = password)
                         navController.navigate(
                             ProfileRoute(
                                 username = username,
-                                email = email
+                                email = email,
+                                userId = userId
                             )
                         )
                     },// When user 'click here' in Login Page
@@ -64,10 +72,20 @@ fun App(db: AppDatabase) {
                 ProfilePage(
                     usernamePP = profile.username,
                     emailPP = profile.email,
+                    userIdPP = profile.userId,
 
                     onBackToLogin = {
                         navController.navigate(LoginRoute)
-                    }
+                    },
+
+                    goToUserCarCollection = {
+                        selectedBrand, userIdPP-> navController.navigate(
+                        UserCarCollectionRoute(
+                            brand = selectedBrand,
+                            userId = userIdPP))//******************
+                    },
+
+                    userViewModel = viewModel
                 )
             }
 //________________________________________________________________________________________________//
@@ -80,10 +98,20 @@ fun App(db: AppDatabase) {
                         //navController.navigate(LoginRoute)
                     },
                 // When you click login in New Account Page it will go back to Login Page
-                onBackToLogin = {
-                    navController.navigate(LoginRoute)
-                                },
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute) },
                     userViewModel = viewModel///????????
+                )
+            }
+
+            composable<UserCarCollectionRoute> { backStackEntry ->
+                val userCarCollection: UserCarCollectionRoute = backStackEntry.toRoute()
+                UserCarCollectionPage(
+                    userCCPBrand = userCarCollection.brand,// now  userCarCollection.brand will contain whichever brand was clicked
+                    userCCPUserId = userCarCollection.userId,
+                    goBackToProfile = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }

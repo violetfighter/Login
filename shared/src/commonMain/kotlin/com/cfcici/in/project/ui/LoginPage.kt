@@ -70,7 +70,7 @@ import org.jetbrains.compose.resources.Font
 
 @Composable
 
-fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
+fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
     val userName = rememberTextFieldState()
     var userPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -182,8 +182,8 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                         inputTransformation = InputTransformation.maxLength(16),
                         textStyle = TextStyle(fontSize = 20.sp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.DarkGray,
+                            unfocusedBorderColor = Color.DarkGray,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             unfocusedLabelColor = Color.DarkGray,
@@ -253,11 +253,12 @@ fun LoginPage(onLoginClick: (String, String) -> Unit, onGoToNewAccount: () -> Un
                                             user -> if(user != null)
                                             {
                                                 val email = user.emailIdUser// to get emailId from room
-                                                val userId = user.userId // userid will be helpful to get user car details
+                                               // val userId = user.userId // userId will be helpful to get user car details
 
                                                 onLoginClick(// Send the username and password to App
                                                     userName.text.toString(),
-                                                    email
+                                                    email,
+                                                    user.userId
                                                 )
                                             }
                                         }

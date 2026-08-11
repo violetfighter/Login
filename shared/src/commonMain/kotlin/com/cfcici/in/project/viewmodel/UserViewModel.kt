@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
+import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.data.repository.UserRepository
 import kotlinx.coroutines.launch
 
@@ -55,10 +56,10 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
-    fun insertUserCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
+    fun insertUserOwnedCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
                         seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String){
         viewModelScope.launch {
-            repository.insertUserCarRepo(
+            repository.insertUserOwnedCarRepo(
                 UserCar(
                     userIdUser = userIdUserVM,
                     brandUser = brandFromVM,
@@ -81,10 +82,10 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
-    fun deleteUserCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
+    fun deleteUserOwnedCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
                           seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String){
         viewModelScope.launch {
-            repository.deleteUserCarRepo(
+            repository.deleteUserOwnedCarRepo(
                 UserCar(
                     userIdUser = userIdUserVM,
                     brandUser = brandFromVM,
@@ -97,6 +98,25 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                     photoUser = photoUserFromVM
                 )
             )
+        }
+    }
+
+
+    fun insertSelectedCarBrandVM(userIdUserVM: Int, selectedCarBrandVM: String){
+        viewModelScope.launch {
+            repository.insertSelectedCarBrandRepo(
+                UserSelectedBrandCars(
+                    userIdFromUsers = userIdUserVM,
+                    selectedBrandName = selectedCarBrandVM
+                )
+            )
+        }
+    }
+
+    fun getSelectedCarBrandsVM(userIdUserVM: Int, onResult: (List<UserSelectedBrandCars>) -> Unit){
+        viewModelScope.launch {
+            val brand = repository.getSelectedCarBrandsRepo(userIdUserVM)
+            onResult(brand)
         }
     }
 }

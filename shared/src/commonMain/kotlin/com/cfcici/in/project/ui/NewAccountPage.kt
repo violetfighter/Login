@@ -111,7 +111,7 @@ fun NewAccountPage(
         }
     }
     Scaffold (
-        snackbarHost = {
+        snackbarHost = {9
         SnackbarHost(hostState = snackbarHostState)
         }
     ){
@@ -518,3 +518,5 @@ fun emailChecker(email: String): String?{//gives string
         else -> null
     }
 }
+
+

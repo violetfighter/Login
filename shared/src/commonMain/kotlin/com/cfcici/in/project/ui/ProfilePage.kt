@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
@@ -59,10 +61,17 @@ import org.jetbrains.compose.resources.Font
 
 
 @Composable
-fun ProfilePage(usernamePP: String, emailPP: String, onBackToLogin: () -> Unit)
+fun ProfilePage(usernamePP: String,
+                emailPP: String,
+                userIdPP: Int,
+                onBackToLogin: () -> Unit,
+                goToUserCarCollection: (String, Int) -> Unit,
+                userViewModel: UserViewModel)
 {
     //var selectedItem by remember { mutableStateOf<String?>(null) } if we use this it will only show the one selected item
     var selectedItem by remember { mutableStateOf(listOf<String>()) }// it will allow user to select multiple box
+    var saveTheSelectedBrand by remember { mutableStateOf(listOf<String>()) }// save the selected brand to room
+
 
     // on starting the bar is not visible that's why we put false otherwise till will think bar is visible and animation will not happen
     var boxVisible by remember { mutableStateOf(false) }
@@ -80,6 +89,10 @@ fun ProfilePage(usernamePP: String, emailPP: String, onBackToLogin: () -> Unit)
     LaunchedEffect(Unit){
         boxVisible = true
         linesVisible = true
+        userViewModel.getSelectedCarBrandsVM(userIdPP){
+            savedBrands -> selectedItem = savedBrands.map{it.selectedBrandName}
+            // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
+        }
     }
 
     Scaffold (
@@ -206,13 +219,18 @@ fun ProfilePage(usernamePP: String, emailPP: String, onBackToLogin: () -> Unit)
                             {
                                 menuItemData.forEach { option ->
                                     DropdownMenuItem(
-                                        text = { Text(
-                                            option,// stores what user currently selected one
-                                            color = Color(0xFFFF9800)
-                                        )},
+                                        text =
+                                            {
+                                                Text(
+                                                    option,// stores what user currently selected one
+                                                    color = Color(0xFFFF9800)
+                                            )
+                                            },
                                         onClick = {
                                             if(option !in selectedItem){
                                                 selectedItem = selectedItem + option
+                                                userViewModel.insertSelectedCarBrandVM(userIdPP, option)
+                                                //now it will store in room (UserSelectedBrandCar table) will not disappear when we navigate to next page
                                                 expand = false
                                             }else{
                                                 scope.launch{
@@ -239,7 +257,10 @@ fun ProfilePage(usernamePP: String, emailPP: String, onBackToLogin: () -> Unit)
                 )
                 {
                     selectedItem.forEach { item ->
-                        ItemBox(selectedItem = item)
+                        ItemBox(
+                            selectedItem = item,
+                            onClick = { goToUserCarCollection(item, userIdPP) }
+                        )
                     }
                 }
             }
@@ -283,9 +304,8 @@ fun ProfilePage(usernamePP: String, emailPP: String, onBackToLogin: () -> Unit)
     }
 }
 
-
 @Composable
-fun ItemBox( selectedItem: String) // add total number of cars in each brand
+fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of cars in each brand
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular, FontWeight.Normal))
 
@@ -293,7 +313,8 @@ fun ItemBox( selectedItem: String) // add total number of cars in each brand
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 40.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
-            .height(60.dp),
+            .height(60.dp)
+            .clickable{onClick()},
         shape = RoundedCornerShape(7.dp),
         color = Color(0xFFF49A9A)
     )
