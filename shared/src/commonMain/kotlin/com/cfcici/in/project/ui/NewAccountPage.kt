@@ -111,7 +111,7 @@ fun NewAccountPage(
         }
     }
     Scaffold (
-        snackbarHost = {9
+        snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
         }
     ){
@@ -507,7 +507,7 @@ fun formatDate(dateMillis: Long?): String {
     val instant = Instant.fromEpochMilliseconds(dateMillis)//Converts the raw millisecond number into a proper Instant object — a structured representation of "this exact moment in time," using kotlinx.datetime's API.
     val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date//Converts that instant into a calendar date (day/month/year), adjusted for the device's current timezone — this is what turns "a huge millisecond number" into "August 2, 2026."
 
-    return "${date.dayOfMonth}/${date.monthNumber}/${date.year}"
+    return "${date.dayOfMonth}/${date.monthNumber}/${date.year}"//??????????????????????
 }
 
 fun emailChecker(email: String): String?{//gives string

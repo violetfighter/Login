@@ -32,13 +32,13 @@ data class  UserCar(// Child of the User
     val userCarIdUser: Int = 0,
     val userIdUser: Int,// foreign key
     val brandUser: String,
-    val modelUser: String,
+    val modelUser: String,//
     val yearUser: Int?,
-    val colourUser: String,
+    val colourUser: String,//
     val seriesUser: String?,
     val typeOfSeriesUser: String?,
     val collectorNoUser: String?,
-    val photoUser: String
+    val photoUser: String//
 )
 
 @Entity(

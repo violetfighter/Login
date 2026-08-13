@@ -6,6 +6,8 @@ import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.data.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
 class UserViewModel(val repository: UserRepository): ViewModel()
@@ -56,8 +58,10 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
+    //Think of it like a walkie-talkie: insertUserOwnedCarVM doesn't know or care what happens after the insert — it just presses the button and says "done"
+    // by calling onResult(). Whoever's listening on the other end decides what to do with that signal.
     fun insertUserOwnedCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
-                        seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String){
+                        seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String, onResult: () -> Unit){
         viewModelScope.launch {
             repository.insertUserOwnedCarRepo(
                 UserCar(
@@ -72,18 +76,20 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                     photoUser = photoUserFromVM
                 )
             )
-        }
+            onResult() //<- runs whatever function was passed in, once insert is done
+        }//Here onResult does carry data — (List<UserCar>) -> Unit — because a fetch naturally produces something to hand back: the list of cars.
+    // onResult(theList) passes that list to whoever's listening.
+       // But an insert doesn't produce a list. It's a write operation — its only meaningful signal is "the write finished." There's no UserCar list to hand back,
+    // because inserting doesn't create one. So the callback type is () -> Unit: no payload, just a "done" signal.
     }
-
-    fun getCarOnSearchBarVM(userIdUserVM: Int, modelUserVM: String, onResult: (List<UserCar>) -> Unit){
-        viewModelScope.launch {
-            val carSearch = repository.getCarOnSearchBarRepo(userIdUserVM, modelUserVM)
-            onResult(carSearch)
-        }
+    fun getUserOwnedCarsByBrandVM(userIdUserVM: Int, brandVM: String, onResult: (List<UserCar>) -> Unit){
+         viewModelScope.launch {
+             onResult(repository.getUserOwnedCarsByBrandRepo(userIdUserVM, brandVM))
+         }
     }
-
+/*
     fun deleteUserOwnedCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
-                          seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String){
+                          seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String,){
         viewModelScope.launch {
             repository.deleteUserOwnedCarRepo(
                 UserCar(
@@ -99,8 +105,17 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                 )
             )
         }
-    }
+    }*/
 
+    fun deleteUserOwnedCarVM(userCarVM: UserCar, onResult: () -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteUserOwnedCarRepo(userCarVM)
+                onResult()
+            // The reason using the onResul() is that when we delete entire row
+        // it doesn't show live update of the new version. So when we add onResult and use display function
+            // it will show the new version
+        }
+    }
 
     fun insertSelectedCarBrandVM(userIdUserVM: Int, selectedCarBrandVM: String){
         viewModelScope.launch {

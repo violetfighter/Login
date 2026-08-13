@@ -111,7 +111,8 @@ fun App(db: AppDatabase) {
                     userCCPUserId = userCarCollection.userId,
                     goBackToProfile = {
                         navController.popBackStack()
-                    }
+                    },
+                    userViewModel = viewModel
                 )
             }
         }

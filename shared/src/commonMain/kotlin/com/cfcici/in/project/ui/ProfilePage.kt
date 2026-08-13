@@ -70,8 +70,6 @@ fun ProfilePage(usernamePP: String,
 {
     //var selectedItem by remember { mutableStateOf<String?>(null) } if we use this it will only show the one selected item
     var selectedItem by remember { mutableStateOf(listOf<String>()) }// it will allow user to select multiple box
-    var saveTheSelectedBrand by remember { mutableStateOf(listOf<String>()) }// save the selected brand to room
-
 
     // on starting the bar is not visible that's why we put false otherwise till will think bar is visible and animation will not happen
     var boxVisible by remember { mutableStateOf(false) }

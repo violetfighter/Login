@@ -44,13 +44,8 @@ class UserRepository (
         userDaoFromRepo.deleteUserOwnedCar(userCarRepo)
     }
 
-    // Get ALL cars owned by the user
-    suspend fun getUserOwnedCarRepo(userIdRepo: Int): List<UserCar>{
-        return userDaoFromRepo.getUserOwnedCar(userIdRepo)
-    }
-
     // Get cars belonging to one specific brand
-    suspend fun getUserOwnedCarsByBrandsRepo(userIdRepo: Int, brandRepo: String): List<UserCar>{
+    suspend fun getUserOwnedCarsByBrandRepo(userIdRepo: Int, brandRepo: String): List<UserCar>{
         return userDaoFromRepo.getUserOwnedCarsByBrands(userIdRepo, brandRepo)
     }
 

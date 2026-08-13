@@ -2,6 +2,7 @@ package com.cfcici.`in`.project.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,8 +28,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,71 +52,89 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.cfcici.`in`.project.data.database.UserCar
+import com.cfcici.`in`.project.viewmodel.UserViewModel
 import login.shared.generated.resources.nissan_skyline
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)///****************
 @Composable
-fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit){
+fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel){
 
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     var showAddCarDialog by remember { mutableStateOf(false) }
 
     //From all my cars, give me only the cars that belong to the brand the user clicked.
-    val getCarsFromThisBrand = userCCPBrand//***************
+    var getCarsFromThisBrand by remember { mutableStateOf<List<UserCar>>(emptyList()) }
+    var searchText by remember { mutableStateOf("") }
+    val totalCarThisBrandOwns = getCarsFromThisBrand.size
 
-    LaunchedEffect(Unit){
-        userViewModel.getSelectedCarBrandsVM(userIdPP){
-                savedBrands -> selectedItem = savedBrands.map{it.selectedBrandName}
+    val filteringForCarSearch = getCarsFromThisBrand.filter { car -> searchText.isBlank()||
+            car.modelUser.contains(searchText, ignoreCase = true) ||
+            car.yearUser?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
+            car.seriesUser?.contains(searchText, ignoreCase = true)  == true ||
+            car.colourUser.contains(searchText, ignoreCase = true) ||
+            car.typeOfSeriesUser?.contains(searchText, ignoreCase = true) == true ||
+            car.collectorNoUser?.contains(searchText, ignoreCase = true) == true
+    }
+
+    fun displayCarFromThisBrand(){
+        userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
+                cars ->
+            getCarsFromThisBrand = cars
         }
     }
 
-    Scaffold()
-    {
-        LazyColumn(
+    LaunchedEffect(Unit) {
+        displayCarFromThisBrand()
+    }
+
+    LazyColumn(
         modifier = Modifier.fillMaxSize()
-            .background(Color.Black),//.clip(RoundedCornerShape(24.dp))
+            .background(Color.Black),
     )
-         {
-            item{
-                Box(
-                modifier = Modifier.fillMaxWidth().height(200.dp)
-                ) {
-                    Image(
+    {
+        item{
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            ) {
+                Image(
                     painter = painterResource(Res.drawable.wp12533988),
                     contentDescription = "Hotwheels",
                     modifier = Modifier.fillMaxSize(),
-                        )
-                    IconButton(
-                        onClick = {
-                            goBackToProfile () },
+                )
+                IconButton(
+                    onClick = {
+                        goBackToProfile () },
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 5.dp, top = 35.dp),
-                        ) {
+                ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIosNew,
                         contentDescription = "go back to profile page",
                         tint = Color.White)
-                    }
-                    IconButton(
+                }
+                IconButton(
                     onClick = {
                         showAddCarDialog = true
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(end = 5.dp, top = 35.dp),
-                        ){
+                ){
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
@@ -125,16 +142,21 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                     )
                 }
             }
-                if(showAddCarDialog){
-                    AddNewCar(
-                        onDismissRequest = {showAddCarDialog = false},// if user hit dismiss don't add car
-                        onConfirmation = {showAddCarDialog = false}// user want to save the car. but close also save the car later
-                    )
-                }
+            if(showAddCarDialog){
+                AddNewCar(
+                    userCCPBrand = userCCPBrand,
+                    userCCPUserId = userCCPUserId,
+                    userViewModel = userViewModel,
+                    onDismissRequest = {showAddCarDialog = false},// if user hit dismiss don't add car
+                    onConfirmation = {
+                        showAddCarDialog = false
+                        displayCarFromThisBrand()}// user want to save the car. but close also save the car later
+                )
+            }
         }
 
         item {
-            Spacer(modifier = Modifier.padding(15.dp))
+            Spacer(modifier = Modifier.padding(top = 15.dp))
             Text(
                 text = userCCPBrand,
                 color = Color.White,
@@ -143,7 +165,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 fontSize = 40.sp,
                 modifier = Modifier.padding(horizontal = 10.dp),
             )
-            Text(text = "Collection",
+            Text(
+                text = "$totalCarThisBrandOwns",
                 color = Color(0xFFF0396B),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
@@ -151,71 +174,69 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 modifier = Modifier.padding(horizontal = 15.dp),
                 textAlign = TextAlign.Center
             )
-
         }
-        item {
-            var searchText by remember { mutableStateOf("") }
-            Row {
-                SearchBar(
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = searchText,
-                            onQueryChange = { searchText = it },
-                            onSearch = {
-                                /* Search later */
-                            },
-                            expanded = false,
-                            onExpandedChange = { },
-                            placeholder = { Text("Search cars here...") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search button",
-                                    tint = Color.White
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,//Tune
-                                    contentDescription = null,
-                                    tint = Color.White
-                                )
-                            },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color(0xFFF0396B),
-                                unfocusedIndicatorColor = Color(0xFFF0396B),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                )
+        stickyHeader {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black)
+                    .padding(bottom = 8.dp, top = 10.dp)
+            )
+            {
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },// this trigger very keystroke
+                    placeholder = { Text("Search cars here...", color = Color.LightGray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search button",
+                            tint = Color.White
                         )
                     },
-                    expanded = false,
-                    onExpandedChange = { },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    },
+                    singleLine = true,
                     modifier = Modifier
-                        .padding(10.dp),
-                    //shape = RoundedCornerShape(50),
-                    colors = SearchBarDefaults.colors(
-                        containerColor = Color.Transparent,
-                        //(0xFF1A1A1A),
-                        //dividerColor = Color.White,
-                    ),
-                    content = { }
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.Black,
+                        unfocusedContainerColor = Color.Black,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.White
+                    )
                 )
-                // Add icon for filter *************************************************************
             }
         }
-            item {
-                getCarsFromThisBrand.forEach {car ->
-                    EachCarTab(
-                        // because you use UserCar as datatype, you don't need to mention the car.model
-                        selectedCar =  car
-                    )
-                }
+        item {
+            if (filteringForCarSearch.isEmpty()){
+                Column {  }
+                Text(
+                    text = "Not Found",
+                    color = Color.LightGray,
+                    fontFamily = usernameFont,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 50.dp)
+                )
+            }else{
+                filteringForCarSearch.forEach { car ->
+                    EachCarTab(selectedCar = car) }
             }
         }
     }
+    /*Scaffold()
+    {
+    }*/
 }
 
 @Composable
@@ -223,6 +244,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 fun EachCarTab(selectedCar: UserCar)
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
+    val haptics = LocalHapticFeedback.current// it vibrat/buzz when you do long press
 
     Card(
         modifier = Modifier
@@ -239,14 +261,20 @@ fun EachCarTab(selectedCar: UserCar)
     ) {
         Row( modifier = Modifier.padding(5.dp))
         {
-            Column(modifier = Modifier.padding(vertical = 5.dp, horizontal = 25.dp)){
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 5.dp, horizontal = 25.dp)
+                    .combinedClickable(
+                        onClick = {})
+            )
+            {
                 Image(
                     painter = painterResource(Res.drawable.nissan_skyline),
                     contentDescription = selectedCar.modelUser,
                     modifier = Modifier
                         .size(90.dp)
                         .clip(RectangleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop////????????????
                 )
             }// need to add photo
             
@@ -259,7 +287,12 @@ fun EachCarTab(selectedCar: UserCar)
                     text = selectedCar.modelUser,
                     color = Color.White,
                     fontFamily = usernameFont,
-                    fontSize = 20.sp
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                // Ellipsis -> put ... at the end if word overflows
+                // Clip -> cut at the point where it only fit
+                // Visible -> overlap other element to show full word
                 )
                 Row {
                     // Because Text expect string you should convert to string
@@ -274,7 +307,9 @@ fun EachCarTab(selectedCar: UserCar)
                         text = selectedCar.colourUser,
                         color = Color.White,
                         fontFamily = usernameFont,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
                 Row {
@@ -283,14 +318,18 @@ fun EachCarTab(selectedCar: UserCar)
                         text = selectedCar.collectorNoUser.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Text(
                         text = selectedCar.seriesUser.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                     Spacer(Modifier.width(30.dp))
 
@@ -298,7 +337,9 @@ fun EachCarTab(selectedCar: UserCar)
                         text = selectedCar.typeOfSeriesUser.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
                     )
                 }
             }
@@ -307,13 +348,19 @@ fun EachCarTab(selectedCar: UserCar)
 }
 
 @Composable
-fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
+fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewModel,
+              onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
     val modelName = rememberTextFieldState()
     val modelColour = rememberTextFieldState()
     val seriesOfModel = rememberTextFieldState()
     val typeOfSeries = rememberTextFieldState()
     val modelCollectionNumber = rememberTextFieldState()
     var selectedYear by remember { mutableStateOf("") }// initially drop down will close
+    //val modelPhoto =
+
+    var modelNameError by remember { mutableStateOf<String?>(null) }
+    var modelPhotoError by remember { mutableStateOf<String?>(null) }
+    var modelColourError by remember { mutableStateOf<String?>(null) }
 
 
     Dialog(
@@ -355,7 +402,11 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
 
                             OutlinedTextField(
                                 state = modelName,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f)
+                                    .onFocusChanged{
+                                        if(it.isFocused)
+                                            modelNameError = null
+                                                   },
                                 lineLimits = TextFieldLineLimits.SingleLine,
                                 textStyle = TextStyle(fontSize = 20.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -364,7 +415,13 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
                                     unfocusedTextColor = Color.White,
                                     focusedTextColor = Color.White,
                                     cursorColor = Color.White
-                                )
+                                ),
+                                isError = modelNameError != null,
+                                supportingText = {
+                                    if (modelNameError != null){
+                                        Text("Name of the model is required ")
+                                    }
+                                }
                             )
                         }
 
@@ -395,7 +452,11 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
 
                             OutlinedTextField(
                                 state = modelColour,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f)
+                                    .onFocusChanged{
+                                        if(it.isFocused)
+                                            modelColourError = null
+                                    },
                                 lineLimits = TextFieldLineLimits.SingleLine,
                                 textStyle = TextStyle(fontSize = 20.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -404,7 +465,11 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
                                     unfocusedTextColor = Color.White,
                                     focusedTextColor = Color.White,
                                     cursorColor = Color.White
-                                )
+                                ),
+                                isError = modelColourError != null,
+                                supportingText = {if (modelColourError != null){
+                                    Text("Colour of the model is required")
+                                } }
                             )
                         }
 
@@ -498,7 +563,8 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
                     ) {
 
                         TextButton(
-                            onClick = { onDismissRequest() }
+                            onClick = {
+                                onDismissRequest() }
                         ) {
                             Text(
                                 text = "Close",
@@ -507,12 +573,32 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
                         }
 
                         TextButton(
-                            onClick = { onConfirmation() }
+                            onClick = {
+                                if (modelName.text.isEmpty()){
+                                    modelNameError = ""
+                                }else
+                                    modelNameError = null
+
+                                if (modelColour.text.isEmpty()){
+                                    modelColourError = ""
+                                }else
+                                    modelColourError = null
+
+                                if (modelName.text.isNotEmpty() || modelColour.text.isNotEmpty()){
+                                    userViewModel.insertUserOwnedCarVM(
+                                        userCCPUserId, userCCPBrand, modelName.text.toString(),
+                                        selectedYear.toIntOrNull(), modelColour.text.toString(), seriesOfModel.text.toString(),
+                                        typeOfSeries.text.toString(), modelCollectionNumber.text.toString(),
+                                        "", onResult = {onConfirmation()}
+                                    )
+                                }
+                            }
                         ) {
                             Text(
                                 text = "Confirm",
                                 color = Color(0xFFF0396B)
                             )
+
                         }
                     }
                 }
@@ -520,9 +606,9 @@ fun AddNewCar(onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)////***************
 @Composable
-fun YearDropDown(selectedYear: String, onYearSelected: (String) -> Unit) {
+fun YearDropDown(selectedYear: String, onYearSelected: (String) -> Unit) { // need to remove the null message when it's empty
     var expanded by remember { mutableStateOf(false) }
     val years = (2026 downTo 1900).map { it.toString() }
 
@@ -534,7 +620,7 @@ fun YearDropDown(selectedYear: String, onYearSelected: (String) -> Unit) {
             value = selectedYear,
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier.menuAnchor(),
+            modifier = Modifier.menuAnchor(),//????????????????
             trailingIcon = {
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,

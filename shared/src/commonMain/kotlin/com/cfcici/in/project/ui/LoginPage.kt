@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -75,12 +74,11 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
     var userPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState()}
-    val orange = Color(0xFFFF9800)
     val gradientColors = listOf( Red, Blue)
     var usernameError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     val hotWheelsFont = FontFamily(Font(Res.font.neonderthaw, FontWeight.Normal))
-    val infiniteTransition = rememberInfiniteTransition(label = "newoFlicker")
+    val infiniteTransition = rememberInfiniteTransition(label = "neoFlicker")
     val flickerAlpha by infiniteTransition.animateFloat(
         initialValue = 0.5f,
         targetValue = 1.20f,
@@ -135,7 +133,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                             style = TextStyle(
                                 brush = Brush.linearGradient(
                                     colors = gradientColors)),
-                            //color = Color(0xFFFF1493).copy(alpha = 0.6f),
+                            //color = Color(0xFFF1493).copy(alpha = 0.6f),
                             modifier = Modifier
                                 .blur(90.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
                                 .graphicsLayer(alpha = flickerAlpha * 0.85f)
@@ -168,7 +166,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                         fontWeight = FontWeight.Light
                     )
 
-                    OutlinedTextField(// TextFiled itself will create box
+                    OutlinedTextField(// TextField itself will create box
                         state = userName,// store whatever user enter
                         lineLimits = TextFieldLineLimits.SingleLine,
                         label = { Text("Enter Your Username") },
