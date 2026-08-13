@@ -56,6 +56,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Red
@@ -74,7 +75,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
     var userPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState()}
-    val gradientColors = listOf( Red, Blue)
+    val gradientColors = listOf( Color(0xFFFF9800), Color(0xFFF0396B))
     var usernameError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     val hotWheelsFont = FontFamily(Font(Res.font.neonderthaw, FontWeight.Normal))
@@ -123,6 +124,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                                 .blur(radius = 10.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
                                 .graphicsLayer(alpha = flickerAlpha)
                                 .padding(24.dp)
+
                         )
                         //  Small soft glow
                         Text(
@@ -180,8 +182,8 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                         inputTransformation = InputTransformation.maxLength(16),
                         textStyle = TextStyle(fontSize = 20.sp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.DarkGray,
-                            unfocusedBorderColor = Color.DarkGray,
+                            focusedBorderColor = Color(0xFFF0396B),
+                            unfocusedBorderColor = Color(0xFFF0396B),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             unfocusedLabelColor = Color.DarkGray,
@@ -206,7 +208,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
 
                     PasswordPage(
                         password = userPassword,
-                        onPasswordChange = { userPassword = it },
+                        passwordChecker = { userPassword = it },
                         isError = passwordError != null,
                         supportingText = {
                             if(passwordError != null){
@@ -228,13 +230,13 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
 
                                 if (userPassword.isEmpty()){
                                     passwordError = "Password is required"
-                                }else if(!isValidPassword(passwordPP = userPassword)){
+                                }else if(isValidPassword(passwordPP = userPassword).isNotEmpty()){
                                     passwordError = "Password is invalid"
                                 } else{
                                     passwordError = null
                                 }
 
-                                if (userPassword.isEmpty() || userName.text.isEmpty() || passwordError != null)
+                                if (userPassword.isEmpty() || userName.text.isEmpty() )
                                 {
                                     scope.launch {
                                     snackbarHostState.showSnackbar(

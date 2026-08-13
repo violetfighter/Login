@@ -321,7 +321,7 @@ fun NewAccountPage(
                         }
                     )
                     if (passwordFocused){
-                        PopUpMessage()
+                        PopUpMessage(newPassword.text.toString())
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -348,7 +348,7 @@ fun NewAccountPage(
 
                                 if(newPassword.text.isEmpty()){
                                     passwordError = "Password is required"
-                                } else if(!isValidPassword(passwordPP = newPassword.text.toString())){
+                                } else if(isValidPassword(passwordPP = newPassword.text.toString()).isNotEmpty()){
                                     passwordError = "Password is invalid"
                                 }
                                 else

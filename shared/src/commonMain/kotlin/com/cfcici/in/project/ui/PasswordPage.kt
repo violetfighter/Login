@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PasswordPage(
-    password: String,
-    onPasswordChange: (String) -> Unit,
+    password: String,//current password
+    passwordChecker: (String) -> Unit,//function that sends the new password back to the parent
     isError: Boolean = false,
     supportingText: @Composable () -> Unit = {}
 ) {//to get user password from login page
@@ -47,7 +47,7 @@ fun PasswordPage(
     ) {
         OutlinedTextField(
             value = password,
-            onValueChange = {if (it.length <=16){ onPasswordChange( it )}},//??????
+            onValueChange = {if (it.length <=16){ passwordChecker( it )}},//??????
             singleLine = true,
             textStyle = TextStyle(fontSize = 20.sp),
 
@@ -81,8 +81,8 @@ fun PasswordPage(
             label = {Text("Enter your password")},
             shape = RoundedCornerShape(50.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.DarkGray,
-                unfocusedBorderColor = Color.DarkGray,
+                focusedBorderColor = Color(0xFFF0396B),
+                unfocusedBorderColor = Color(0xFFF0396B),
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
                 unfocusedLabelColor = Color.DarkGray,
@@ -107,47 +107,54 @@ fun PasswordPage(
             supportingText = supportingText
         )
         if (passwordFocused) {
-            PopUpMessage()
+            PopUpMessage(password)
         }
     }
 }
 // When user click the box it shows the message
 @Composable
-fun PopUpMessage() {
+fun PopUpMessage(password: (String)) {
+
+    val message  = isValidPassword(password)
+
     Surface(
         modifier = Modifier
-            .width(320.dp)
-            .padding(top = 14.dp, start = 16.dp, end = 16.dp),
+            .width(400.dp)
+            .padding(top = 1.dp, start = 10.dp, end = 10.dp),
        // .blur(radius = 10.dp)
         shape = RoundedCornerShape(7.dp),
-        color = Color(0xFFE1E2EC)
+        color = Color.Transparent,//0xFF1A1A1A
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(12.dp),
         ) {
-            Text(
-                text = "Password requirements:",
-                fontWeight = FontWeight.Bold
-            )
-            Text("• Must be between 8 and 16 characters")
-            Text("• At least one digit")
-            Text("• At least one uppercase letter")
-            Text("• At least one lowercase letter")
-            Text("• At least one special character")
+
+            message.forEach {  error ->
+                Text(text = error,
+                    color = Color(0xFFF83C3C)
+                )}
         }
     }
 }
 // isValidPassword should be outside the Composable otherwise it cannot call to other files
-fun isValidPassword(passwordPP: String): Boolean{
+fun isValidPassword(passwordPP: String): List<String>{
+
+    val errorMessage = mutableListOf<String>()
+
     if ((passwordPP.length < 8) || (passwordPP.length > 16)){
-        return false }
+        errorMessage.add("• Must be between 8 and 16 characters") }
+
     if (passwordPP.firstOrNull { it.isDigit() } == null){
-        return false }
+        errorMessage.add("• At least one digit") }
+
     if (passwordPP.firstOrNull {it.isLowerCase()} == null){
-        return false }
+        errorMessage.add("• At least one lowercase letter") }
+
     if (passwordPP.firstOrNull {it.isUpperCase()} == null) {
-        return false }
+        errorMessage.add("• At least one uppercase letter") }
+
     if (passwordPP.firstOrNull { !it.isLetterOrDigit() } == null) {
-        return false}// check for special characters
-    return true
+        errorMessage.add("• At least one special character") }// check for special characters
+
+    return errorMessage
 }

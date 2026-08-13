@@ -77,35 +77,24 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                 )
             )
             onResult() //<- runs whatever function was passed in, once insert is done
-        }//Here onResult does carry data — (List<UserCar>) -> Unit — because a fetch naturally produces something to hand back: the list of cars.
-    // onResult(theList) passes that list to whoever's listening.
-       // But an insert doesn't produce a list. It's a write operation — its only meaningful signal is "the write finished." There's no UserCar list to hand back,
-    // because inserting doesn't create one. So the callback type is () -> Unit: no payload, just a "done" signal.
+        }
+    // onResult is used to notify the UI that the database operation has finished.
+// We cannot simply call onConfirmation() immediately after insertUserOwnedCarVM()
+// because the database insertion happens inside a coroutine and may not be finished yet.
+// The ViewModel calls onResult() only after the repository finishes inserting the car.
+// Then onResult calls onConfirmation(), which updates the UI by closing the dialog
+// and refreshing the car list.
+// Flow: Insert car → Room finishes → onResult() → onConfirmation() → UI updates
+
+        // onResult notifies the UI after the database insertion is finished.
+// It then calls onConfirmation() to close the dialog and refresh the car list.
+// We need this because the database operation runs inside a coroutine.
     }
     fun getUserOwnedCarsByBrandVM(userIdUserVM: Int, brandVM: String, onResult: (List<UserCar>) -> Unit){
          viewModelScope.launch {
              onResult(repository.getUserOwnedCarsByBrandRepo(userIdUserVM, brandVM))
          }
     }
-/*
-    fun deleteUserOwnedCarVM(userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?, colourFromVM: String,
-                          seriesFromVM: String?, typeOfSeriesFromVM: String?, collectorNoUserVM: String?, photoUserFromVM: String,){
-        viewModelScope.launch {
-            repository.deleteUserOwnedCarRepo(
-                UserCar(
-                    userIdUser = userIdUserVM,
-                    brandUser = brandFromVM,
-                    modelUser = modelFromVM,
-                    yearUser = yearFromVM,
-                    colourUser = colourFromVM,
-                    seriesUser = seriesFromVM,
-                    typeOfSeriesUser = typeOfSeriesFromVM,
-                    collectorNoUser = collectorNoUserVM,
-                    photoUser = photoUserFromVM
-                )
-            )
-        }
-    }*/
 
     fun deleteUserOwnedCarVM(userCarVM: UserCar, onResult: () -> Unit){
         viewModelScope.launch(Dispatchers.IO) {
@@ -132,6 +121,13 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         viewModelScope.launch {
             val brand = repository.getSelectedCarBrandsRepo(userIdUserVM)
             onResult(brand)
+        }
+    }
+
+    fun deleteSelectedCarBrandVM(userCarBrandVM: UserSelectedBrandCars, onResult: () -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteSelectedCarBrandRepo(userCarBrandVM)
+            onResult()
         }
     }
 }

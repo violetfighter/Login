@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -43,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
-import login.shared.generated.resources.wp12533988
+import login.shared.generated.resources.HotWheels
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
@@ -66,7 +68,24 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import login.shared.generated.resources.AutoWorldLogo
+import login.shared.generated.resources.Burago
+import login.shared.generated.resources.GreenLight
+import login.shared.generated.resources.JohnnyLightning
+import login.shared.generated.resources.KaidoHouse
+import login.shared.generated.resources.Logo_jada_toys
+import login.shared.generated.resources.M2M
+import login.shared.generated.resources.Majorette
+import login.shared.generated.resources.MatchboxLogo
+import login.shared.generated.resources.MiniGT
+import login.shared.generated.resources.PopRace
+import login.shared.generated.resources.Tarmac
+import login.shared.generated.resources.Tomica
+import login.shared.generated.resources.black
+import login.shared.generated.resources.inno64
+import login.shared.generated.resources.maisto_logo_640x320
 import login.shared.generated.resources.nissan_skyline
+
 @OptIn(ExperimentalMaterial3Api::class)///****************
 @Composable
 fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel){
@@ -79,6 +98,28 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
     var searchText by remember { mutableStateOf("") }
     val totalCarThisBrandOwns = getCarsFromThisBrand.size
 
+    val brandBackground = mapOf(
+        "HotWheels" to Res.drawable.HotWheels,
+        "MatchBox" to Res.drawable.MatchboxLogo,
+        "Tomica" to Res.drawable.Tomica,
+        "Kaido House" to Res.drawable.KaidoHouse,
+        "Tarmac Works" to Res.drawable.Tarmac,
+        "Pop Race" to Res.drawable.PopRace,
+        "Inno 64" to Res.drawable.inno64,
+        "Auto World" to Res.drawable.AutoWorldLogo,
+        "GreenLight" to Res.drawable.GreenLight,
+        "Johnny Lightning" to Res.drawable.JohnnyLightning,
+        "Majorette" to Res.drawable.Majorette,
+        "M2 Machines" to Res.drawable.M2M,
+        "Jada Toys" to Res.drawable.Logo_jada_toys,
+        "Maisto" to Res.drawable.maisto_logo_640x320,
+        "Solido" to Res.drawable.black,
+        "MINI GT" to Res.drawable.MiniGT,
+        "Bburago" to Res.drawable.Burago
+    )
+
+    val logo = brandBackground[userCCPBrand] ?: Res.drawable.HotWheels // fallback drawable
+
     val filteringForCarSearch = getCarsFromThisBrand.filter { car -> searchText.isBlank()||
             car.modelUser.contains(searchText, ignoreCase = true) ||
             car.yearUser?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
@@ -88,10 +129,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             car.collectorNoUser?.contains(searchText, ignoreCase = true) == true
     }
 
+    var contextMenuCarId by remember { mutableStateOf<Int?>(null) } // you need UserId
+
     fun displayCarFromThisBrand(){
         userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
-                cars ->
-            getCarsFromThisBrand = cars
+                cars -> getCarsFromThisBrand = cars
         }
     }
 
@@ -111,8 +153,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                     .height(200.dp)
             ) {
                 Image(
-                    painter = painterResource(Res.drawable.wp12533988),
-                    contentDescription = "Hotwheels",
+                    painter = painterResource(logo),
+                    contentDescription = "null",
                     modifier = Modifier.fillMaxSize(),
                 )
                 IconButton(
@@ -230,27 +272,64 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 )
             }else{
                 filteringForCarSearch.forEach { car ->
-                    EachCarTab(selectedCar = car) }
+                    EachCarTab(selectedCar = car,
+                    onLongPressCar = {contextMenuCarId = it.userCarIdUser}) }
             }
         }
     }
-    /*Scaffold()
-    {
-    }*/
+    if (contextMenuCarId != null) {
+        val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdUser == contextMenuCarId }
+
+        AlertDialog(
+            onDismissRequest = { contextMenuCarId = null },
+            containerColor = Color(0xFF1A1A1A),
+            title = {
+                Text(selectedCarForMenu.modelUser, color = Color.White)
+            },
+            text = {
+                Text("What would you like to do with this car?", color = Color.LightGray)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    // handle edit later
+                    contextMenuCarId = null
+                }) {
+                    Text("Edit", color = Color(0xFFFF9800))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    userViewModel.deleteUserOwnedCarVM(selectedCarForMenu) {
+                        displayCarFromThisBrand()// refresh it
+                    }
+                    contextMenuCarId = null
+                }) {
+                    Text("Delete", color = Color(0xFFF0396B))
+                }
+            }
+        )
+    }
 }
 
 @Composable
 //if you are using : UserCar you are passing all the parameter in the UserCar instead of only one datatype
-fun EachCarTab(selectedCar: UserCar)
+fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
-    val haptics = LocalHapticFeedback.current// it vibrat/buzz when you do long press
+    val haptics = LocalHapticFeedback.current
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
-            .height(100.dp),
+            .height(100.dp)
+            .combinedClickable(
+                onClick = {},// show large picture
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongPressCar(selectedCar)
+                }
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray
@@ -264,8 +343,7 @@ fun EachCarTab(selectedCar: UserCar)
             Column(
                 modifier = Modifier
                     .padding(vertical = 5.dp, horizontal = 25.dp)
-                    .combinedClickable(
-                        onClick = {})
+
             )
             {
                 Image(
@@ -589,7 +667,9 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                         userCCPUserId, userCCPBrand, modelName.text.toString(),
                                         selectedYear.toIntOrNull(), modelColour.text.toString(), seriesOfModel.text.toString(),
                                         typeOfSeries.text.toString(), modelCollectionNumber.text.toString(),
-                                        "", onResult = {onConfirmation()}
+                                        "",
+
+                                        onResult = {onConfirmation()}
                                     )
                                 }
                             }

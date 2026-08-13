@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -37,6 +38,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
@@ -78,19 +81,29 @@ fun ProfilePage(usernamePP: String,
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val menuItemData = listOf("HotWheels", "MatchBox", "Tomica", "Kaido House", "Tarmac Works", "Pop Race", "Inno 64",
         "Auto World", "GreenLight", "Johnny Lightning", "Majorette", "M2 Machines", "Jada Toys", "Maisto", "Solido", "MINI GT", "Bburago")
+
     val itemColour = listOf(Color(0xFFF28FA3), Color(0xFFF7B267), Color(0xFFF49A9A), Color(0xFFF5C99B))
 
     val snackbarHostState = remember { SnackbarHostState()}
     val scope = rememberCoroutineScope ()
     var expand by remember { mutableStateOf(false) }// if dropdown is open or closed
 
+    var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }
+
+    var getCarBrand by remember { mutableStateOf<List<UserSelectedBrandCars>>(emptyList()) }
+
+    fun displayBrand(){
+        userViewModel.getSelectedCarBrandsVM(userIdPP){
+                savedBrands -> selectedItem = savedBrands.map{it.selectedBrandName}
+            // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
+        }
+
+    }
+
     LaunchedEffect(Unit){
         boxVisible = true
         linesVisible = true
-        userViewModel.getSelectedCarBrandsVM(userIdPP){
-            savedBrands -> selectedItem = savedBrands.map{it.selectedBrandName}
-            // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
-        }
+        displayBrand()
     }
 
     Scaffold (
@@ -299,6 +312,38 @@ fun ProfilePage(usernamePP: String,
                 }
             }
         }
+        if(contextMenuCarBrandId != null){
+            val selectedCarBrandForMenu = getCarBrand.first{it.userSelectedCarBrandId == contextMenuCarBrandId}
+            AlertDialog(
+                onDismissRequest = { contextMenuCarBrandId = null },
+                containerColor = Color(0xFF1A1A1A),
+                title = {
+                    Text(selectedCarBrandForMenu.selectedBrandName, color = Color.White)
+                },
+                text = {
+                    Text("What would you like to do with this car?", color = Color.LightGray)
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // handle edit later
+                        contextMenuCarBrandId = null
+                    }) {
+                        Text("Edit", color = Color(0xFFFF9800))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        userViewModel.deleteSelectedCarBrandVM(selectedCarBrandForMenu) {
+                            displayBrand()// refresh it
+                        }
+                        contextMenuCarBrandId = null
+                    }) {
+                        Text("Delete", color = Color(0xFFF0396B))
+                    }
+                }
+            )
+        }
+
     }
 }
 
@@ -314,7 +359,7 @@ fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of c
             .height(60.dp)
             .clickable{onClick()},
         shape = RoundedCornerShape(7.dp),
-        color = Color(0xFFF49A9A)
+        color = Color.Transparent
     )
     {
         Box(
@@ -324,7 +369,7 @@ fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of c
             Text(
                 text = selectedItem,
                 modifier = Modifier.padding(start = 16.dp),
-                color = Color(0xFF4A2C3A),
+                color = Color(0xFFF0396B),
                 fontWeight = FontWeight.Bold,
                 fontFamily = usernameFont
             )
