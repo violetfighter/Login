@@ -1,11 +1,13 @@
 package com.cfcici.`in`.project.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,11 +25,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,17 +73,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.runtime.rememberCoroutineScope
+import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import com.preat.peekaboo.image.picker.SelectionMode
+import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
+import com.preat.peekaboo.ui.camera.PeekabooCamera
+import com.preat.peekaboo.ui.camera.rememberPeekabooCameraState
 import login.shared.generated.resources.AutoWorldLogo
-import login.shared.generated.resources.Burago
+import login.shared.generated.resources.BuragoLogo
 import login.shared.generated.resources.GreenLight
 import login.shared.generated.resources.JohnnyLightning
 import login.shared.generated.resources.KaidoHouse
 import login.shared.generated.resources.Logo_jada_toys
 import login.shared.generated.resources.M2M
 import login.shared.generated.resources.Majorette
-import login.shared.generated.resources.MatchboxLogo
 import login.shared.generated.resources.MiniGT
 import login.shared.generated.resources.PopRace
 import login.shared.generated.resources.Tarmac
@@ -84,23 +96,30 @@ import login.shared.generated.resources.Tomica
 import login.shared.generated.resources.black
 import login.shared.generated.resources.inno64
 import login.shared.generated.resources.maisto_logo_640x320
+import login.shared.generated.resources.matchbox2
 import login.shared.generated.resources.nissan_skyline
 
+
+enum class SortOrder{
+    NEWEST_FIRST, OLDEST_FIRST////???????
+}
 @OptIn(ExperimentalMaterial3Api::class)///****************
 @Composable
-fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel){
+fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage){
 
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     var showAddCarDialog by remember { mutableStateOf(false) }
 
     //From all my cars, give me only the cars that belong to the brand the user clicked.
-    var getCarsFromThisBrand by remember { mutableStateOf<List<UserCar>>(emptyList()) }
     var searchText by remember { mutableStateOf("") }
+    var getCarsFromThisBrand by remember { mutableStateOf<List<UserCar>>(emptyList()) }
     val totalCarThisBrandOwns = getCarsFromThisBrand.size
+
+    var expand by remember { mutableStateOf(false) }
 
     val brandBackground = mapOf(
         "HotWheels" to Res.drawable.HotWheels,
-        "MatchBox" to Res.drawable.MatchboxLogo,
+        "MatchBox" to Res.drawable.matchbox2,
         "Tomica" to Res.drawable.Tomica,
         "Kaido House" to Res.drawable.KaidoHouse,
         "Tarmac Works" to Res.drawable.Tarmac,
@@ -115,11 +134,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         "Maisto" to Res.drawable.maisto_logo_640x320,
         "Solido" to Res.drawable.black,
         "MINI GT" to Res.drawable.MiniGT,
-        "Bburago" to Res.drawable.Burago
+        "Bburago" to Res.drawable.BuragoLogo
     )
+    var sortOrder by remember { mutableStateOf<SortOrder?>(null) }
 
     val logo = brandBackground[userCCPBrand] ?: Res.drawable.HotWheels // fallback drawable
-
     val filteringForCarSearch = getCarsFromThisBrand.filter { car -> searchText.isBlank()||
             car.modelUser.contains(searchText, ignoreCase = true) ||
             car.yearUser?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
@@ -128,6 +147,13 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             car.typeOfSeriesUser?.contains(searchText, ignoreCase = true) == true ||
             car.collectorNoUser?.contains(searchText, ignoreCase = true) == true
     }
+        .let { list ->//////?????????
+            when (sortOrder) {
+                SortOrder.NEWEST_FIRST -> list.sortedByDescending { it.yearUser ?: 0 }
+                SortOrder.OLDEST_FIRST -> list.sortedBy { it.yearUser ?: 0 }
+                null -> list
+            }
+        }
 
     var contextMenuCarId by remember { mutableStateOf<Int?>(null) } // you need UserId
 
@@ -137,145 +163,176 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 
-    LaunchedEffect(Unit) {
+
+    LaunchedEffect(userCCPBrand) {
         displayCarFromThisBrand()
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-            .background(Color.Black),
-    )
-    {
-        item{
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                Image(
-                    painter = painterResource(logo),
-                    contentDescription = "null",
-                    modifier = Modifier.fillMaxSize(),
-                )
-                IconButton(
-                    onClick = {
-                        goBackToProfile () },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 5.dp, top = 35.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBackIosNew,
-                        contentDescription = "go back to profile page",
-                        tint = Color.White)
-                }
-                IconButton(
-                    onClick = {
-                        showAddCarDialog = true
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 5.dp, top = 35.dp),
-                ){
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.White
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 60.dp) // reserve space so last car isn't hidden behind fixed bar
+        ) {
+            item {
+                Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+                    Image(
+                        painter = painterResource(logo),
+                        contentDescription = "null",
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
-            if(showAddCarDialog){
-                AddNewCar(
-                    userCCPBrand = userCCPBrand,
-                    userCCPUserId = userCCPUserId,
-                    userViewModel = userViewModel,
-                    onDismissRequest = {showAddCarDialog = false},// if user hit dismiss don't add car
-                    onConfirmation = {
-                        showAddCarDialog = false
-                        displayCarFromThisBrand()}// user want to save the car. but close also save the car later
+
+            item {
+                Spacer(modifier = Modifier.padding(top = 10.dp))
+                Text(
+                    text = userCCPBrand,
+                    color = Color.White,
+                    fontFamily = usernameFont,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 35.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                )
+                Text(
+                    text = "Total Owns $totalCarThisBrandOwns",
+                    color = Color(0xFFF0396B),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    fontFamily = usernameFont,
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    textAlign = TextAlign.Center
                 )
             }
-        }
 
-        item {
-            Spacer(modifier = Modifier.padding(top = 15.dp))
-            Text(
-                text = userCCPBrand,
-                color = Color.White,
-                fontFamily = usernameFont,
-                fontWeight = FontWeight.Bold,
-                fontSize = 40.sp,
-                modifier = Modifier.padding(horizontal = 10.dp),
-            )
-            Text(
-                text = "$totalCarThisBrandOwns",
-                color = Color(0xFFF0396B),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                fontFamily = usernameFont,
-                modifier = Modifier.padding(horizontal = 15.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-        stickyHeader {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black)
-                    .padding(bottom = 8.dp, top = 10.dp)
-            )
-            {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },// this trigger very keystroke
-                    placeholder = { Text("Search cars here...", color = Color.LightGray) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search button",
-                            tint = Color.White
-                        )
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = null,
-                            tint = Color.White
-                        )
-                    },
-                    singleLine = true,
+            stickyHeader {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.Black,
-                        unfocusedContainerColor = Color.Black,
-                        focusedBorderColor = Color.Black,
-                        unfocusedBorderColor = Color.Black,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White
+                        .background(Color.Black)
+                        .padding(bottom = 8.dp, top = 10.dp)
+                )
+                {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },// this trigger very keystroke
+                        placeholder = { Text("Search cars here...", color = Color.LightGray) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search button",
+                                tint = Color.White
+                            )
+                        },
+                        trailingIcon = {
+                            Box{
+                                IconButton(onClick = {expand = !expand}){
+                                    Icon(
+                                        imageVector = Icons.Default.Tune,
+                                        contentDescription = "Filter",
+                                        tint = Color.White
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = expand,
+                                    onDismissRequest = {expand = false},
+                                    modifier = Modifier.background(Color(0xFF1A1A1A)),
+                                    shape = RoundedCornerShape(16.dp)
+                                ){
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text("Newest to Oldest", color = Color.White)
+                                               },
+                                            onClick = {sortOrder = SortOrder.NEWEST_FIRST; expand = false}
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text("Oldest to Newest ", color = Color.White)
+                                        },
+                                        onClick = {sortOrder = SortOrder.OLDEST_FIRST; expand = false}
+                                    )
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.Black,
+                            unfocusedContainerColor = Color.Black,
+                            focusedBorderColor = Color.Black,
+                            unfocusedBorderColor = Color.Black,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color.White
+                        )
                     )
+                }
+            }
+
+            item {
+                if (filteringForCarSearch.isEmpty() && (totalCarThisBrandOwns > 0)) {
+                    Text(
+                        text = "Not Found",
+                        color = Color.LightGray,
+                        fontFamily = usernameFont,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 50.dp)
+                    )
+                } else {
+                    filteringForCarSearch.forEach { car ->
+                        EachCarTab(selectedCar = car, onLongPressCar = { contextMenuCarId = it.userCarIdUser })
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color.Black)
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        )
+        {
+            IconButton(
+                modifier = Modifier.padding(start = 50.dp),
+                onClick = { goBackToProfile() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    contentDescription = "go back to profile page",
+                    tint = Color.White
+                )
+            }
+            IconButton(
+                modifier = Modifier.padding(end = 50.dp),
+                onClick = { showAddCarDialog = true }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White
                 )
             }
         }
-        item {
-            if (filteringForCarSearch.isEmpty()){
-                Column {  }
-                Text(
-                    text = "Not Found",
-                    color = Color.LightGray,
-                    fontFamily = usernameFont,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 50.dp)
-                )
-            }else{
-                filteringForCarSearch.forEach { car ->
-                    EachCarTab(selectedCar = car,
-                    onLongPressCar = {contextMenuCarId = it.userCarIdUser}) }
+    }
+
+    if (showAddCarDialog) {
+        AddNewCar(
+            userCCPBrand = userCCPBrand,
+            userCCPUserId = userCCPUserId,
+            userViewModel = userViewModel,
+            imageStorage = imageStorage,
+            onDismissRequest = { showAddCarDialog = false },
+            onConfirmation = {
+                showAddCarDialog = false
+                displayCarFromThisBrand()
             }
-        }
+        )
     }
     if (contextMenuCarId != null) {
         val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdUser == contextMenuCarId }
@@ -347,7 +404,8 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
             )
             {
                 Image(
-                    painter = painterResource(Res.drawable.nissan_skyline),
+                    painter = painterResource(Res.drawable.nissan_skyline),///// add real photo
+
                     contentDescription = selectedCar.modelUser,
                     modifier = Modifier
                         .size(90.dp)
@@ -426,7 +484,7 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
 }
 
 @Composable
-fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewModel,
+fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewModel, imageStorage: ImageStorage,
               onDismissRequest: () -> Unit, onConfirmation: ()-> Unit){
     val modelName = rememberTextFieldState()
     val modelColour = rememberTextFieldState()
@@ -434,7 +492,18 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
     val typeOfSeries = rememberTextFieldState()
     val modelCollectionNumber = rememberTextFieldState()
     var selectedYear by remember { mutableStateOf("") }// initially drop down will close
-    //val modelPhoto =
+    var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }// ByteArray lowest-level way to represent any file's content the photos, music, and video in byte
+    var showCamera by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val launcher = rememberImagePickerLauncher(
+        selectionMode = SelectionMode.Single,
+        scope = scope,
+        onResult = { byteArrays ->
+            byteArrays.firstOrNull()?.let {
+                selectedImageBytes = it
+            }
+        }
+    )
 
     var modelNameError by remember { mutableStateOf<String?>(null) }
     var modelPhotoError by remember { mutableStateOf<String?>(null) }
@@ -449,7 +518,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
             Card(
                 modifier = Modifier
                     .fillMaxWidth(0.92f)
-                    .height(550.dp),
+                    .height(600.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFF1A1A1A)
@@ -459,7 +528,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Column(
@@ -503,7 +572,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        //Spacer(modifier = Modifier.height(16.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -551,7 +620,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        //Spacer(modifier = Modifier.height(16.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -631,6 +700,114 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                 )
                             )
                         }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),//  helps to make each card shared equally
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Card(
+                                    modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                                    shape = RoundedCornerShape(30.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF1A1A1A)
+                                    ),
+                                    border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                                    onClick = { launcher.launch() } // <- whole card triggers upload now
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ){
+                                        IconButton(onClick = { launcher.launch() }) {
+                                            Icon(imageVector = Icons.Default.Upload,
+                                                contentDescription = "Upload", tint = Color.White)
+                                        }
+                                        Text(text = "Upload a Photo",
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            color = Color.White)
+                                    }
+                                }
+                                Card(
+                                    modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                                    shape = RoundedCornerShape(30.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF1A1A1A)
+                                    ),
+                                    border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                                    onClick = { showCamera = true } // <- opens camera
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ){
+                                        IconButton(onClick = { showCamera = true }) {
+                                            Icon(
+                                                imageVector = Icons.Default.PhotoCamera,
+                                                contentDescription = "Camera",
+                                                tint = Color.White
+                                            )
+                                        }
+                                        Text(
+                                            text = "Take a Photo",
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (selectedImageBytes != null) {
+                            // Show a small preview
+                            Text("Image selected", color = Color.Green, fontSize = 12.sp)
+                        }
+                    }
+
+                    if (showCamera) {
+                        Dialog(onDismissRequest = { showCamera = false }) {
+                            val state = rememberPeekabooCameraState(onCapture = { bytes ->
+                                if (bytes != null) {
+                                    selectedImageBytes = bytes
+                                    showCamera = false
+                                }
+                            })
+                            Box(modifier = Modifier.size(300.dp)) {
+                                PeekabooCamera(
+                                    state = state,
+                                    modifier = Modifier.fillMaxSize(),
+                                    permissionDeniedContent = {
+                                        Column(
+                                            modifier = Modifier.background(Color.Black).fillMaxSize(),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text("Camera permission denied", color = Color.White)
+                                            TextButton(onClick = { showCamera = false }) {
+                                                Text("Close")
+                                            }
+                                        }
+                                    }
+                                )
+                                IconButton(
+                                    onClick = { state.capture() },
+                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PhotoCamera,
+                                        contentDescription = "Camera",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(48.dp))
+                                }
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -662,12 +839,24 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                 }else
                                     modelColourError = null
 
-                                if (modelName.text.isNotEmpty() || modelColour.text.isNotEmpty()){
+                                if (modelName.text.isNotEmpty() && modelColour.text.isNotEmpty()){
+                                    var imagePath = ""// if user never picked the photo it stays empty
+
+                                    //selectedImageBytes have the user selected photo
+                                    //?.let { } combo means: "if this isn't null, run the block below, and call it bytes inside."
+                                    // If it's null (user didn't pick a photo), this whole block is skipped entirely
+                                    selectedImageBytes?.let { bytes ->
+
+                                        //it is how user photo is saved using userID and timestamp in ms so it guarantees uniqueness no photo collied
+                                        val fileName = "car_${userCCPUserId}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
+                                        imagePath = imageStorage.saveImageToFile(bytes, fileName) // convert bytes to real image (jpg file) on device's storage
+                                    }
+
                                     userViewModel.insertUserOwnedCarVM(
                                         userCCPUserId, userCCPBrand, modelName.text.toString(),
                                         selectedYear.toIntOrNull(), modelColour.text.toString(), seriesOfModel.text.toString(),
                                         typeOfSeries.text.toString(), modelCollectionNumber.text.toString(),
-                                        "",
+                                        imagePath,
 
                                         onResult = {onConfirmation()}
                                     )
@@ -685,6 +874,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
             }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)////***************
 @Composable

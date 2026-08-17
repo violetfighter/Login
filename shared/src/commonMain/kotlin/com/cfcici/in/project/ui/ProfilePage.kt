@@ -5,7 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
@@ -72,7 +74,7 @@ fun ProfilePage(usernamePP: String,
                 userViewModel: UserViewModel)
 {
     //var selectedItem by remember { mutableStateOf<String?>(null) } if we use this it will only show the one selected item
-    var selectedItem by remember { mutableStateOf(listOf<String>()) }// it will allow user to select multiple box
+    var selectedItem by remember { mutableStateOf<List<UserSelectedBrandCars>>(emptyList()) }// it will allow user to select multiple box
 
     // on starting the bar is not visible that's why we put false otherwise till will think bar is visible and animation will not happen
     var boxVisible by remember { mutableStateOf(false) }
@@ -82,19 +84,15 @@ fun ProfilePage(usernamePP: String,
     val menuItemData = listOf("HotWheels", "MatchBox", "Tomica", "Kaido House", "Tarmac Works", "Pop Race", "Inno 64",
         "Auto World", "GreenLight", "Johnny Lightning", "Majorette", "M2 Machines", "Jada Toys", "Maisto", "Solido", "MINI GT", "Bburago")
 
-    val itemColour = listOf(Color(0xFFF28FA3), Color(0xFFF7B267), Color(0xFFF49A9A), Color(0xFFF5C99B))
-
     val snackbarHostState = remember { SnackbarHostState()}
     val scope = rememberCoroutineScope ()
     var expand by remember { mutableStateOf(false) }// if dropdown is open or closed
 
-    var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }
-
-    var getCarBrand by remember { mutableStateOf<List<UserSelectedBrandCars>>(emptyList()) }
+    var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }///??????
 
     fun displayBrand(){
-        userViewModel.getSelectedCarBrandsVM(userIdPP){
-                savedBrands -> selectedItem = savedBrands.map{it.selectedBrandName}
+        userViewModel.getSelectedCarBrandsVM(userIdPP){ savedBrands ->
+            selectedItem = savedBrands
             // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
         }
 
@@ -202,7 +200,7 @@ fun ProfilePage(usernamePP: String,
                             fontWeight = FontWeight.Bold,
                             fontFamily = usernameFont,
                             modifier = Modifier
-                                .padding(start = 16.dp, top = 30.dp, ),
+                                .padding(start = 16.dp, top = 30.dp ),
                             textAlign = TextAlign.Start,
                             fontSize = 20.sp,
                             color = Color.Black,
@@ -226,6 +224,7 @@ fun ProfilePage(usernamePP: String,
                                 modifier = Modifier
                                     .height(300.dp)// height of the dropdown
                                     .background(Color(0xFF1A1A1A))
+
                             )
                             {
                                 menuItemData.forEach { option ->
@@ -235,13 +234,21 @@ fun ProfilePage(usernamePP: String,
                                                 Text(
                                                     option,// stores what user currently selected one
                                                     color = Color(0xFFFF9800)
-                                            )
+                                                )
                                             },
                                         onClick = {
-                                            if(option !in selectedItem){
-                                                selectedItem = selectedItem + option
-                                                userViewModel.insertSelectedCarBrandVM(userIdPP, option)
+                                            // map -> map is used to take every item in a collection and transform it into something else
+                                            // for example in UserSelectedBrand{1, "HowWheels"}
+
+                                            //option is a String but UserSelectedBrandCars not string, so it selected brand name and turn that to string
+                                            if(option !in selectedItem.map { it.selectedBrandName }){//Take every UserSelectedBrandCars and give me only its selectedBrandName.
+
+                                                //selectedItem = selectedItem + option  not needed. Room saves it, and then you reload the list from Room.
+                                                userViewModel.insertSelectedCarBrandVM(userIdPP, option, ){
+                                                    displayBrand()
+                                                }
                                                 //now it will store in room (UserSelectedBrandCar table) will not disappear when we navigate to next page
+
                                                 expand = false
                                             }else{
                                                 scope.launch{
@@ -269,8 +276,11 @@ fun ProfilePage(usernamePP: String,
                 {
                     selectedItem.forEach { item ->
                         ItemBox(
-                            selectedItem = item,
-                            onClick = { goToUserCarCollection(item, userIdPP) }
+                            selectedBrandItem = item,
+                            brandId = userIdPP,
+                            goToUserCarCollection = goToUserCarCollection,
+                            onLongPressCar = { contextMenuCarBrandId = it.userSelectedCarBrandId }
+                            //onClick = { goToUserCarCollection(item, userIdPP) }
                         )
                     }
                 }
@@ -291,7 +301,7 @@ fun ProfilePage(usernamePP: String,
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Logout,
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = "Logout",
                         tint = Color.White
                     )
@@ -313,51 +323,83 @@ fun ProfilePage(usernamePP: String,
             }
         }
         if(contextMenuCarBrandId != null){
-            val selectedCarBrandForMenu = getCarBrand.first{it.userSelectedCarBrandId == contextMenuCarBrandId}
-            AlertDialog(
-                onDismissRequest = { contextMenuCarBrandId = null },
-                containerColor = Color(0xFF1A1A1A),
-                title = {
-                    Text(selectedCarBrandForMenu.selectedBrandName, color = Color.White)
-                },
-                text = {
-                    Text("What would you like to do with this car?", color = Color.LightGray)
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        // handle edit later
+            val selectedCarBrandForMenu = selectedItem.firstOrNull { it.userSelectedCarBrandId == contextMenuCarBrandId }
+            if (selectedCarBrandForMenu != null) {
+                AlertDialog(
+                    onDismissRequest = {
                         contextMenuCarBrandId = null
-                    }) {
-                        Text("Edit", color = Color(0xFFFF9800))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        userViewModel.deleteSelectedCarBrandVM(selectedCarBrandForMenu) {
-                            displayBrand()// refresh it
+                    },
+                    containerColor = Color(0xFF1A1A1A),
+                    title = {
+                        Text(
+                            selectedCarBrandForMenu.selectedBrandName,
+                            color = Color.White
+                        )
+                    },
+                    text = {
+                        Text(
+                            "What would you like to do with this car?",
+                            color = Color.LightGray
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                contextMenuCarBrandId = null
+                            }
+                        ) {
+                            Text(
+                                "Edit",
+                                color = Color(0xFFFF9800)
+                            )
                         }
-                        contextMenuCarBrandId = null
-                    }) {
-                        Text("Delete", color = Color(0xFFF0396B))
-                    }
-                }
-            )
-        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                userViewModel.deleteSelectedCarBrandVM(
+                                    userIdPP,
+                                    selectedCarBrandForMenu.selectedBrandName,
+                                ) {
+                                    displayBrand()
+                                }
 
+                                contextMenuCarBrandId = null
+                            }
+                        ) {
+                            Text(
+                                "Delete",
+                                color = Color(0xFFF0396B)
+                            )
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of cars in each brand
+fun ItemBox( selectedBrandItem: UserSelectedBrandCars, brandId: Int, goToUserCarCollection: (String, Int) -> Unit , onLongPressCar: (UserSelectedBrandCars) -> Unit) // add total number of cars in each brand
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular, FontWeight.Normal))
+    val haptics = LocalHapticFeedback.current
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 40.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)
             .height(60.dp)
-            .clickable{onClick()},
+            .combinedClickable(
+                onClick = {
+                    goToUserCarCollection(selectedBrandItem.selectedBrandName, brandId)
+                },
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongPressCar(selectedBrandItem)
+                }
+
+            ),
         shape = RoundedCornerShape(7.dp),
         color = Color.Transparent
     )
@@ -367,7 +409,7 @@ fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of c
             contentAlignment = Alignment.CenterStart,
             ){
             Text(
-                text = selectedItem,
+                text = selectedBrandItem.selectedBrandName,
                 modifier = Modifier.padding(start = 16.dp),
                 color = Color(0xFFF0396B),
                 fontWeight = FontWeight.Bold,
@@ -376,4 +418,3 @@ fun ItemBox( selectedItem: String, onClick: () -> Unit) // add total number of c
         }
     }
 }
-//pass12!@PASS

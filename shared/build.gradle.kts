@@ -71,6 +71,8 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.koin.compose.navigation)
+            implementation(libs.peekaboo.ui)
+            implementation(libs.peekaboo.image.picker)
 
         }
         commonTest.dependencies {

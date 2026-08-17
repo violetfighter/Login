@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -47,7 +46,7 @@ fun PasswordPage(
     ) {
         OutlinedTextField(
             value = password,
-            onValueChange = {if (it.length <=16){ passwordChecker( it )}},//??????
+            onValueChange = {if (it.length <=16){ passwordChecker( it )}},
             singleLine = true,
             textStyle = TextStyle(fontSize = 20.sp),
 

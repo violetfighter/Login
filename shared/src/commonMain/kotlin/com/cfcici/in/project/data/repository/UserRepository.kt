@@ -64,8 +64,10 @@ class UserRepository (
         return userDaoFromRepo.getSelectedCarBrands(userIdRepo)
     }
 
-    //delete selected brand
-    suspend fun  deleteSelectedCarBrandRepo(selectedBrandCarsRepo: UserSelectedBrandCars){
-        userDaoFromRepo.deleteUserSelectedBrand(selectedBrandCarsRepo)
+    //delete selected brand and cars at same time so we put both function in one repo
+    suspend fun deleteSelectedCarBrandRepo(userId: Int, selectedBrandCarsRepo: String) {
+        userDaoFromRepo.deleteUserOwnedCarsByBrand(userId, selectedBrandCarsRepo)
+        userDaoFromRepo.deleteSelectedBrand(userId, selectedBrandCarsRepo
+        )
     }
 }

@@ -34,7 +34,7 @@ data class UserCarCollectionRoute(
 )
 
 @Composable
-fun App(db: AppDatabase) {
+fun App(db: AppDatabase, imageStorage: ImageStorage) {
     val repository = UserRepository(db.userDao())
     val viewModel = UserViewModel(repository)
     MaterialTheme {
@@ -109,10 +109,9 @@ fun App(db: AppDatabase) {
                 UserCarCollectionPage(
                     userCCPBrand = userCarCollection.brand,// now  userCarCollection.brand will contain whichever brand was clicked
                     userCCPUserId = userCarCollection.userId,
-                    goBackToProfile = {
-                        navController.popBackStack()
-                    },
-                    userViewModel = viewModel
+                    goBackToProfile = { navController.popBackStack() },
+                    userViewModel = viewModel,
+                    imageStorage = imageStorage
                 )
             }
         }

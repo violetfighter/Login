@@ -59,7 +59,10 @@ the reason we used userIdUser = :userIdDao, when the app used by many people and
     @Query("""SELECT * FROM UserSelectedCarBrand WHERE userIdFromUsers = :userIdDao""")
     suspend fun getSelectedCarBrands(userIdDao: Int): List<UserSelectedBrandCars>
 
-    @Delete
-    suspend fun deleteUserSelectedBrand(selectedBrandDao: UserSelectedBrandCars)
+    @Query("""DELETE FROM UserOwnedCar WHERE userIdUser = :userIdDao AND brandUser = :selectedBrandDao""")
+    suspend fun deleteUserOwnedCarsByBrand(userIdDao: Int, selectedBrandDao: String)
+
+    @Query("""DELETE FROM UserSelectedCarBrand WHERE userIdFromUsers = :userIdDao AND selectedBrandName = :selectedBrandDao""")
+    suspend fun deleteSelectedBrand(userIdDao: Int, selectedBrandDao: String)
 
 }

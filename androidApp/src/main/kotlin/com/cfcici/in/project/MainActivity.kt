@@ -15,7 +15,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val db = DBFactory(applicationContext).createDatabase()
-            App(db)
+            val imageStorage = ImageStorage(applicationContext)
+            App(db, imageStorage)
         }
     }
 }

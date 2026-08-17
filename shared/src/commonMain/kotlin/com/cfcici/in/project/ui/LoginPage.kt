@@ -113,7 +113,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                     ){
                         // Large soft glow
                         Text(
-                            text = "Hot Wheels",
+                            text = "Wheelhouse",
                             fontFamily = hotWheelsFont,
                             fontSize = 60.sp,
                             fontWeight = FontWeight.Bold,
@@ -128,7 +128,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                         )
                         //  Small soft glow
                         Text(
-                            text = "Hot Wheels",
+                            text = "Wheelhouse",
                             fontFamily = hotWheelsFont,
                             fontSize = 60.sp,
                             fontWeight = FontWeight.Bold,
@@ -142,7 +142,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                                 .padding(24.dp)
                         )
                         Text(
-                            text = "Hot Wheels",
+                            text = "Wheelhouse",
                             //modifier = Modifier
                                 //.fillMaxHeight()
                                 //.padding(10.dp),

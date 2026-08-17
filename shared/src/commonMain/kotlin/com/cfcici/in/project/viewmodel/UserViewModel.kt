@@ -106,7 +106,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
-    fun insertSelectedCarBrandVM(userIdUserVM: Int, selectedCarBrandVM: String){
+    fun insertSelectedCarBrandVM(userIdUserVM: Int, selectedCarBrandVM: String, onResult: () -> Unit){
         viewModelScope.launch {
             repository.insertSelectedCarBrandRepo(
                 UserSelectedBrandCars(
@@ -114,6 +114,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                     selectedBrandName = selectedCarBrandVM
                 )
             )
+            onResult() // <- runs after the suspend insert finishes, same coroutine
         }
     }
 
@@ -124,10 +125,11 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
-    fun deleteSelectedCarBrandVM(userCarBrandVM: UserSelectedBrandCars, onResult: () -> Unit){
+    fun deleteSelectedCarBrandVM( userIdVM: Int, userCarBrandVM: String, onResult: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteSelectedCarBrandRepo(userCarBrandVM)
+            repository.deleteSelectedCarBrandRepo(userIdVM, userCarBrandVM)
             onResult()
         }
     }
 }
+
