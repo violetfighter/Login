@@ -23,7 +23,9 @@ ksp = "2.3.10"
 kotlinx-serialization = "1.11.0"
 navigation-compose = "2.9.2"
 koin = "4.1.1"
-peekaboo = "0.5.2"
+peekaboo = "0.5.2"##upload pic
+coil = "3.0.0-rc01"##display/load the saved car images.
+camerax = "1.6.1"## for custom UI camera optinal
 
 
 [libraries]
@@ -62,6 +64,10 @@ koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", ver
 koin-compose-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin" }
 peekaboo-ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo" }
 peekaboo-image-picker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+androidx-camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

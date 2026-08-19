@@ -105,6 +105,7 @@ fun ProfilePage(usernamePP: String,
     }
 
     Scaffold (
+        containerColor = Color.Black,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ){
         innerPadding ->
@@ -122,6 +123,7 @@ fun ProfilePage(usernamePP: String,
                     initialOffsetY = { fullHeight -> fullHeight }// use negative to move upwards
                 )
             ) {
+
                 // vertical line
                 Row(
                     modifier = Modifier
@@ -139,7 +141,9 @@ fun ProfilePage(usernamePP: String,
                 ){}
             }
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    //.fillMaxWidth()
+                    .fillMaxSize()
             )
             {
                 Spacer(modifier = Modifier.height(40.dp))
@@ -244,7 +248,7 @@ fun ProfilePage(usernamePP: String,
                                             if(option !in selectedItem.map { it.selectedBrandName }){//Take every UserSelectedBrandCars and give me only its selectedBrandName.
 
                                                 //selectedItem = selectedItem + option  not needed. Room saves it, and then you reload the list from Room.
-                                                userViewModel.insertSelectedCarBrandVM(userIdPP, option, ){
+                                                userViewModel.insertSelectedCarBrandVM(userIdPP, option ){
                                                     displayBrand()
                                                 }
                                                 //now it will store in room (UserSelectedBrandCar table) will not disappear when we navigate to next page
@@ -270,7 +274,8 @@ fun ProfilePage(usernamePP: String,
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 90.dp)
+                        //.padding(bottom = 90.dp)
+                        .weight(1f)
                         .verticalScroll(rememberScrollState())
                 )
                 {
@@ -284,43 +289,45 @@ fun ProfilePage(usernamePP: String,
                         )
                     }
                 }
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            )
-            {
-                IconButton(
+                Row(
                     modifier = Modifier
-                        .padding(start = 50.dp),
-                    onClick = {
-                        onBackToLogin()
+                        //.align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                    //.padding(vertical = 10.dp)
+                    ,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                )
+                {
+                    IconButton(
+                        modifier = Modifier
+                            .padding(start = 50.dp),
+                        onClick = {
+                            onBackToLogin()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Logout",
-                        tint = Color.White
-                    )
-                }
 
-                IconButton(
-                    modifier = Modifier
-                        .padding(end = 50.dp),
-                    onClick = {
-                        // do something
+                    IconButton(
+                        modifier = Modifier
+                            .padding(end = 50.dp),
+                        onClick = {
+                            // do something
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = "Camera",
+                            tint = Color.White
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = "Camera",
-                        tint = Color.White
-                    )
                 }
             }
+
         }
         if(contextMenuCarBrandId != null){
             val selectedCarBrandForMenu = selectedItem.firstOrNull { it.userSelectedCarBrandId == contextMenuCarBrandId }

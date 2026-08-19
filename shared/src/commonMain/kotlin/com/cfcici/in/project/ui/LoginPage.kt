@@ -56,10 +56,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color.Companion.Blue
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import com.cfcici.`in`.project.viewmodel.UserViewModel
@@ -156,7 +153,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                             ),
                         )
                     }
-
+/*
                     Text(
                         text = "Log in to your account",
                         modifier = Modifier.padding(10.dp),
@@ -166,7 +163,7 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                         //Remember onPrimaryContainer -> text/icon colour PrimaryContainer -> background
                         color = Color.White,
                         fontWeight = FontWeight.Light
-                    )
+                    )*/
 
                     OutlinedTextField(// TextField itself will create box
                         state = userName,// store whatever user enter
@@ -286,20 +283,20 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
                         Text(
                             text = "Don't have an account? ",
                             modifier = Modifier
-                                .padding(vertical = 5.dp),
-                            fontSize = 17.sp,
+                                .padding(top = 40.dp),
+                            fontSize = 15.sp,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Normal
                         )
 
                         Text(
                             text = "Click Here",
                             modifier = Modifier
-                                .padding(vertical = 5.dp)
+                                .padding(top = 40.dp, start = 3.dp)
                                 .clickable { onGoToNewAccount() },  // navigate to  new account
                             color = Color(0xFFFF9800),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Normal
                         )
 
 

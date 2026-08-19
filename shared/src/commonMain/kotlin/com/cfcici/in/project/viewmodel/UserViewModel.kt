@@ -2,6 +2,7 @@ package com.cfcici.`in`.project.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Delete
 import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
@@ -30,11 +31,31 @@ class UserViewModel(val repository: UserRepository): ViewModel()
     //fun getAllUser(): List<User> {
         //return repository.getUserRepo()
         // Add later}
-    //fun deleteUser(user: User){
-       // repository.deleteUserRepo(user)
-        // Add later}
+
+    fun updateCarEditVM(userCarEdit: UserCar){
+        viewModelScope.launch {
+            repository.updateCarEditRepo(userCarEdit)
+        }
+    }
+
+    fun updateProfileEditVM(userProfileEdit: User){
+        viewModelScope.launch {
+            repository.updateProfileEditRepo(userProfileEdit)
+        }
+    }
+
+    fun deleteUserVM(userDelete: User, onResult: () -> Unit){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteUserRepo(userDelete)
+            onResult()
+        }
+    }
     // onResult is a function that give to emailExistVM()
     // After you finish checking the database, give me the true or false result
+
+    fun updateCarEditVM(){
+
+    }
 
     fun emailExistVM(emailIDFromVM: String, onResult: (Boolean) -> Unit){
         viewModelScope.launch {

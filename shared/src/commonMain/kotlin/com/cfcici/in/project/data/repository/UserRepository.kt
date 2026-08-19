@@ -11,13 +11,20 @@ class UserRepository (
     suspend fun insertUserRepo(userRepo: User){
         userDaoFromRepo.insert(userRepo)
     }
-
-    suspend fun deleteUserRepo(userRepo: User){
-        userDaoFromRepo.delete(userRepo)
-    }
-
     suspend fun getUserRepo(): List<User>{
         return userDaoFromRepo.getAll()
+    }
+
+    suspend fun deleteUserRepo(userRepo: User){
+        userDaoFromRepo.deleteUser(userRepo)
+    }
+
+    suspend fun updateCarEditRepo(userCarRepo: UserCar){
+        return userDaoFromRepo.updateCarEdit(userCarRepo)
+    }
+
+    suspend fun updateProfileEditRepo(userProfileRepo: User){
+        return userDaoFromRepo.updateProfileEdit(userProfileRepo)
     }
 
     suspend fun  emailExistsRepo(email: String): Boolean{

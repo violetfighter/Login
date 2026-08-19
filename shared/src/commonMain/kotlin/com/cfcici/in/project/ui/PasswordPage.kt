@@ -105,9 +105,10 @@ fun PasswordPage(
             isError = isError,
             supportingText = supportingText
         )
+        /*
         if (passwordFocused) {
             PopUpMessage(password)
-        }
+        }*/
     }
 }
 // When user click the box it shows the message

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface UserDao {
@@ -14,7 +15,13 @@ interface UserDao {
     suspend fun insert(vararg user: User)
 
     @Delete
-    suspend fun delete(user: User)
+    suspend fun deleteUser(user: User)
+
+    @Update
+    suspend fun updateCarEdit(userCar: UserCar)
+
+    @Update
+    suspend fun updateProfileEdit(user: User)
 
     //Asynchronously check my user table for this email and return true if it exists, otherwise return false
     // Means look inside  the user table and find the email already exist

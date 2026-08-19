@@ -46,6 +46,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
+            implementation(libs.androidx.camerax.camera2)
+            implementation(libs.androidx.camerax.lifecycle)
+            implementation(libs.androidx.camerax.view)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -73,6 +76,7 @@ kotlin {
             implementation(libs.koin.compose.navigation)
             implementation(libs.peekaboo.ui)
             implementation(libs.peekaboo.image.picker)
+            implementation(libs.coil.compose)
 
         }
         commonTest.dependencies {

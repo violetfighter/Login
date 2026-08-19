@@ -126,7 +126,8 @@ fun NewAccountPage(
                     Brush.linearGradient(colors = listOf(Color(0xFFF0396B), Color(0xFF1A1A1A), Color(0xFFF0555C)))
                 )
                 .hazeSource(state = hazeState)// mark this as the blur source
-                .statusBarsPadding() // pushes content below the statues bar
+                .statusBarsPadding(), // pushes content below the statues bar
+            contentAlignment = Alignment.Center
         ){
             Card(
                 modifier = Modifier
@@ -155,11 +156,11 @@ fun NewAccountPage(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
                         text = "Create New Account",
-                        fontSize = 32.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
                         style = TextStyle(
@@ -169,7 +170,7 @@ fun NewAccountPage(
                         ),
                     )
 
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Spacer(modifier = Modifier.height(30.dp))
 
                     OutlinedTextField(
                         state = newUserName,
@@ -199,8 +200,6 @@ fun NewAccountPage(
                                 Text("Username is required")
                         }
                     )
-
-                    Spacer(modifier = Modifier.height(20.dp))
 
                     OutlinedTextField(
                         state = newEmailID,
@@ -232,8 +231,6 @@ fun NewAccountPage(
                             // Safe here because the "if" right before it already confirmed passwordError != null otherwise it will crash the app
                         }
                     )
-
-                    Spacer(modifier = Modifier.height(20.dp))
 
                     OutlinedTextField(
                         state = newDOB,
@@ -290,8 +287,6 @@ fun NewAccountPage(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
                     OutlinedTextField(
                         state = newPassword,
                         label = {Text("Password")},
@@ -326,7 +321,6 @@ fun NewAccountPage(
                         PopUpMessage(newPassword.text.toString())
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         modifier = Modifier.padding(16.dp),
@@ -388,8 +382,6 @@ fun NewAccountPage(
                         Text(text = "Create")
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
                     Row(
                         modifier = Modifier.padding(5.dp).fillMaxSize(),
                         horizontalArrangement = Arrangement.Center)
@@ -397,19 +389,19 @@ fun NewAccountPage(
                         Text(
                             text = ("Already have an account? "),
                             modifier = Modifier
-                                .padding(vertical = 30.dp),
-                            fontSize = 17.sp,
+                                .padding(top = 30.dp),
+                            fontSize = 15.sp,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Normal
                         )
                         Text(
                             text = ("Login"),
                             modifier = Modifier
-                                .padding(vertical = 30.dp, horizontal = 5.dp)
+                                .padding(top = 30.dp, start = 3.dp)
                                 .clickable{onBackToLogin()},
                             color = Color(0xFFFF9800),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Normal
                         )
                     }
                 }
