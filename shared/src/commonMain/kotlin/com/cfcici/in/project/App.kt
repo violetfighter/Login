@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.cfcici.`in`.project.data.database.AppDatabase
+import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
@@ -111,7 +112,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     userCCPUserId = userCarCollection.userId,
                     goBackToProfile = { navController.popBackStack() },
                     userViewModel = viewModel,
-                    imageStorage = imageStorage
+                    imageStorage = imageStorage,
                 )
             }
         }

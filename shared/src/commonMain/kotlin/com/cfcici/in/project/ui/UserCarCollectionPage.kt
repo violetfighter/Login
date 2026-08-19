@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -58,7 +55,6 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -100,15 +96,13 @@ import login.shared.generated.resources.black
 import login.shared.generated.resources.inno64
 import login.shared.generated.resources.maisto_logo_640x320
 import login.shared.generated.resources.matchbox2
-import login.shared.generated.resources.nissan_skyline
-
 
 enum class SortOrder{
     NEWEST_FIRST, OLDEST_FIRST////???????
 }
 @OptIn(ExperimentalMaterial3Api::class)///****************
 @Composable
-fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage, editingCar: UserCar? = null){
+fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage){
 
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     var showAddCarDialog by remember { mutableStateOf(false) }
@@ -319,7 +313,9 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 }
                 IconButton(
                     modifier = Modifier.padding(end = 50.dp),
-                    onClick = { showAddCarDialog = true }
+                    onClick = {
+                        carBeingEdit = null
+                        showAddCarDialog = true }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -336,11 +332,16 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 userCCPUserId = userCCPUserId,
                 userViewModel = userViewModel,
                 imageStorage = imageStorage,
-                onDismissRequest = { showAddCarDialog = false },
+                existingCar = carBeingEdit,
+                onDismissRequest = {
+                    showAddCarDialog = false
+                    carBeingEdit = null
+                },
                 onConfirmation = {
                     showAddCarDialog = false
+                    carBeingEdit = null
                     displayCarFromThisBrand()
-                },
+                }
             )
         }
     }
@@ -512,6 +513,8 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
 fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewModel, imageStorage: ImageStorage,
               onDismissRequest: () -> Unit, onConfirmation: ()-> Unit, existingCar: UserCar? = null) // ? = -> we use AddNewCar two ways 1. add new car (empty form) 2. selected car (filled form)
 {
+    var oldPhotoDeleted by remember { mutableStateOf(false) }
+    var showingExistingPhoto by remember { mutableStateOf(false) }
    // New car -> existingCar is null -> ""
     // Edit -> existingCar has a car -> model name appears automatically
     val modelName = rememberTextFieldState(
@@ -829,12 +832,32 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     .clickable {
                         selectedImageBytes?.let { bytes ->
                             selectedImageBitmap = bytes.decodeToImageBitmap()
+                            showingExistingPhoto = false
                             showImagePreview = true
                         }
                     }
             )
-        }else{
-            if (modelPhotoError != null){
+        }else if (existingCar?.photoUser?.isNotEmpty() == true && !oldPhotoDeleted){
+            Text(
+                text = "Current Image",
+                color = Color.White,
+                fontSize = 15.sp,
+                modifier = Modifier
+                    .padding(top = 30.dp)
+                    .clickable{
+                        val bytes = imageStorage.loadImageFromFile(existingCar.photoUser)
+                        if(bytes != null){
+                            selectedImageBitmap = bytes.decodeToImageBitmap()
+                            showingExistingPhoto = true
+                            showImagePreview = true
+                        }
+                    }
+            )
+        }
+
+        else{
+            // If editing and the old photo exists, don't show an error.
+            if (modelPhotoError != null) {
                 Text(text = "Photo of the model is required",
                     color = Color.Red,
                     fontSize = 15.sp,
@@ -847,11 +870,14 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     showImagePreview = false},
                 containerColor = Color(0xFF1A1A1A),
                 confirmButton = {
-                    Row (
-                    ){
+                    Row{
                         TextButton(
                             onClick = {
-                                selectedImageBytes = null
+                                if(showingExistingPhoto){
+                                    oldPhotoDeleted = true
+                                }else{
+                                    selectedImageBytes = null
+                                }
                                 showImagePreview = false
                             }
                         ){
@@ -897,6 +923,16 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
 
             TextButton(
                 onClick = {
+
+                    // Check if the user has a photo.
+                    // For a new car, they must select a photo.
+                    // For an existing car, the old photo already counts.
+
+                    // after deleting the old photo, existingCar.photoUser still contains the old path because existingCar itself hasn't changed.
+                    val hasPhoto = selectedImageBytes?.isNotEmpty() == true ||
+                            (existingCar?.photoUser?.isNotEmpty() == true && !oldPhotoDeleted)
+
+
                     if (modelName.text.isEmpty()){
                         modelNameError = ""
                     }else
@@ -907,13 +943,28 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     }else
                         modelColourError = null
 
-                    if (selectedImageBytes == null){
+                    if (selectedImageBytes == null &&
+                        existingCar?.photoUser?.isNotEmpty() != true
+                    ) {
                         modelPhotoError = ""
-                    }else
+                    } else {
                         modelPhotoError = null
+                    }
+                    if (!hasPhoto) {
+                        modelPhotoError = ""
+                    } else {
+                        modelPhotoError = null
+                    }
 
-                    if (modelName.text.isNotEmpty() && modelColour.text.isNotEmpty() && selectedImageBytes?.isNotEmpty() == true){
-                        var imagePath = ""// if user never picked the photo it stays empty
+                    if (modelName.text.isNotEmpty() && modelColour.text.isNotEmpty() && hasPhoto){
+                       // var imagePath = ""// if user never picked the photo it stays empty
+
+                        // Stores the existing photo when editing a car.
+                        // If this is a new car, there is no old photo, so it starts as empty.
+                        //var imagePath = existingCar?.photoUser ?: ""
+
+                        //If the user deleted the old photo, this still keeps the old path.
+                        var imagePath = if(oldPhotoDeleted){""}else{existingCar?.photoUser ?: ""}
 
                         //selectedImageBytes have the user selected photo
                         //?.let { } combo means: "if this isn't null, run the block below, and call it bytes inside."
@@ -936,7 +987,19 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                 onResult = {onConfirmation()}
                             )
                         }else{ // if it's existingCar not empty go for this
-                            userViewModel.updateCarEditVM()
+                            val updatedCar = existingCar.copy(//copy() keeps the fields you didn't change, especially the car's ID.
+                                // This is an existing car, so update it.
+                                // The old photo is kept unless the user selects a new photo.
+                                modelUser = modelName.text.toString(),
+                                yearUser = selectedYear.toIntOrNull(),
+                                colourUser = modelColour.text.toString(),
+                                seriesUser = seriesOfModel.text.toString(),
+                                typeOfSeriesUser = typeOfSeries.text.toString(),
+                                collectorNoUser = modelCollectionNumber.text.toString(),
+                                photoUser = imagePath
+                            )
+                            userViewModel.updateCarEditVM(updatedCar, onResult = onConfirmation)
+
                         }
                     }
                 }

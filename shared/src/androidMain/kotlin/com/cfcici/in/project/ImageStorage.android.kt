@@ -12,4 +12,11 @@ actual class ImageStorage actual constructor(private val context: Any?) {
         file.writeBytes(bytes)
         return file.absolutePath
     }
+    actual fun loadImageFromFile(path: String): ByteArray? {
+        return try {
+            File(path).readBytes()
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

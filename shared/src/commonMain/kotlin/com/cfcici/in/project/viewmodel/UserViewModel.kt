@@ -32,15 +32,17 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         //return repository.getUserRepo()
         // Add later}
 
-    fun updateCarEditVM(userCarEdit: UserCar){
+    fun updateCarEditVM(userCarEdit: UserCar, onResult: () -> Unit){
         viewModelScope.launch {
             repository.updateCarEditRepo(userCarEdit)
+            onResult()
         }
     }
 
-    fun updateProfileEditVM(userProfileEdit: User){
+    fun updateProfileEditVM(userProfileEdit: User, onResult: () -> Unit){
         viewModelScope.launch {
             repository.updateProfileEditRepo(userProfileEdit)
+            onResult()
         }
     }
 
