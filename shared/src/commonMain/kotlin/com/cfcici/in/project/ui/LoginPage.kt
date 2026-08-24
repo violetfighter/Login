@@ -67,7 +67,7 @@ import org.jetbrains.compose.resources.Font
 
 @Composable
 
-fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
+fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
     val userName = rememberTextFieldState()
     var userPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -254,7 +254,6 @@ fun LoginPage(onLoginClick: (String, String, Int) -> Unit, onGoToNewAccount: () 
 
                                                 onLoginClick(// Send the username and password to App
                                                     userName.text.toString(),
-                                                    email,
                                                     user.userId
                                                 )
                                             }

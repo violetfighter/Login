@@ -10,11 +10,17 @@ actual class ImageStorage actual constructor(private val context: Any?) {
         val file = File(appContext.filesDir, "car_photos/$fileName")
         file.parentFile?.mkdirs()
         file.writeBytes(bytes)
-        return file.absolutePath
+        return fileName   // ← store just the filename now, not file.absolutePath
     }
-    actual fun loadImageFromFile(path: String): ByteArray? {
+
+    actual fun getFullPath(fileName: String): String {
+        val appContext = context as Context
+        return File(appContext.filesDir, "car_photos/$fileName").absolutePath
+    }
+
+    actual fun loadImageFromFile(fileName: String): ByteArray? {
         return try {
-            File(path).readBytes()
+            File(getFullPath(fileName)).readBytes()
         } catch (e: Exception) {
             null
         }

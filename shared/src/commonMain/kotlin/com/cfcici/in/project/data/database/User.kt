@@ -1,6 +1,5 @@
 package com.cfcici.`in`.project.data.database
 
-import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -15,6 +14,7 @@ data class User(//Parent of the UserCar
     val passwordUser: String,
     val dateOfBirthUser: String,
     val emailIdUser: String,
+    val userPhotoUser: String? = null // nullable, default to null
 )
 @Entity(
     tableName = "UserOwnedCar",
@@ -38,7 +38,7 @@ data class  UserCar(// Child of the User
     val seriesUser: String?,
     val typeOfSeriesUser: String?,
     val collectorNoUser: String?,
-    val photoUser: String//
+    val carPhotoUser: String//
 )
 
 @Entity(

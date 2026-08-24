@@ -4,6 +4,7 @@ import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserDao
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import kotlinx.coroutines.flow.Flow
 
 class UserRepository (
     private val userDaoFromRepo: UserDao){
@@ -11,8 +12,12 @@ class UserRepository (
     suspend fun insertUserRepo(userRepo: User){
         userDaoFromRepo.insert(userRepo)
     }
-    suspend fun getUserRepo(): List<User>{
-        return userDaoFromRepo.getAll()
+
+    //suspend and Flow won't get along
+    //suspend = "pause here, do work, hand back one final value."
+    //Flow = "here's an ongoing stream of values that arrive over time, no pausing needed to declare it."
+    fun getUserDetailsRepo(userIdRepo: Int): Flow<User?> {
+        return userDaoFromRepo.getAll(userIdRepo)
     }
 
     suspend fun deleteUserRepo(userRepo: User){

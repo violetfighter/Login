@@ -7,11 +7,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.cfcici.`in`.project.data.database.AppDatabase
-import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
 import com.cfcici.`in`.project.ui.ProfilePage
+import com.cfcici.`in`.project.ui.SettingsPage
 import com.cfcici.`in`.project.ui.UserCarCollectionPage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
@@ -22,7 +22,6 @@ object LoginRoute // Object means it doesn't accept any values
 @Serializable//?
 data class ProfileRoute(
     val username: String,
-    val email: String,
     val userId: Int)
 
 @Serializable
@@ -31,6 +30,11 @@ object NewAccountRoute
 @Serializable
 data class UserCarCollectionRoute(
     val brand: String,
+    val userId: Int
+)
+
+@Serializable
+data class SettingRoute(
     val userId: Int
 )
 
@@ -49,12 +53,11 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
             composable<LoginRoute> {
                 LoginPage(
                     //onLoginClick goes to Login
-                    onLoginClick = { username, email, userId ->
+                    onLoginClick = { username, userId->
                         //viewModel.insertUser(usernameFromVM = username, passwordFromVM = password)
                         navController.navigate(
                             ProfileRoute(
                                 username = username,
-                                email = email,
                                 userId = userId
                             )
                         )
@@ -71,12 +74,14 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                 // takes serialization data and reconstructs the ProfileRoute object
                 val profile: ProfileRoute = backStackEntry.toRoute()
                 ProfilePage(
-                    usernamePP = profile.username,
-                    emailPP = profile.email,
-                    userIdPP = profile.userId,
+                    usernamePP = profile.username, userIdPP = profile.userId,
 
                     onBackToLogin = {
                         navController.navigate(LoginRoute)
+                    },
+
+                    goToSetting = {
+                        navController.navigate(SettingRoute(userId = profile.userId))
                     },
 
                     goToUserCarCollection = {
@@ -85,7 +90,6 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                             brand = selectedBrand,
                             userId = userIdPP))//******************
                     },
-
                     userViewModel = viewModel
                 )
             }
@@ -104,6 +108,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     userViewModel = viewModel///????????
                 )
             }
+//________________________________________________________________________________________________//
 
             composable<UserCarCollectionRoute> { backStackEntry ->
                 val userCarCollection: UserCarCollectionRoute = backStackEntry.toRoute()
@@ -113,6 +118,23 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     goBackToProfile = { navController.popBackStack() },
                     userViewModel = viewModel,
                     imageStorage = imageStorage,
+                )
+            }
+//________________________________________________________________________________________________//
+
+            composable<SettingRoute>{ backStackEntry ->
+                val setting: SettingRoute = backStackEntry.toRoute()
+                SettingsPage(
+                    userIdSP = setting.userId,
+                    goBackToProfilePage = { username, userId ->
+                        navController.navigate(
+                            ProfileRoute(
+                                username = username, userId = userId
+                            )
+                        )
+                    },
+                    userViewModel = viewModel,
+                    imageStorage = imageStorage
                 )
             }
         }

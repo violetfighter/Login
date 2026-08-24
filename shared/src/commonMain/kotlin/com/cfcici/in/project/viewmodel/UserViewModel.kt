@@ -2,18 +2,24 @@ package com.cfcici.`in`.project.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Delete
 import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.data.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class UserViewModel(val repository: UserRepository): ViewModel()
 {
     //ViewModel should not have suspended functions
+
+    //Suspend functions (one-shot) — need onResult, because the ViewModel function itself can't return
+    // a value directly out of a viewModelScope.launch { } coroutine:
+
+    //Flow functions (ongoing stream) — no callback needed, since a Flow is already a value you can hand back directly
+    // and let the composable collect from over time:
     fun insertUserVM(usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String){
         viewModelScope.launch {//Run this code asynchronously, and keep it associated with this ViewModel.
             //asynchronous code, it means code that can start a task without making the rest of the program wait for that task to finish.
@@ -28,9 +34,12 @@ class UserViewModel(val repository: UserRepository): ViewModel()
             )
         }
     }
-    //fun getAllUser(): List<User> {
-        //return repository.getUserRepo()
-        // Add later}
+//Your other functions (insertUserVM, updateCarEditVM, etc.) all launch a coroutine because they're calling suspend fun
+// that do work and finish — insert this row, update that row, done. Those need viewModelScope.launch { } because suspend functions can only be called from inside a coroutine.
+
+//getAllUserVM is fundamentally different: it's not "do a task and finish," it's "give me an open pipe that keeps delivering values."
+// You don't launch a pipe — you just hand it to whoever wants to drink from it (in this case, SettingsPage/ProfilePage via collectAsState()).
+    fun getUserDetailsVM(userIdUserVM: Int): Flow<User?> = repository.getUserDetailsRepo(userIdUserVM)
 
     fun updateCarEditVM(userCarEdit: UserCar, onResult: () -> Unit){
         viewModelScope.launch {
@@ -54,10 +63,6 @@ class UserViewModel(val repository: UserRepository): ViewModel()
     }
     // onResult is a function that give to emailExistVM()
     // After you finish checking the database, give me the true or false result
-
-    fun updateCarEditVM(){
-
-    }
 
     fun emailExistVM(emailIDFromVM: String, onResult: (Boolean) -> Unit){
         viewModelScope.launch {
@@ -96,7 +101,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                     seriesUser = seriesFromVM,
                     typeOfSeriesUser = typeOfSeriesFromVM,
                     collectorNoUser = collectorNoUserVM,
-                    photoUser = photoUserFromVM
+                    carPhotoUser = photoUserFromVM
                 )
             )
             onResult() //<- runs whatever function was passed in, once insert is done

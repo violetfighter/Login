@@ -19,6 +19,7 @@ actual class DBFactory actual constructor(private val context: Any?) {
         )
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 

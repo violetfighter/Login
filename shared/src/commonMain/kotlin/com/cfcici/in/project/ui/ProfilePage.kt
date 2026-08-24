@@ -23,7 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -67,9 +67,9 @@ import org.jetbrains.compose.resources.Font
 
 @Composable
 fun ProfilePage(usernamePP: String,
-                emailPP: String,
                 userIdPP: Int,
                 onBackToLogin: () -> Unit,
+                goToSetting: (Int) -> Unit,
                 goToUserCarCollection: (String, Int) -> Unit,
                 userViewModel: UserViewModel)
 {
@@ -172,7 +172,9 @@ fun ProfilePage(usernamePP: String,
                                 fontSize = 30.sp,
                                 fontFamily = usernameFont
                             )
+
                             // remove this and add email
+                            /*
                             Text(
                                 text = "Email: $emailPP",
                                 modifier = Modifier
@@ -181,7 +183,7 @@ fun ProfilePage(usernamePP: String,
                                 textAlign = TextAlign.Start,
                                 color = Color.White,
                                 fontFamily = usernameFont
-                            )
+                            )*/
                         }
                     }
                 }
@@ -316,12 +318,12 @@ fun ProfilePage(usernamePP: String,
                         modifier = Modifier
                             .padding(end = 50.dp),
                         onClick = {
-                            // do something
+                            goToSetting(userIdPP)
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Camera",
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
                             tint = Color.White
                         )
                     }

@@ -14,13 +14,19 @@ import platform.posix.memcpy
 
 actual class ImageStorage actual constructor(private val context: Any?) {
 
-    actual fun saveImageToFile(bytes: ByteArray, fileName: String): String {
-        val documentsDir = NSSearchPathForDirectoriesInDomains(
+    private fun documentsDir(): String =
+        NSSearchPathForDirectoriesInDomains(
             NSDocumentDirectory, NSUserDomainMask, true
         ).first() as String
-        val filePath = "$documentsDir/$fileName"
+
+    actual fun saveImageToFile(bytes: ByteArray, fileName: String): String {
+        val filePath = "${documentsDir()}/$fileName"
         bytes.toNSData().writeToFile(filePath, atomically = true)
-        return filePath
+        return fileName   // ← store just the filename now, not the full path
+    }
+
+    actual fun getFullPath(fileName: String): String {
+        return "${documentsDir()}/$fileName"   // recomputed fresh every launch
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -29,9 +35,9 @@ actual class ImageStorage actual constructor(private val context: Any?) {
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    actual fun loadImageFromFile(path: String): ByteArray? {
+    actual fun loadImageFromFile(fileName: String): ByteArray? {
         return try {
-            NSData.dataWithContentsOfFile(path)?.toKotlinByteArray()
+            NSData.dataWithContentsOfFile(getFullPath(fileName))?.toKotlinByteArray()
         } catch (_: Exception) {
             null
         }

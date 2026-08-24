@@ -144,7 +144,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             car.typeOfSeriesUser?.contains(searchText, ignoreCase = true) == true ||
             car.collectorNoUser?.contains(searchText, ignoreCase = true) == true
     }
-        .let { list ->//////?????????
+        .let { list ->
             when (sortOrder) {
                 SortOrder.NEWEST_FIRST -> list.sortedByDescending { it.yearUser ?: 0 }
                 SortOrder.OLDEST_FIRST -> list.sortedBy { it.yearUser ?: 0 }
@@ -418,9 +418,9 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
 
             )
             {
-                if (selectedCar.photoUser.isNotEmpty()) {
+                if (selectedCar.carPhotoUser.isNotEmpty()) {
                     AsyncImage(
-                        model = selectedCar.photoUser,
+                        model = selectedCar.carPhotoUser,
                         contentDescription = selectedCar.modelUser,
                         modifier = Modifier
                             .size(90.dp)
@@ -557,34 +557,39 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            //.padding(16.dp)
+        ,
+        //horizontalAlignment = Alignment.CenterHorizontally,
+        //verticalArrangement = Arrangement.Center
     )
     {
         // Header Row with a Close button
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            //horizontalArrangement = Arrangement.SpaceBetween,
+            //verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(onClick = {
-                if (showCamera)
-                    showCamera = false
-                else onDismissRequest() })
+            TextButton(onClick =
+                {
+                    if (showCamera)
+                        showCamera = false
+                    else onDismissRequest()
+                }
+            )
             {
                 Text(if (showCamera)
                     "Cancel"
                 else "",
                     color = Color(0xFFF0396B),
-                    modifier = Modifier.padding(start = 20.dp, top = 40.dp, bottom = 20.dp))
+                    modifier = Modifier.padding(start = 20.dp, top = 40.dp))
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (showCamera) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(0.9f)) {
+            Box(
+                modifier = Modifier.fillMaxWidth()) { ///?????
                 CameraCapture(
                     onImageCaptured = { bytes ->
                         selectedImageBytes = bytes
@@ -623,13 +628,13 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     cursorColor = Color.White
                 ),
                 isError = modelNameError != null,
-                supportingText = {
-                    if (modelNameError != null){
-                        Text("Name of the model is required ")
-                    }
-                }
+                supportingText = if (modelNameError != null) {
+                    { Text("Name of the model is required") }
+                } else null // removes the extra spacing
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -647,7 +652,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(
                 text = "Colour:",
                 modifier = Modifier.width(125.dp),
@@ -671,16 +677,19 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     cursorColor = Color.White
                 ),
                 isError = modelColourError != null,
-                supportingText = {if (modelColourError != null){
-                    Text("Colour of the model is required")
-                } }
+                supportingText = if (modelColourError != null) {
+                    { Text("Name of the colour is required") }
+                } else null
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(
                 text = "Collection Number:",
                 modifier = Modifier.width(125.dp),
@@ -707,7 +716,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(
                 text = "Series Name:",
                 modifier = Modifier.width(125.dp),
@@ -734,7 +744,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(
                 text = "Type Of Series:",
                 modifier = Modifier.width(125.dp),
@@ -780,7 +791,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ){
-                        IconButton(onClick = { launcher.launch() }) {
+                        IconButton(onClick = { launcher.launch() }) { // Only icon triggers
                             Icon(imageVector = Icons.Default.Upload,
                                 contentDescription = "Upload", tint = Color.White)
                         }
@@ -837,7 +848,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         }
                     }
             )
-        }else if (existingCar?.photoUser?.isNotEmpty() == true && !oldPhotoDeleted){
+        }else if (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted){
             Text(
                 text = "Current Image",
                 color = Color.White,
@@ -845,7 +856,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                 modifier = Modifier
                     .padding(top = 30.dp)
                     .clickable{
-                        val bytes = imageStorage.loadImageFromFile(existingCar.photoUser)
+                        val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoUser)
                         if(bytes != null){
                             selectedImageBitmap = bytes.decodeToImageBitmap()
                             showingExistingPhoto = true
@@ -928,9 +939,9 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     // For a new car, they must select a photo.
                     // For an existing car, the old photo already counts.
 
-                    // after deleting the old photo, existingCar.photoUser still contains the old path because existingCar itself hasn't changed.
+                    // after deleting the old photo, existingCar.carPhotoUser still contains the old path because existingCar itself hasn't changed.
                     val hasPhoto = selectedImageBytes?.isNotEmpty() == true ||
-                            (existingCar?.photoUser?.isNotEmpty() == true && !oldPhotoDeleted)
+                            (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted)
 
 
                     if (modelName.text.isEmpty()){
@@ -944,7 +955,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         modelColourError = null
 
                     if (selectedImageBytes == null &&
-                        existingCar?.photoUser?.isNotEmpty() != true
+                        existingCar?.carPhotoUser?.isNotEmpty() != true
                     ) {
                         modelPhotoError = ""
                     } else {
@@ -961,10 +972,10 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
 
                         // Stores the existing photo when editing a car.
                         // If this is a new car, there is no old photo, so it starts as empty.
-                        //var imagePath = existingCar?.photoUser ?: ""
+                        //var imagePath = existingCar?.carPhotoUser ?: ""
 
                         //If the user deleted the old photo, this still keeps the old path.
-                        var imagePath = if(oldPhotoDeleted){""}else{existingCar?.photoUser ?: ""}
+                        var imagePath = if(oldPhotoDeleted){""}else{existingCar?.carPhotoUser ?: ""}
 
                         //selectedImageBytes have the user selected photo
                         //?.let { } combo means: "if this isn't null, run the block below, and call it bytes inside."
@@ -996,10 +1007,9 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                 seriesUser = seriesOfModel.text.toString(),
                                 typeOfSeriesUser = typeOfSeries.text.toString(),
                                 collectorNoUser = modelCollectionNumber.text.toString(),
-                                photoUser = imagePath
+                                carPhotoUser = imagePath
                             )
                             userViewModel.updateCarEditVM(updatedCar, onResult = onConfirmation)
-
                         }
                     }
                 }

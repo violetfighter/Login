@@ -63,12 +63,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalHapticFeedback
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.blur.blurEffect
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -118,7 +118,6 @@ fun NewAccountPage(
         }
     ){
         Box(
-
             modifier = Modifier
                 .fillMaxSize()
                 //.background(Color.Black)
@@ -130,17 +129,18 @@ fun NewAccountPage(
             contentAlignment = Alignment.Center
         ){
             Card(
+                shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     //.fillMaxHeight()
                     //.height(5.dp)
                     .padding(20.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .hazeEffect(state = hazeState) {
-                        blurEffect {
-                            blurRadius = 50.dp
+                    .hazeBlur(
+                        input = HazeInput.Sources(hazeState),
+                        style = HazeBlurStyle {
+                            blurRadius(50.dp)
                         }
-                    },
-                shape = RoundedCornerShape(24.dp),
+                    ),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Black.copy(alpha = 0.5f)
                 )
@@ -238,7 +238,8 @@ fun NewAccountPage(
                         shape = RoundedCornerShape(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle = TextStyle(fontSize = 20.sp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .onFocusChanged{
                                 if(it.isFocused)
                                     dateOfBirthError = null
@@ -502,7 +503,7 @@ fun formatDate(dateMillis: Long?): String {
     val instant = Instant.fromEpochMilliseconds(dateMillis)//Converts the raw millisecond number into a proper Instant object — a structured representation of "this exact moment in time," using kotlinx.datetime's API.
     val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date//Converts that instant into a calendar date (day/month/year), adjusted for the device's current timezone — this is what turns "a huge millisecond number" into "August 2, 2026."
 
-    return "${date.dayOfMonth}/${date.monthNumber}/${date.year}"//??????????????????????
+    return "${date.dayOfMonth}/${date.monthNumber}/${date.year}"// display the DD/MM/YYYY
 }
 
 fun emailChecker(email: String): String?{//gives string

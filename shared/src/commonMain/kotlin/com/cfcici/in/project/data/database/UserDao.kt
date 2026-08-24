@@ -5,11 +5,20 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users")
-    suspend fun getAll(): List<User>
+    @Query("SELECT * FROM Users WHERE userId = :userIdDao")
+    fun getAll(userIdDao: Int): Flow<User?>
+
+    //User? (nullable) — because the query might find nothing (e.g., bad id, or user got deleted),
+    // so Room needs a way to represent "no result."
+
+    //Flow<...> wrapping it — this is what makes it "live."
+    // Instead of fetching once and being done, Flow keeps an open connection to that row.
+    // Any time anything updates that row (username changed, photo changed, whatever),
+    // Room automatically emits the new version through the Flow, and your UI reacts instantly — no manual re-fetching needed.
 
     @Insert
     suspend fun insert(vararg user: User)
