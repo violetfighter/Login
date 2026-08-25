@@ -71,6 +71,16 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
+    fun usernameExistsVM(usernameIDFromVM: String, onResult: (Boolean) -> Unit){
+        viewModelScope.launch {
+            val isUsernameExist = repository.usernameExistsRepo(usernameIDFromVM)
+            onResult(isUsernameExist)
+        }
+    }
+
+    fun totalCarsUserOwnVM(userId: Int): Flow<Int> = repository.totalCarsUserOwnRepo(userId)
+
+
     //get all the user item like user id, username, email id, date of birth
     fun getUserByUsernameVM(getUserByUsernameFromVM: String, onResult: (User?) -> Unit){
         viewModelScope.launch {

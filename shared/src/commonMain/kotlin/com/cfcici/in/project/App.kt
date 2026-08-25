@@ -90,7 +90,8 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                             brand = selectedBrand,
                             userId = userIdPP))//******************
                     },
-                    userViewModel = viewModel
+                    userViewModel = viewModel,
+                    imageStorage = imageStorage
                 )
             }
 //________________________________________________________________________________________________//

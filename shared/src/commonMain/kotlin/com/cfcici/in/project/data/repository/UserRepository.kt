@@ -13,6 +13,15 @@ class UserRepository (
         userDaoFromRepo.insert(userRepo)
     }
 
+    fun totalCarsUserOwnRepo(userIdRepo: Int): Flow<Int> {
+        return userDaoFromRepo.totalCarsUserOwn(userIdDao = userIdRepo)
+    }
+
+    suspend fun usernameExistsRepo(usernameRepo: String): Boolean{
+        val existingUser = userDaoFromRepo.getUsernameIdDuplication(usernameRepo)
+        return existingUser != null
+    }
+
     //suspend and Flow won't get along
     //suspend = "pause here, do work, hand back one final value."
     //Flow = "here's an ongoing stream of values that arrive over time, no pausing needed to declare it."
@@ -63,9 +72,11 @@ class UserRepository (
 
     //########################################################################################################################################################################
 
+    /*
     suspend fun getCarOnSearchBarRepo(userIdUserRepo: Int, modelUserRepo: String): List<UserCar>{
         return userDaoFromRepo.getCarOnSearchBar(userIdUserRepo, modelUserRepo)
     }
+    */
 
     suspend fun insertSelectedCarBrandRepo(selectedBrandCarsRepo: UserSelectedBrandCars){
         userDaoFromRepo.insertSelectedCarBrand(selectedBrandCarsRepo)

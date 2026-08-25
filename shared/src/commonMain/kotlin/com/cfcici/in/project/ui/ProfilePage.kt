@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -41,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,17 +56,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import coil3.compose.AsyncImage
+import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
+import login.shared.generated.resources.profile_icon
 import org.jetbrains.compose.resources.Font
-
+import org.jetbrains.compose.resources.painterResource
 
 
 @Composable
@@ -71,8 +80,13 @@ fun ProfilePage(usernamePP: String,
                 onBackToLogin: () -> Unit,
                 goToSetting: (Int) -> Unit,
                 goToUserCarCollection: (String, Int) -> Unit,
-                userViewModel: UserViewModel)
+                userViewModel: UserViewModel,
+                imageStorage: ImageStorage
+)
 {
+    val totalCarUserOwn by userViewModel.totalCarsUserOwnVM(userIdPP).collectAsState(initial = null)
+    val user by userViewModel.getUserDetailsVM(userIdPP).collectAsState(initial = null)
+
     //var selectedItem by remember { mutableStateOf<String?>(null) } if we use this it will only show the one selected item
     var selectedItem by remember { mutableStateOf<List<UserSelectedBrandCars>>(emptyList()) }// it will allow user to select multiple box
 
@@ -83,19 +97,15 @@ fun ProfilePage(usernamePP: String,
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val menuItemData = listOf("HotWheels", "MatchBox", "Tomica", "Kaido House", "Tarmac Works", "Pop Race", "Inno 64",
         "Auto World", "GreenLight", "Johnny Lightning", "Majorette", "M2 Machines", "Jada Toys", "Maisto", "Solido", "MINI GT", "Bburago")
-
     val snackbarHostState = remember { SnackbarHostState()}
     val scope = rememberCoroutineScope ()
     var expand by remember { mutableStateOf(false) }// if dropdown is open or closed
-
     var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }///??????
-
     fun displayBrand(){
         userViewModel.getSelectedCarBrandsVM(userIdPP){ savedBrands ->
             selectedItem = savedBrands
             // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
         }
-
     }
 
     LaunchedEffect(Unit){
@@ -163,27 +173,38 @@ fun ProfilePage(usernamePP: String,
                             .padding(horizontal = 20.dp, vertical = 20.dp)
                     )
                     {
-                        Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val currentUser = user
+
+                            if(!currentUser?.userPhotoUser.isNullOrBlank()){
+                                AsyncImage(
+                                    model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }else
+                                Image(
+                                    painter = painterResource(Res.drawable.profile_icon),
+                                    contentDescription = "Default Profile picture",
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+
                             Text(
                                 text = "Hello $usernamePP",
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.padding(start = 10.dp),
                                 textAlign = TextAlign.Start,
                                 color = Color.White,
-                                fontSize = 30.sp,
+                                fontSize = 28.sp,
                                 fontFamily = usernameFont
                             )
-
-                            // remove this and add email
-                            /*
-                            Text(
-                                text = "Email: $emailPP",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 10.dp),
-                                textAlign = TextAlign.Start,
-                                color = Color.White,
-                                fontFamily = usernameFont
-                            )*/
                         }
                     }
                 }
@@ -201,8 +222,8 @@ fun ProfilePage(usernamePP: String,
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ){
-                        Text( // Add  total number of cars user own
-                            text = "Total Collection",
+                        Text(
+                            text = "Total Collection $totalCarUserOwn",
                             fontWeight = FontWeight.Bold,
                             fontFamily = usernameFont,
                             modifier = Modifier

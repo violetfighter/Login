@@ -198,7 +198,7 @@ fun NewAccountPage(
                         isError = usernameError != null,// read as does usernameError have any error false -> shows nothing
                         supportingText = {
                             if (usernameError != null)
-                                Text("Username is required")
+                                Text(usernameError!!)
                         }
                     )
 
@@ -335,7 +335,7 @@ fun NewAccountPage(
                                     emailError = emailChecker(newEmailID.text.toString()) }
 
                                 if (newUserName.text.isEmpty()){
-                                    usernameError = ""//= "Username is required"
+                                    usernameError = "Username is required"
                                 }else
                                     usernameError = null
 
@@ -366,25 +366,34 @@ fun NewAccountPage(
                                     }
                                 }
                                 else{
-                                    userViewModel.emailExistVM((newEmailID.text.toString())){
-                                        exists ->
-                                        if(exists){
-                                            emailError = "Email already exists"
-                                        }else
-                                        { // Send the values to App so it can save on room database
-                                            onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
-                                            scope.launch {
-                                                val snackbarJob = launch {
+                                    userViewModel.emailExistVM((newEmailID.text.toString()))
+                                    {emailExists ->
+
+                                        userViewModel.usernameExistsVM(newUserName.text.toString())
+                                        { usernameExists ->
+
+                                            if(emailExists){
+                                                emailError = "Email already exists"
+                                            }
+                                            if(usernameExists){
+                                                usernameError = "Username already exists"
+                                            }
+                                            if (!emailExists && !usernameExists)
+                                            { // Send the values to App so it can save on room database
+                                                onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
+                                                scope.launch {
+                                                    val snackbarJob = launch {
                                                     snackbarHostState.showSnackbar(
                                                         message = "Successfully created the account.",
                                                         duration = SnackbarDuration.Short
                                                     )
                                                 }
-                                                delay(2000)
-                                                snackbarJob.cancel()
-                                                onBackToLogin()
-                                            }
+                                                    delay(1000)
+                                                    snackbarJob.cancel()
+                                                    onBackToLogin()
+                                                }
                                         }
+                                    }
                                     }
                                 }
                             }

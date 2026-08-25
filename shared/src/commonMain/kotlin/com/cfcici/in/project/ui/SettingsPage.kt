@@ -786,7 +786,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     painter = painterResource(Res.drawable.profile_icon),
                     contentDescription = "Default Profile picture",
                     modifier = Modifier
-                        .size(600.dp)
+                        .size(300.dp)
+                        .clip(CircleShape)
                         //.transformable(state = state)
                         //.graphicsLayer(
                             //scaleX = zoom,
@@ -795,7 +796,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             //translationY = offset.y
                             //)
                         ,
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
             }
         }

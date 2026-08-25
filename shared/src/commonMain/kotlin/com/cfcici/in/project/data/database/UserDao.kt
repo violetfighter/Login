@@ -29,6 +29,13 @@ interface UserDao {
     @Update
     suspend fun updateCarEdit(userCar: UserCar)
 
+
+    @Query("""SELECT COUNT(*) FROM UserOwnedCar WHERE userIdUser = :userIdDao""")
+    fun totalCarsUserOwn(userIdDao: Int): Flow<Int>
+
+    @Query("SELECT * FROM Users WHERE usernameUser = :usernameUserDao LIMIT 1")
+    suspend fun getUsernameIdDuplication(usernameUserDao: String): User?
+
     @Update
     suspend fun updateProfileEdit(user: User)
 
