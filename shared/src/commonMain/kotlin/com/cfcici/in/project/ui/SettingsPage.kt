@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -53,12 +57,17 @@ import login.shared.generated.resources.Res
 import login.shared.generated.resources.profile_icon
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -72,7 +81,7 @@ import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
 import kotlin.let
 
 @Composable
-fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage)
+fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage,  onBackToLogin: () -> Unit)
 
 //Reason why we use collectAsState
 //Subscribes to the Flow — it starts collecting values from userViewModel.getUser(userIdSP) the moment your composable enters composition.
@@ -98,6 +107,22 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     var showCamera by remember { mutableStateOf(false) }
     var pendingCamera by remember { mutableStateOf(false) }
 
+    val haptics = LocalHapticFeedback.current
+    var showFullImage by remember { mutableStateOf(false) }
+    /*val imageLongPressAnimation by animateDpAsState(
+        targetValue = if (showFullImage) 300.dp else 190.dp,
+        animationSpec = tween(durationMillis = 250, easing = LinearEasing),
+        label = "Profile Image Size"
+    )
+    val scale = if (showFullImage) ContentScale.Fit else ContentScale.Crop
+    */
+
+    var zoom by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val state = rememberTransformableState { zoomChange, _ , _ ->
+        zoom = (zoom * zoomChange).coerceIn(1f, 5f) // clamp so it can't shrink below original or zoom absurdly far
+        //offset += offsetChange
+    }
 
     val scope = rememberCoroutineScope()
     var selectedProfileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }// turns byte to pixeled pics like it shows on UI and this is a local storage not saved on db
@@ -123,6 +148,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             }
         }
     )
+
+    var deleteUserPermanently by remember  {mutableStateOf<Int?>(null)}
 
     LaunchedEffect(pendingCamera) {
         if (pendingCamera) {
@@ -377,7 +404,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 }
 
                 IconButton(
-                    onClick = {} // User delete completely
+                    onClick = {deleteUserPermanently = userIdSP} // User delete completely
                 ){
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -391,45 +418,66 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .offset(y = 160.dp - 100.dp / 2 - 20.dp)
+                //.combinedClickable(
+                    //onClick = {}, // it is not necessary, it only because onLongClick won't stay along without onClick
+                    //onLongClick = {
+                        //haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        //showFullImage = true
+                    //}
+                //)
         )
         {
             val currentUser = user
-            //display the user selected picture instantly
-            if (selectedProfileBitmap != null) {
-                Image(
-                    bitmap = selectedProfileBitmap!!,
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(190.dp)
-                        .clip(CircleShape)
-                        .clickable(
-                            onClick = {}
-                        ),
-                    contentScale = ContentScale.Crop
-                )
-            }
 
-            // previously saved photo, loaded from disk via its saved path
-            else if(currentUser?.userPhotoUser != null){
-                AsyncImage(
-                    model = imageStorage.getFullPath(currentUser.userPhotoUser),
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(190.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            else {
-                // no photo at all, default photo
-                Image(
-                    painter = painterResource(Res.drawable.profile_icon),
-                    contentDescription = "Default Profile picture",
-                    modifier = Modifier
-                        .size(190.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+            Box(
+                modifier = Modifier
+                    .pointerInput(selectedProfileBitmap, currentUser?.userPhotoUser){
+                        detectTapGestures (
+                            onLongPress = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showFullImage = true
+                            }
+                        )
+                    }
+            )
+            {
+                //display the user selected picture instantly
+                //3
+                if (selectedProfileBitmap != null) {
+                    Image(
+                        bitmap = selectedProfileBitmap!!,
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(190.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                // previously saved photo, loaded from disk via its saved path
+                //1
+                else if(currentUser?.userPhotoUser != null){
+                    AsyncImage(
+                        model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(190.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                else {
+                    // no photo at all, default photo
+                    //2
+                    Image(
+                        painter = painterResource(Res.drawable.profile_icon),
+                        contentDescription = "Default Profile picture",
+                        modifier = Modifier
+                            .size(190.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
             IconButton(
@@ -446,6 +494,37 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier.size(30.dp)
                 )
             }
+        }
+
+        if(deleteUserPermanently != null){
+            AlertDialog(
+                //deleteUserPermanently = null make Alert Dialog disappear
+                onDismissRequest = {deleteUserPermanently = null},
+                containerColor = Color(0xFF1A1A1A),
+                title = {
+                    Text("Delete the account", color = Color(0xFFFF9800))
+                },
+                text = {
+                    Text("Are you sure you want to delete the account permanently?", color = Color.LightGray)
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {deleteUserPermanently = null}
+                    ){
+                        Text("Cancel", color = Color(0xFFFF9800))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        user?.let{ currentUser ->
+                            userViewModel.deleteUserVM(currentUser){}
+                        }
+                        onBackToLogin()
+                    }){
+                        Text("Delete", color = Color(0xFFF0396B))
+                    }
+                }
+            )
         }
 
         if(showProfilePhotoOptions){
@@ -639,6 +718,87 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             }
         }
         */
+    }
+
+    if (showFullImage){
+        val currentUser = user
+
+        LaunchedEffect(showFullImage){
+            if(showFullImage){
+                zoom = 1f
+                offset = Offset.Zero
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.85f))
+                .clickable(
+                    indication = null,//"don't draw any ripple effect"
+                    interactionSource = remember { MutableInteractionSource() }// "here's an empty tracker, since I still have to supply one"
+                ){
+                    showFullImage = false
+                },
+            contentAlignment = Alignment.Center,
+        )
+        {
+            //display the user selected picture instantly
+            //3
+            if (selectedProfileBitmap != null) {
+                Image(
+                    bitmap = selectedProfileBitmap!!,
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(600.dp)
+                        .transformable(state = state)
+                        .graphicsLayer(
+                            scaleX = zoom,
+                            scaleY = zoom,
+                            //translationX = offset.x,
+                            //translationY = offset.y
+                            ),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            // previously saved photo, loaded from disk via its saved path
+            //1
+            else if(currentUser?.userPhotoUser != null){
+                AsyncImage(
+                    model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(600.dp)
+                        .transformable(state = state)
+                        .graphicsLayer(
+                            scaleX = zoom,
+                            scaleY = zoom,
+                            //translationX = offset.x,
+                            //translationY = offset.y
+                        ),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            else {
+                // no photo at all, default photo
+                //2
+                Image(
+                    painter = painterResource(Res.drawable.profile_icon),
+                    contentDescription = "Default Profile picture",
+                    modifier = Modifier
+                        .size(600.dp)
+                        //.transformable(state = state)
+                        //.graphicsLayer(
+                            //scaleX = zoom,
+                            //scaleY = zoom,
+                            //translationX = offset.x,
+                            //translationY = offset.y
+                            //)
+                        ,
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
     }
 
     if(showCamera){

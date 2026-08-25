@@ -134,7 +134,10 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                         )
                     },
                     userViewModel = viewModel,
-                    imageStorage = imageStorage
+                    imageStorage = imageStorage,
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute)
+                    },
                 )
             }
         }
