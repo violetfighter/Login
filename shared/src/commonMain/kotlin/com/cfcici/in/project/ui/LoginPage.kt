@@ -60,6 +60,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import kotlinx.coroutines.delay
 import login.shared.generated.resources.Res
 import login.shared.generated.resources.neonderthaw
 import org.jetbrains.compose.resources.Font
@@ -236,12 +237,16 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
                                 if (userPassword.isEmpty() || userName.text.isEmpty() )
                                 {
                                     scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Need to fill up everything.",
-                                        duration = SnackbarDuration.Short
-                                    )
+                                        val snackbarJob = launch{
+                                            snackbarHostState.showSnackbar(
+                                                message = "Need to fill up everything.",
+                                                duration = SnackbarDuration.Indefinite
+                                            )
+                                        }
+                                        delay(2000)
+                                        snackbarJob.cancel()
+                                    }
                                 }
-                            }
                             else {
                                 userViewModel.loginCheckerVM( userName.text.toString(), userPassword){
                                     exists ->

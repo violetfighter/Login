@@ -401,7 +401,10 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .size(190.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape)
+                        .clickable(
+                            onClick = {}
+                        ),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -644,7 +647,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 "Cancel",
                 color = Color(0xFFF0396B),
                 modifier = Modifier
-                    .padding(start = 20.dp, top = 45.dp)
+                    .padding(start = 20.dp, top = 50.dp)
                     .clickable { showCamera = false }
             )
             CameraCapture(

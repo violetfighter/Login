@@ -284,7 +284,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                         )
                     } else {
                         filteringForCarSearch.forEach { car ->
-                            EachCarTab(selectedCar = car, onLongPressCar = { contextMenuCarId = it.userCarIdUser })
+                            EachCarTab(selectedCar = car, imageStorage = imageStorage, onLongPressCar = { contextMenuCarId = it.userCarIdUser })
                         }
                     }
                 }
@@ -383,7 +383,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
 @Composable
 //if you are using : UserCar you are passing all the parameter in the UserCar instead of only one datatype
-fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
+fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar: (UserCar) -> Unit)
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val haptics = LocalHapticFeedback.current
@@ -420,7 +420,7 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
             {
                 if (selectedCar.carPhotoUser.isNotEmpty()) {
                     AsyncImage(
-                        model = selectedCar.carPhotoUser,
+                        model = imageStorage.getFullPath(fileName = selectedCar.carPhotoUser),
                         contentDescription = selectedCar.modelUser,
                         modifier = Modifier
                             .size(90.dp)
@@ -459,7 +459,7 @@ fun EachCarTab(selectedCar: UserCar, onLongPressCar: (UserCar) -> Unit)
                 Row {
                     // Because Text expect string you should convert to string
                     Text(
-                        text = selectedCar.yearUser.toString(),
+                        text = selectedCar.yearUser?.toString() ?: "",
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp
@@ -559,15 +559,15 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
             .background(Color.Black)
             //.padding(16.dp)
         ,
-        //horizontalAlignment = Alignment.CenterHorizontally,
-        //verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     )
     {
         // Header Row with a Close button
         Row(
             modifier = Modifier.fillMaxWidth(),
-            //horizontalArrangement = Arrangement.SpaceBetween,
-            //verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick =
                 {
@@ -581,7 +581,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     "Cancel"
                 else "",
                     color = Color(0xFFF0396B),
-                    modifier = Modifier.padding(start = 20.dp, top = 40.dp))
+                    modifier = Modifier.padding(start = 20.dp, top = 50.dp))
             }
         }
 
@@ -913,7 +913,6 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                 }
             )
         }
-
         Spacer(modifier = Modifier.padding(vertical = 20.dp))
 
         Row(

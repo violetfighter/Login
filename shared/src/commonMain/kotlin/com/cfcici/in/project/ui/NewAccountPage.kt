@@ -69,6 +69,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.hazeBlur
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -354,10 +355,14 @@ fun NewAccountPage(
                                if (newUserName.text.isEmpty() || newPassword.text.isEmpty() || newDOB.text.isEmpty() || newEmailID.text.isEmpty() || passwordError != null || emailError != null)
                                 {
                                     scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            message = "Need to fill up everything.",
-                                            duration = SnackbarDuration.Short
-                                        )
+                                        val snackbarJob = launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "Need to fill up everything.",
+                                                duration = SnackbarDuration.Indefinite
+                                            )
+                                        }
+                                        delay(2000)
+                                        snackbarJob.cancel()
                                     }
                                 }
                                 else{
@@ -369,10 +374,14 @@ fun NewAccountPage(
                                         { // Send the values to App so it can save on room database
                                             onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
                                             scope.launch {
-                                                snackbarHostState.showSnackbar(
-                                                    message = "Successfully created the account.",
-                                                    duration = SnackbarDuration.Short
-                                                )
+                                                val snackbarJob = launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        message = "Successfully created the account.",
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                }
+                                                delay(2000)
+                                                snackbarJob.cancel()
                                                 onBackToLogin()
                                             }
                                         }
