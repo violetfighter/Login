@@ -21,8 +21,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Delete
@@ -80,6 +85,19 @@ import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
 import kotlin.let
 
+
+data class  AvatarStyle(val name: String, val label: String)
+
+val avatarStyles = listOf(
+    AvatarStyle("avataaars", "Avataaars"),
+    AvatarStyle("bottts", "Bottts"),
+    AvatarStyle("pixel-art", "Pixel Art"),
+    AvatarStyle("adventurer", "Adventurer"),
+    AvatarStyle("fun-emoji", "Fun Emoji")
+)
+
+fun avatarUrl(style: String, seed: String): String = "https://api.dicebear.com/9.x/$style/png?seed=$seed"
+
 @Composable
 fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage,  onBackToLogin: () -> Unit)
 
@@ -119,9 +137,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 
     var zoom by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
-    val state = rememberTransformableState { zoomChange, _ , _ ->
+    val state = rememberTransformableState { zoomChange, offsetChange , _ ->
         zoom = (zoom * zoomChange).coerceIn(1f, 5f) // clamp so it can't shrink below original or zoom absurdly far
-        //offset += offsetChange
+        offset += offsetChange
     }
 
     val scope = rememberCoroutineScope()
@@ -457,8 +475,15 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 // previously saved photo, loaded from disk via its saved path
                 //1
                 else if(currentUser?.userPhotoUser != null){
+                    val photoValue = currentUser.userPhotoUser
+                    val model = if (photoValue.startsWith("http")){
+                        photoValue // it's a remote DiceBear URL, use as-is
+                    }else{
+                        imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                    }
                     AsyncImage(
-                        model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                        //model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                        model = model,
                         contentDescription = "Profile picture",
                         modifier = Modifier
                             .size(190.dp)
@@ -546,6 +571,16 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     )
                     {
+                        Avatars (
+                            onAvatarSelected = {url ->
+                                showProfilePhotoOptions = false
+                                user?.let {
+                                    currentUser ->
+                                    val updatedAvatar = currentUser.copy(userPhotoUser = url)
+                                    userViewModel.updateProfileEditVM(updatedAvatar){}
+                                }
+                            }
+                        )
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(30.dp),
@@ -557,14 +592,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                 showProfilePhotoOptions = false
                                 image.launch()
                             }
-
-
-                        ){
+                        )
+                        {
                             Row (
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
-                            ) {
+                            )
+                            {
                                 Icon(
                                     modifier = Modifier.padding(8.dp),
                                     imageVector = Icons.Default.Upload,
@@ -749,13 +784,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     bitmap = selectedProfileBitmap!!,
                     contentDescription = "Profile picture",
                     modifier = Modifier
+                        .padding(10.dp)
                         .size(600.dp)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
                             scaleY = zoom,
-                            //translationX = offset.x,
-                            //translationY = offset.y
+                            translationX = offset.x,
+                            translationY = offset.y
                             ),
                     contentScale = ContentScale.Fit
                 )
@@ -768,13 +804,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     model = imageStorage.getFullPath(currentUser.userPhotoUser),
                     contentDescription = "Profile picture",
                     modifier = Modifier
+                        .padding(10.dp)
                         .size(600.dp)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
                             scaleY = zoom,
-                            //translationX = offset.x,
-                            //translationY = offset.y
+                            translationX = offset.x,
+                            translationY = offset.y
                         ),
                     contentScale = ContentScale.Fit
                 )
@@ -788,13 +825,13 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier
                         .size(300.dp)
                         .clip(CircleShape)
-                        //.transformable(state = state)
+                        .transformable(state = state)
                         //.graphicsLayer(
                             //scaleX = zoom,
                             //scaleY = zoom,
                             //translationX = offset.x,
                             //translationY = offset.y
-                            //)
+                       // )
                         ,
                     contentScale = ContentScale.Crop
                 )
@@ -938,6 +975,44 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             }
 
         )
+    }
+}
+
+///*************************************************************************************************
+@Composable
+fun Avatars(
+    onAvatarSelected: (String) -> Unit
+){
+    LazyColumn(
+        modifier = Modifier.height(280.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ){
+        items(avatarStyles){ style ->
+            Column {
+                Text(
+                    text = style.label,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ){
+                    items((1..8).toList()){seedNum ->
+                        val url = avatarUrl(style.name, "${style.name}-$seedNum")
+                        AsyncImage(
+                            model = url,
+                            contentDescription = "${style.label} avatar $seedNum",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(70.dp)
+                                .clip(CircleShape)
+                                .background(Color.DarkGray)
+                                .clickable{onAvatarSelected(url)}
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

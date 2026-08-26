@@ -179,8 +179,15 @@ fun ProfilePage(usernamePP: String,
                             val currentUser = user
 
                             if(!currentUser?.userPhotoUser.isNullOrBlank()){
+                                val photoValue = currentUser.userPhotoUser
+                                val model = if (photoValue.startsWith("http")){
+                                    photoValue // it's a remote DiceBear URL, use as-is
+                                }else{
+                                    imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                                }
                                 AsyncImage(
-                                    model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                                    //model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                                    model = model,
                                     contentDescription = "Profile Picture",
                                     modifier = Modifier
                                         .size(80.dp)

@@ -71,6 +71,7 @@ koin-compose-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navi
 peekaboo-ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo" }
 peekaboo-image-picker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 androidx-camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 androidx-camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }

@@ -82,6 +82,7 @@ kotlin {
             implementation(libs.peekaboo.ui)
             implementation(libs.peekaboo.image.picker)
             implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
 
         }
 

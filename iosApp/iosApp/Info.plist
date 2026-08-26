@@ -11,6 +11,9 @@
     <key>CFBundleSignature</key>
     <string></string>
 
+    <key>CFBundleDisplayName</key>
+    <string>Wheelhouse</string>
+
     <key>NSCameraUsageDescription</key>
     <string>This app needs access to the camera to take photos of your cars.</string>
 </dict>

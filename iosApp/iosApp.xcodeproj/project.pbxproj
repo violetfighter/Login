@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		5FC4E91967348F069E4E5126 /* Login.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Login.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5FC4E91967348F069E4E5126 /* Wheelhouse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wheelhouse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -50,7 +50,7 @@
 		83284577F3D7C17DA38187A9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5FC4E91967348F069E4E5126 /* Login.app */,
+				5FC4E91967348F069E4E5126 /* Wheelhouse.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = 5FC4E91967348F069E4E5126 /* Login.app */;
+			productReference = 5FC4E91967348F069E4E5126 /* Wheelhouse.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
