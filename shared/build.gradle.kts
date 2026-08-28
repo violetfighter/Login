@@ -83,6 +83,7 @@ kotlin {
             implementation(libs.peekaboo.image.picker)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+            implementation(libs.krop.ui)
 
         }
 

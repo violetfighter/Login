@@ -2,6 +2,14 @@ package com.cfcici.`in`.project.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import com.attafitamim.krop.core.crop.ImageCropper
+import com.attafitamim.krop.core.crop.rememberImageCropper
+import com.attafitamim.krop.ui.ImageCropperDialog
+import com.attafitamim.krop.core.crop.CropResult
+import com.attafitamim.krop.core.crop.CropError
+import com.attafitamim.krop.core.images.ImageBitmapSrc
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,10 +32,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Delete
@@ -67,23 +73,38 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.CameraCapture
+import com.cfcici.`in`.project.encodeToByteArray
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
 import kotlin.let
+
 
 
 data class  AvatarStyle(val name: String, val label: String)
@@ -98,6 +119,43 @@ val avatarStyles = listOf(
 
 fun avatarUrl(style: String, seed: String): String = "https://api.dicebear.com/9.x/$style/png?seed=$seed"
 
+fun cropCircularBitmap(
+    source: ImageBitmap,
+    center: Offset,   // in SOURCE image pixel coords
+    radius: Float,    // in SOURCE image pixel coords
+    outputSize: Int = 512
+): ImageBitmap
+{
+    val output = ImageBitmap(outputSize, outputSize, hasAlpha = true)
+    val canvas = Canvas(output)
+    val drawScope = CanvasDrawScope()
+    drawScope.draw(
+        density = Density(1f),
+        layoutDirection = LayoutDirection.Ltr,
+        canvas = canvas,
+        size = Size(outputSize.toFloat(), outputSize.toFloat())
+    ) {
+        clipPath(Path().apply {
+            addOval(Rect(Offset.Zero, Size(outputSize.toFloat(), outputSize.toFloat())))
+        }) {
+            drawImage(
+                image = source,
+                srcOffset = IntOffset(
+                    (center.x - radius).toInt().coerceIn(0, source.width),
+                    (center.y - radius).toInt().coerceIn(0, source.height)
+                ),
+                srcSize = IntSize(
+                    (radius * 2).toInt().coerceAtMost(source.width),
+                    (radius * 2).toInt().coerceAtMost(source.height)
+                ),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(outputSize, outputSize)
+            )
+        }
+    }
+    return output
+}
+
 @Composable
 fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage,  onBackToLogin: () -> Unit)
 
@@ -107,6 +165,10 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 //           every time the Flow emits a new value (because Room detected the row changed),
 //           collectAsState() updates a State<User?> object behind the scenes, which automatically triggers recomposition of anything reading it.
 {
+    var showCropScreen by remember { mutableStateOf(false) }
+    var imageToCrop by remember { mutableStateOf<ImageBitmap?>(null) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
     val user by userViewModel.getUserDetailsVM(userIdSP).collectAsState(initial = null)
     var usernameSP by remember { mutableStateOf("") }
     var emailSP by remember { mutableStateOf("") }
@@ -138,11 +200,36 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     var zoom by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val state = rememberTransformableState { zoomChange, offsetChange , _ ->
-        zoom = (zoom * zoomChange).coerceIn(1f, 5f) // clamp so it can't shrink below original or zoom absurdly far
-        offset += offsetChange
+        //zoom = (zoom * zoomChange).coerceIn(1f, 5f) // clamp so it can't shrink below original or zoom absurdly far
+        //offset += offsetChange
+        val newZoom = (zoom * zoomChange).coerceIn(1f, 5f)
+        // how far the image is allowed to pan, scales with zoom level
+        val maxOffsetX = (newZoom - 1f) * 300f// tune 300f based on image size
+        val maxOffsetY = (newZoom - 1f) * 300f
+
+        zoom = newZoom
+        offset = if (zoom <= 1f){
+            Offset.Zero // locked in place when not zoomed in
+        }else{
+            Offset(
+                x = (offset.x + offsetChange.x).coerceIn(-maxOffsetX, maxOffsetX),
+                y = (offset.y + offsetChange.y).coerceIn(-maxOffsetY, maxOffsetY)
+                //the coerceIn(-maxOffsetX, maxOffsetX) stops the user from dragging the image so far that it disappears
+            // off-screen — the further zoomed in they are, the more room they get to pan
+            // (since maxOffsetX scales with (newZoom - 1f)).
+            )
+        }
     }
 
     val scope = rememberCoroutineScope()
+    val imageCropper = rememberImageCropper()
+    val cropState = imageCropper.cropState
+
+    if (cropState != null) {
+        ImageCropperDialog(
+            state = cropState
+        )
+    }
     var selectedProfileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }// turns byte to pixeled pics like it shows on UI and this is a local storage not saved on db
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) } // turns to byte
     val image = rememberImagePickerLauncher(
@@ -150,17 +237,65 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
         scope = scope,
         onResult = { byteArrays ->
             byteArrays.firstOrNull()?.let { bytes ->
-                selectedImageBytes = bytes
-                selectedProfileBitmap = bytes.decodeToImageBitmap()
-                val fileName = "profil_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
-                val imagePath = imageStorage.saveImageToFile(bytes, fileName)
-                println("Saved profile image path: $imagePath")
 
-                user?.let{
-                    currentUser ->
-                    val updatedImage = currentUser.copy(userPhotoUser = imagePath)
-                    userViewModel.updateProfileEditVM(updatedImage){
-                        println("Profile photo update completed successfully")
+                val bitmap = bytes.decodeToImageBitmap()
+
+                scope.launch {
+                    when (val result = imageCropper.crop { ImageBitmapSrc(bitmap) }) {
+
+                        CropResult.Cancelled -> {
+                            // User cancelled cropping
+                        }
+
+                        is CropError -> {
+                            println("Krop crop error: $result")
+                        }
+
+                        is CropResult.Success -> {
+                            val croppedBitmap = result.bitmap
+
+                            // Convert cropped bitmap back to bytes
+                            val croppedBytes = croppedBitmap.encodeToByteArray()
+
+                            selectedImageBytes = croppedBytes
+                            selectedProfileBitmap = croppedBitmap
+
+                            val fileName =
+                                "profile_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
+
+                            val imagePath =
+                                imageStorage.saveImageToFile(
+                                    croppedBytes,
+                                    fileName
+                                )
+
+                            user?.let { currentUser ->
+
+                                val updatedUser =
+                                    currentUser.copy(
+                                        userPhotoUser = imagePath
+                                    )
+
+                                userViewModel.updateProfileEditVM(updatedUser) {
+                                    println("Cropped profile photo saved")
+                                }
+                                /*
+                    selectedImageBytes = bytes
+                    selectedProfileBitmap = bytes.decodeToImageBitmap()
+                    val fileName = "profil_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
+                    val imagePath = imageStorage.saveImageToFile(bytes, fileName)
+                    println("Saved profile image path: $imagePath")
+
+                    user?.let{
+                        currentUser ->
+                        val updatedImage = currentUser.copy(userPhotoUser = imagePath)
+                        userViewModel.updateProfileEditVM(updatedImage){
+                            println("Profile photo update completed successfully")
+                        }
+                    }
+                    */
+                            }
+                        }
                     }
                 }
             }
@@ -204,7 +339,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             .fillMaxSize()
             //.padding(10.dp)
             .background(Color.Black)
-    ) {
+    )
+    {
         Column {
             Box(
                 modifier = Modifier
@@ -576,7 +712,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                 showProfilePhotoOptions = false
                                 // had a problem with showing instantly update of profile pic, but when I added these two lines, its gone
                                 // Reason -> we're writing selectedProfileBitmap  as null if it wasn't null it checks the "display the user selected picture instantly" which written like != null
-                                //so that make avatars dont display instant
+                                //so that make avatars don't display instant
                                 selectedProfileBitmap = null
                                 selectedImageBytes = null
                                 user?.let {
@@ -867,16 +1003,28 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             )
             CameraCapture(
                 onImageCaptured = { bytes ->
-                    selectedImageBytes = bytes
-                    selectedProfileBitmap = bytes.decodeToImageBitmap()
+                    val bitmap = bytes.decodeToImageBitmap()
+                    scope.launch {
+                        when (val result = imageCropper.crop { ImageBitmapSrc(bitmap) }) {
+                            CropResult.Cancelled -> {}
+                            is CropError -> {
+                                println("Krop crop error: $result")
+                            }
+                            is CropResult.Success -> {
+                                val croppedBitmap = result.bitmap
+                                val croppedBytes = croppedBitmap.encodeToByteArray()
 
-                    val fileName = "profile_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
-                    val imagePath = imageStorage.saveImageToFile(bytes, fileName)
+                                selectedImageBytes = croppedBytes
+                                selectedProfileBitmap = croppedBitmap
 
-                    user?.let{
-                            currentUser ->
-                        val updatedCameraImage = currentUser.copy(userPhotoUser = imagePath)
-                        userViewModel.updateProfileEditVM(updatedCameraImage){
+                                val fileName = "profile_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
+                                val imagePath = imageStorage.saveImageToFile(croppedBytes, fileName)
+
+                                user?.let { currentUser ->
+                                    val updatedCameraImage = currentUser.copy(userPhotoUser = imagePath)
+                                    userViewModel.updateProfileEditVM(updatedCameraImage) {}
+                                }
+                            }
                         }
                     }
                     showCamera = false
@@ -1032,6 +1180,7 @@ fun Avatars(
         }
     }
 }
+
 
 /*
 @Preview

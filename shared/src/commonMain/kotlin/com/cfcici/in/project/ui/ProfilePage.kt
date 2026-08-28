@@ -416,6 +416,7 @@ fun ProfilePage(usernamePP: String,
     }
 }
 
+
 @Composable
 fun ItemBox( selectedBrandItem: UserSelectedBrandCars, brandId: Int, goToUserCarCollection: (String, Int) -> Unit , onLongPressCar: (UserSelectedBrandCars) -> Unit) // add total number of cars in each brand
 {
