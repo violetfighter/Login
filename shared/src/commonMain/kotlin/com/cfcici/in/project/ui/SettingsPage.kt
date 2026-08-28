@@ -8,6 +8,9 @@ import com.attafitamim.krop.ui.ImageCropperDialog
 import com.attafitamim.krop.core.crop.CropResult
 import com.attafitamim.krop.core.crop.CropError
 import com.attafitamim.krop.core.images.ImageBitmapSrc
+import com.attafitamim.krop.core.crop.cropperStyle
+import com.attafitamim.krop.core.crop.CircleCropShape
+import com.attafitamim.krop.core.crop.AspectRatio
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
@@ -227,7 +230,12 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 
     if (cropState != null) {
         ImageCropperDialog(
-            state = cropState
+            state = cropState,
+            style = cropperStyle(
+                shapes = listOf(CircleCropShape),
+                aspects = listOf(AspectRatio(1, 1)),
+                guidelines = null
+            )
         )
     }
     var selectedProfileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }// turns byte to pixeled pics like it shows on UI and this is a local storage not saved on db
