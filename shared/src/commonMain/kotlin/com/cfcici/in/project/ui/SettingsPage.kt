@@ -574,6 +574,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         Avatars (
                             onAvatarSelected = {url ->
                                 showProfilePhotoOptions = false
+                                // had a problem with showing instantly update of profile pic, but when I added these two lines, its gone
+                                // Reason -> we're writing selectedProfileBitmap  as null if it wasn't null it checks the "display the user selected picture instantly" which written like != null
+                                //so that make avatars dont display instant
+                                selectedProfileBitmap = null
+                                selectedImageBytes = null
                                 user?.let {
                                     currentUser ->
                                     val updatedAvatar = currentUser.copy(userPhotoUser = url)
@@ -779,9 +784,15 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
         {
             //display the user selected picture instantly
             //3
+            //// Priority: 1) selectedProfileBitmap = instant local preview for
+            //// upload/camera only (bytes, not yet in DB). 2) userPhotoUser = real
+            //// source of truth from DB (local path or DiceBear URL). 3) default icon.
+            //// selectedProfileBitmap must be manually reset to null whenever a
+            //// different photo source is chosen (e.g. avatar), or it'll permanently
+            //// shadow branch 2 since if/else-if stops at the first true match.
             if (selectedProfileBitmap != null) {
                 Image(
-                    bitmap = selectedProfileBitmap!!,
+                    bitmap = selectedProfileBitmap!!,//????
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
@@ -800,8 +811,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             // previously saved photo, loaded from disk via its saved path
             //1
             else if(currentUser?.userPhotoUser != null){
+                val photoValue = currentUser.userPhotoUser
+                val model = if (photoValue.startsWith("http")) {
+                    photoValue
+                } else {
+                    imageStorage.getFullPath(photoValue)
+                }
                 AsyncImage(
-                    model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                    model = model,
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
