@@ -66,6 +66,7 @@ import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
@@ -288,8 +289,9 @@ fun ProfilePage(usernamePP: String,
                                                 scope.launch{
                                                     snackbarHostState.showSnackbar(
                                                         message = "You already selected.",
-                                                        duration = SnackbarDuration.Short
+                                                        duration = SnackbarDuration.Indefinite
                                                     )
+                                                    delay(2000)
                                                 }
                                                 expand = false
                                             }

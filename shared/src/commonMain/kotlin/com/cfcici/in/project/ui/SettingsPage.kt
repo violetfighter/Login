@@ -2,7 +2,6 @@ package com.cfcici.`in`.project.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import com.attafitamim.krop.core.crop.ImageCropper
 import com.attafitamim.krop.core.crop.rememberImageCropper
 import com.attafitamim.krop.ui.ImageCropperDialog
 import com.attafitamim.krop.core.crop.CropResult
@@ -72,32 +71,18 @@ import login.shared.generated.resources.profile_icon
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Canvas
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.CameraCapture
@@ -122,43 +107,6 @@ val avatarStyles = listOf(
 
 fun avatarUrl(style: String, seed: String): String = "https://api.dicebear.com/9.x/$style/png?seed=$seed"
 
-fun cropCircularBitmap(
-    source: ImageBitmap,
-    center: Offset,   // in SOURCE image pixel coords
-    radius: Float,    // in SOURCE image pixel coords
-    outputSize: Int = 512
-): ImageBitmap
-{
-    val output = ImageBitmap(outputSize, outputSize, hasAlpha = true)
-    val canvas = Canvas(output)
-    val drawScope = CanvasDrawScope()
-    drawScope.draw(
-        density = Density(1f),
-        layoutDirection = LayoutDirection.Ltr,
-        canvas = canvas,
-        size = Size(outputSize.toFloat(), outputSize.toFloat())
-    ) {
-        clipPath(Path().apply {
-            addOval(Rect(Offset.Zero, Size(outputSize.toFloat(), outputSize.toFloat())))
-        }) {
-            drawImage(
-                image = source,
-                srcOffset = IntOffset(
-                    (center.x - radius).toInt().coerceIn(0, source.width),
-                    (center.y - radius).toInt().coerceIn(0, source.height)
-                ),
-                srcSize = IntSize(
-                    (radius * 2).toInt().coerceAtMost(source.width),
-                    (radius * 2).toInt().coerceAtMost(source.height)
-                ),
-                dstOffset = IntOffset.Zero,
-                dstSize = IntSize(outputSize, outputSize)
-            )
-        }
-    }
-    return output
-}
-
 @Composable
 fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage,  onBackToLogin: () -> Unit)
 
@@ -168,10 +116,6 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 //           every time the Flow emits a new value (because Room detected the row changed),
 //           collectAsState() updates a State<User?> object behind the scenes, which automatically triggers recomposition of anything reading it.
 {
-    var showCropScreen by remember { mutableStateOf(false) }
-    var imageToCrop by remember { mutableStateOf<ImageBitmap?>(null) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
-
     val user by userViewModel.getUserDetailsVM(userIdSP).collectAsState(initial = null)
     var usernameSP by remember { mutableStateOf("") }
     var emailSP by remember { mutableStateOf("") }
@@ -229,12 +173,16 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     val cropState = imageCropper.cropState
 
     if (cropState != null) {
+        // make picture readjusted in circle
         ImageCropperDialog(
             state = cropState,
             style = cropperStyle(
-                shapes = listOf(CircleCropShape),
-                aspects = listOf(AspectRatio(1, 1)),
-                guidelines = null
+                shapes = listOf(CircleCropShape),// crop mask as circle, because user can only select pic in circle not in any other shape like rectangle we use list of CircleCropShape
+                backgroundColor = (Color.Black),
+                overlay = Color.Black.copy(alpha = .5f),
+                aspects = listOf(AspectRatio(1, 1)),//crop bounding box to a 1:1 ratio (square), which pairs naturally with a circle
+                guidelines = null,
+
             )
         )
     }
@@ -287,21 +235,6 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                 userViewModel.updateProfileEditVM(updatedUser) {
                                     println("Cropped profile photo saved")
                                 }
-                                /*
-                    selectedImageBytes = bytes
-                    selectedProfileBitmap = bytes.decodeToImageBitmap()
-                    val fileName = "profil_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
-                    val imagePath = imageStorage.saveImageToFile(bytes, fileName)
-                    println("Saved profile image path: $imagePath")
-
-                    user?.let{
-                        currentUser ->
-                        val updatedImage = currentUser.copy(userPhotoUser = imagePath)
-                        userViewModel.updateProfileEditVM(updatedImage){
-                            println("Profile photo update completed successfully")
-                        }
-                    }
-                    */
                             }
                         }
                     }
@@ -941,6 +874,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier
                         .padding(10.dp)
                         .size(600.dp)
+                        .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
@@ -967,6 +901,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier
                         .padding(10.dp)
                         .size(600.dp)
+                        .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
@@ -1073,9 +1008,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
         )
     }
 
-    // you can write calendar same as username the only difference is
-
-    //which comes first, if or the .let{}?
+    // you can write calendar same as username the only difference is which comes first, if or the .let{}?
 
     //1.Username: user?.let { if (...) {...} else {...} } → .let{} is the outer wrapper,
     // if/else is inside it → it available everywhere.

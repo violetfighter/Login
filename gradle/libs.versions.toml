@@ -27,7 +27,10 @@ peekaboo = "0.5.2"##upload pic
 coil = "3.5.0"##display/load the saved car images.
 camerax = "1.6.2"## for custom UI camera optinal
 ktor = "3.5.2" # to fetch the api
-krop = "0.3.0-alpha01" ##############????????????????????
+krop = "0.3.0-alpha01"
+firebase-bom = "33.2.0"
+gitlive-firebase = "2.6.0"
+animated-vector-drawable = "1.2.0"
 
 
 
@@ -78,6 +81,12 @@ krop-ui = { module = "com.attafitamim.krop:ui", version.ref = "krop" }
 androidx-camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 androidx-camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+gitlive-firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "gitlive-firebase" }
+gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitlive-firebase" }
+gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitlive-firebase" }
+animated-vector-drawable = { module = "androidx.vectordrawable:vectordrawable-animated", version.ref = "animated-vector-drawable" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

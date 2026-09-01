@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -26,6 +28,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
@@ -114,6 +118,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
     var expand by remember { mutableStateOf(false) }
 
+
     val brandBackground = mapOf(
         "HotWheels" to Res.drawable.HotWheels,
         "MatchBox" to Res.drawable.matchbox2,
@@ -154,6 +159,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
     var contextMenuCarId by remember { mutableStateOf<Int?>(null) } // you need UserId
     var carBeingEdit by remember { mutableStateOf<UserCar?>(null) }
+    var carBeingViewed by remember { mutableStateOf<UserCar?>(null) }
 
     fun displayCarFromThisBrand(){
         userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
@@ -284,7 +290,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                         )
                     } else {
                         filteringForCarSearch.forEach { car ->
-                            EachCarTab(selectedCar = car, imageStorage = imageStorage, onLongPressCar = { contextMenuCarId = it.userCarIdUser })
+                            EachCarTab(selectedCar = car, imageStorage = imageStorage, onLongPressCar = { contextMenuCarId = it.userCarIdUser }, onShortClick = { carBeingViewed = it })
                         }
                     }
                 }
@@ -346,6 +352,41 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 
+    if (carBeingViewed != null) {
+        //!! is Kotlin's "not-null assertion" — it tells the compiler "trust me, this is not null right now, treat it as a plain UserCar."
+        // It'll throw a crash if you're wrong, but here you're safe because this whole block only runs inside if (carBeingViewed != null),
+        // so you already know it can't be null at this point.
+        val selectedCarForMenu = carBeingViewed!!
+        AlertDialog(
+            onDismissRequest = {carBeingViewed = null},
+            containerColor = Color(0xFF1A1A1A),
+            title = {
+                Text(selectedCarForMenu.modelUser, color = Color(0xFFF0396B), fontSize = 30.sp)
+            },
+            text = {
+                Column {
+                    if (selectedCarForMenu.carPhotoUser.isNotEmpty()) {
+                        AsyncImage(
+                            model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoUser),
+                            contentDescription = selectedCarForMenu.modelUser,
+                            modifier = Modifier
+                                .size(400.dp)
+                                .clip(RectangleShape),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    carBeingViewed = null
+                }){
+                    Text("Close", color = Color(0xFFFF9800))
+                }
+            }
+        )
+    }
+
     if (contextMenuCarId != null) {
         val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdUser == contextMenuCarId }
 
@@ -383,7 +424,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
 @Composable
 //if you are using : UserCar you are passing all the parameter in the UserCar instead of only one datatype
-fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar: (UserCar) -> Unit)
+fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar: (UserCar) -> Unit, onShortClick: (UserCar) -> Unit)
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val haptics = LocalHapticFeedback.current
@@ -394,7 +435,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
             .padding(10.dp)
             .height(100.dp)
             .combinedClickable(
-                onClick = {},// show large picture
+                onClick = {onShortClick(selectedCar)},// show large picture
                 onLongClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onLongPressCar(selectedCar)
@@ -410,6 +451,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
             defaultElevation = 4.dp
         )
     ) {
+
         Row( modifier = Modifier.padding(5.dp))
         {
             Column(
@@ -604,7 +646,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(
                 text = "Model Name:",
                 modifier = Modifier.width(125.dp),
@@ -639,7 +682,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        )
+        {
             Text(text = "Year: ", modifier = Modifier.width(125.dp), color = Color.White)
             YearDropDown(
                 selectedYear = selectedYear,
@@ -834,21 +878,45 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
 
         // shows the that image selected
         if (selectedImageBytes != null) {
-            Text(
-                "Image selected",
-                color = Color.White,
-                fontSize = 15.sp,
-                modifier = Modifier
-                    .padding(top = 30.dp)
-                    .clickable {
-                        selectedImageBytes?.let { bytes ->
-                            selectedImageBitmap = bytes.decodeToImageBitmap()
-                            showingExistingPhoto = false
-                            showImagePreview = true
-                        }
-                    }
-            )
+            val bitmap = remember(selectedImageBytes) { selectedImageBytes!!.decodeToImageBitmap() }
+            Box(
+                modifier = Modifier.padding(top = 20.dp)
+            ) {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black)
+                ) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = "Selected car photo",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { selectedImageBitmap = bitmap
+                                showingExistingPhoto = false
+                                showImagePreview = true},
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                IconButton(
+                    onClick = { selectedImageBytes = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 8.dp, y = (-8).dp)
+                        .size(24.dp)
+                        .background(Color(0xFFF0396B), shape = CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Remove photo",
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp))
+                }
+            }
         }else if (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted){
+            val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoUser)
+
             Text(
                 text = "Current Image",
                 color = Color.White,
@@ -856,7 +924,6 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                 modifier = Modifier
                     .padding(top = 30.dp)
                     .clickable{
-                        val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoUser)
                         if(bytes != null){
                             selectedImageBitmap = bytes.decodeToImageBitmap()
                             showingExistingPhoto = true
@@ -907,7 +974,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     Image(
                         bitmap = selectedImageBitmap!!,
                         contentDescription = "Selected car photo",
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().size(400.dp),
                         contentScale = ContentScale.Fit
                     )
                 }

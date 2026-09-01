@@ -280,29 +280,31 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+
                     Row(
                         modifier = Modifier.padding(5.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.SpaceBetween
+
                     ) {
                         Text(
-                            text = "Don't have an account? ",
+                            text = "Forgot Password?",
                             modifier = Modifier
-                                .padding(top = 40.dp),
+                                .padding(top = 40.dp, start = 0.dp)
+                                .clickable{},
                             fontSize = 15.sp,
-                            color = Color.White,
+                            color = Color(0xFFFF9800),
                             fontWeight = FontWeight.Normal
                         )
 
                         Text(
-                            text = "Click Here",
+                            text = "Sign Up",
                             modifier = Modifier
-                                .padding(top = 40.dp, start = 3.dp)
+                                .padding(top = 40.dp, start = 0.dp)
                                 .clickable { onGoToNewAccount() },  // navigate to  new account
                             color = Color(0xFFFF9800),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal
                         )
-
 
                     }
                 }

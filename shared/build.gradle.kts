@@ -44,6 +44,7 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
             implementation(libs.androidx.camerax.camera2)
@@ -53,6 +54,9 @@ kotlin {
 
         }
         commonMain.dependencies {
+            implementation(libs.gitlive.firebase.common)
+            implementation(libs.gitlive.firebase.auth)
+            implementation(libs.gitlive.firebase.firestore) // for data storage/sync
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.client.json)
