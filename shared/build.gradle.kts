@@ -54,8 +54,9 @@ kotlin {
 
         }
         commonMain.dependencies {
-            implementation(libs.gitlive.firebase.common)
+            implementation(libs.gitlive.firebase.messaging)
             implementation(libs.gitlive.firebase.auth)
+            implementation(libs.gitlive.firebase.common)
             implementation(libs.gitlive.firebase.firestore) // for data storage/sync
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.contentNegotiation)

@@ -169,5 +169,14 @@ class UserViewModel(val repository: UserRepository): ViewModel()
             onResult()
         }
     }
-}
 
+    fun sendPasswordReset(email: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.sendPasswordResetEmail(email)
+            if (!result.isSuccess) {
+                result.exceptionOrNull()?.printStackTrace()
+            }
+            onResult(result.isSuccess)
+        }
+    }
+}

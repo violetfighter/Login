@@ -4,6 +4,8 @@ import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserDao
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
 
 class UserRepository (
@@ -92,5 +94,15 @@ class UserRepository (
         userDaoFromRepo.deleteUserOwnedCarsByBrand(userId, selectedBrandCarsRepo)
         userDaoFromRepo.deleteSelectedBrand(userId, selectedBrandCarsRepo
         )
+    }
+
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            Firebase.auth.sendPasswordResetEmail(email)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            println("sendPasswordResetEmail failed: ${e.message}")
+            Result.failure(e)
+        }
     }
 }

@@ -83,8 +83,10 @@ androidx-camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", vers
 androidx-camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 gitlive-firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "gitlive-firebase" }
 gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitlive-firebase" }
+gitlive-firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "gitlive-firebase" }
 gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitlive-firebase" }
 animated-vector-drawable = { module = "androidx.vectordrawable:vectordrawable-animated", version.ref = "animated-vector-drawable" }
 

@@ -11,6 +11,7 @@ import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
 import com.cfcici.`in`.project.ui.ProfilePage
+import com.cfcici.`in`.project.ui.SentEmailPage
 import com.cfcici.`in`.project.ui.SettingsPage
 import com.cfcici.`in`.project.ui.UserCarCollectionPage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
@@ -26,6 +27,9 @@ data class ProfileRoute(
 
 @Serializable
 object NewAccountRoute
+
+@Serializable
+object SentEmailRoute
 
 @Serializable
 data class UserCarCollectionRoute(
@@ -65,8 +69,14 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     onGoToNewAccount = {
                         navController.navigate(NewAccountRoute)
                     },
+                    onSentEmailPage = {navController.navigate(SentEmailRoute)},
                     userViewModel = viewModel
                 )
+            }
+//________________________________________________________________________________________________//
+
+            composable<SentEmailRoute>{
+                SentEmailPage(viewModel = viewModel)
             }
 //________________________________________________________________________________________________//
 // backStack Entry represent the current values of username, password...
@@ -88,7 +98,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                         selectedBrand, userIdPP-> navController.navigate(
                         UserCarCollectionRoute(
                             brand = selectedBrand,
-                            userId = userIdPP))//******************
+                            userId = userIdPP))
                     },
                     userViewModel = viewModel,
                     imageStorage = imageStorage
@@ -106,7 +116,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                 // When you click login in New Account Page it will go back to Login Page
                     onBackToLogin = {
                         navController.navigate(LoginRoute) },
-                    userViewModel = viewModel///????????
+                    userViewModel = viewModel
                 )
             }
 //________________________________________________________________________________________________//

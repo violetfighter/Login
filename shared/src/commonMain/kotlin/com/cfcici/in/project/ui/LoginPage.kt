@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
+import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 import login.shared.generated.resources.Res
@@ -68,7 +69,7 @@ import org.jetbrains.compose.resources.Font
 
 @Composable
 
-fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit , userViewModel: UserViewModel) {
+fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit , onSentEmailPage:() -> Unit, userViewModel: UserViewModel) {
     val userName = rememberTextFieldState()
     var userPassword by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -285,12 +286,15 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
                         modifier = Modifier.padding(5.dp).fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
 
-                    ) {
+                    )
+                    {
                         Text(
                             text = "Forgot Password?",
                             modifier = Modifier
                                 .padding(top = 40.dp, start = 0.dp)
-                                .clickable{},
+                                .clickable{
+                                    onSentEmailPage()
+                                },
                             fontSize = 15.sp,
                             color = Color(0xFFFF9800),
                             fontWeight = FontWeight.Normal
@@ -310,5 +314,5 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
                 }
             }
         }
-
 }
+

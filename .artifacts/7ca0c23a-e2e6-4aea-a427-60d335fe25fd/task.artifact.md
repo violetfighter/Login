@@ -1,0 +1,4 @@
+- `[x]` Update `UserRepository.kt` to use `sendPasswordResetEmail`
+- `[x]` Update `UserViewModel.kt` to use `sendPasswordReset`
+- `[x]` Update `SendEmailPage.kt` to call `sendPasswordReset`
+- `[x]` Verify build and sync

@@ -32,7 +32,8 @@ fun PasswordPage(
     passwordChecker: (String) -> Unit,//function that sends the new password back to the parent
     isError: Boolean = false,
     supportingText: @Composable () -> Unit = {}
-) {//to get user password from login page
+)
+{//to get user password from login page
     // We need to check is password visible or not
     // So we created boolean state
     var passwordDisplay by remember { mutableStateOf(false) }// gives password = false
@@ -113,7 +114,8 @@ fun PasswordPage(
 }
 // When user click the box it shows the message
 @Composable
-fun PopUpMessage(password: (String)) {
+fun PopUpMessage(password: (String))
+{
 
     val message  = isValidPassword(password)
 
