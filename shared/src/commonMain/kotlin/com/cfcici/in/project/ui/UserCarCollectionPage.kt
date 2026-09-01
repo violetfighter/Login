@@ -352,6 +352,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 
+
     if (carBeingViewed != null) {
         //!! is Kotlin's "not-null assertion" — it tells the compiler "trust me, this is not null right now, treat it as a plain UserCar."
         // It'll throw a crash if you're wrong, but here you're safe because this whole block only runs inside if (carBeingViewed != null),
