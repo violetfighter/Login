@@ -352,7 +352,6 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 
-
     if (carBeingViewed != null) {
         //!! is Kotlin's "not-null assertion" — it tells the compiler "trust me, this is not null right now, treat it as a plain UserCar."
         // It'll throw a crash if you're wrong, but here you're safe because this whole block only runs inside if (carBeingViewed != null),
@@ -881,7 +880,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
         if (selectedImageBytes != null) {
             val bitmap = remember(selectedImageBytes) { selectedImageBytes!!.decodeToImageBitmap() }
             Box(
-                modifier = Modifier.padding(top = 20.dp)
+                modifier = Modifier.padding(top = 40.dp)
             ) {
                 Card(
                     shape = RoundedCornerShape(12.dp),
@@ -894,7 +893,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         modifier = Modifier
                             .size(100.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .clickable { selectedImageBitmap = bitmap
+                            .clickable {
+                                selectedImageBitmap = bitmap
                                 showingExistingPhoto = false
                                 showImagePreview = true},
                         contentScale = ContentScale.Crop
@@ -905,8 +905,9 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .offset(x = 8.dp, y = (-8).dp)
-                        .size(24.dp)
-                        .background(Color(0xFFF0396B), shape = CircleShape)
+                        .size(15.dp)
+                        .background(Color(0xFFF0396B),
+                            shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
@@ -915,23 +916,60 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         modifier = Modifier.size(14.dp))
                 }
             }
-        }else if (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted){
+        }
+        else if (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted){
             val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoUser)
+            val existingCarBitmap = remember ( bytes ) {bytes?.decodeToImageBitmap()}
 
-            Text(
-                text = "Current Image",
-                color = Color.White,
-                fontSize = 15.sp,
-                modifier = Modifier
-                    .padding(top = 30.dp)
-                    .clickable{
-                        if(bytes != null){
-                            selectedImageBitmap = bytes.decodeToImageBitmap()
-                            showingExistingPhoto = true
-                            showImagePreview = true
-                        }
+            if (existingCarBitmap != null){
+                Box(
+                    modifier = Modifier.padding(top = 40.dp)
+                )
+                {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                        colors = CardDefaults.cardColors(containerColor = Color.Black)
+                    )
+                    {
+                        Image(
+                            bitmap = existingCarBitmap,
+                            contentDescription = "Selected car photo",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable
+                                {
+                                    if(bytes != null)
+                                    {
+                                        selectedImageBitmap = bytes.decodeToImageBitmap()
+                                        showingExistingPhoto = true
+                                        showImagePreview = true
+                                    }
+                                },
+                            contentScale = ContentScale.Crop
+                        )
                     }
-            )
+                    IconButton(
+                        onClick = {
+                            selectedImageBytes = null
+                            oldPhotoDeleted = true
+                                  },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 8.dp, y = (-8).dp)
+                            .size(15.dp)
+                            .background(Color(0xFFF0396B),
+                                shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove photo",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp))
+                    }
+                }
+            }
         }
 
         else{
