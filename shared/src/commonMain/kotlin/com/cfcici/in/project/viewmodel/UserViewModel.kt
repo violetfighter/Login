@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import com.cfcici.`in`.project.data.repository.FirestoreUserRepository
 import com.cfcici.`in`.project.data.repository.UserRepository
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +16,9 @@ import kotlinx.coroutines.launch
 
 class UserViewModel(val repository: UserRepository): ViewModel()
 {
+    private val firestoreUserRepository = FirestoreUserRepository()
+
+
     //ViewModel should not have suspended functions
 
     //Suspend functions (one-shot) — need onResult, because the ViewModel function itself can't return
@@ -20,22 +26,43 @@ class UserViewModel(val repository: UserRepository): ViewModel()
 
     //Flow functions (ongoing stream) — no callback needed, since a Flow is already a value you can hand back directly
     // and let the composable collect from over time:
-    fun insertUserVM(usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String){
+    fun insertUserVM(usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String, onResult: (Boolean) -> Unit){
         viewModelScope.launch {//Run this code asynchronously, and keep it associated with this ViewModel.
             //asynchronous code, it means code that can start a task without making the rest of the program wait for that task to finish.
-            repository.insertUserRepo(
-                User(
-                    // Create new object when we add new users
-                    usernameUser = usernameFromVM,// we need to use username from User
-                    passwordUser = passwordFromVM,
-                    dateOfBirthUser = dateOfBirthFromVM,
-                    emailIdUser = emailIDFromVM
-                )
-            )
+            try {
+
+                //Create the account in Firebase Auth first
+                val authResult = Firebase.auth.createUserWithEmailAndPassword(emailIDFromVM, passwordFromVM)
+                val authUserId = authResult.user?.uid
+
+                if(authUserId != null){
+                    // Still insert into Room, same as before
+                    val newUser = User(
+                        // Create new object when we add new users
+                        usernameUser = usernameFromVM,// we need to use username from User
+                        passwordUser = passwordFromVM,
+                        dateOfBirthUser = dateOfBirthFromVM,
+                        emailIdUser = emailIDFromVM
+                    )
+                    repository.insertUserRepo(newUser)
+
+                    //Sync Profile details to Firestore, keyed by the Auth uid
+                    firestoreUserRepository.syncUserToFirestore(authUserId, newUser)
+
+                    onResult(true)
+                }else{
+                    onResult(false)
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
+                onResult(false)
+            }
+
         }
     }
 //Your other functions (insertUserVM, updateCarEditVM, etc.) all launch a coroutine because they're calling suspend fun
-// that do work and finish — insert this row, update that row, done. Those need viewModelScope.launch { } because suspend functions can only be called from inside a coroutine.
+// that do work and finish — insert this row, update that row, done.
+// Those need viewModelScope.launch { } because suspend functions can only be called from inside a coroutine.
 
 //getAllUserVM is fundamentally different: it's not "do a task and finish," it's "give me an open pipe that keeps delivering values."
 // You don't launch a pipe — you just hand it to whoever wants to drink from it (in this case, SettingsPage/ProfilePage via collectAsState()).

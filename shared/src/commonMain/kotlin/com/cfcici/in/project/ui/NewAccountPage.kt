@@ -367,7 +367,8 @@ fun NewAccountPage(
                                 }
                                 else{
                                     userViewModel.emailExistVM((newEmailID.text.toString()))
-                                    {emailExists ->
+                                    {
+                                        emailExists ->
 
                                         userViewModel.usernameExistsVM(newUserName.text.toString())
                                         { usernameExists ->

@@ -76,7 +76,11 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
 //________________________________________________________________________________________________//
 
             composable<SentEmailRoute>{
-                SentEmailPage(viewModel = viewModel)
+                SentEmailPage(
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute)
+                    },
+                    viewModel = viewModel)
             }
 //________________________________________________________________________________________________//
 // backStack Entry represent the current values of username, password...
@@ -110,8 +114,14 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
             composable <NewAccountRoute>{
                 NewAccountPage(
                     onCreateNewAccount = { usernameNewAccountRoute, passwordNewAccountRoute, dataOfBirthNewAccountRoute, emailIdNewAccountRoute->
-                        viewModel.insertUserVM(usernameFromVM = usernameNewAccountRoute, passwordFromVM = passwordNewAccountRoute, dateOfBirthFromVM = dataOfBirthNewAccountRoute, emailIDFromVM = emailIdNewAccountRoute)
-                        //navController.navigate(LoginRoute)
+                        viewModel.insertUserVM(usernameFromVM = usernameNewAccountRoute, passwordFromVM = passwordNewAccountRoute, dateOfBirthFromVM = dataOfBirthNewAccountRoute, emailIDFromVM = emailIdNewAccountRoute, onResult = {
+                            success -> if (success){
+                                navController.navigate(LoginRoute)
+                            }
+                        })
+                        //the reason why we use two LoginRoute
+                        //1. onBackToLogin when we click the create button it will be immediate moves to Login page don't even wait for to save to on db
+                        //2 the first one will wait it to save it on db like in Auth so there won't be any trouble
                     },
                 // When you click login in New Account Page it will go back to Login Page
                     onBackToLogin = {

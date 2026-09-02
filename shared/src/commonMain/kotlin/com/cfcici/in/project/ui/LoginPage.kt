@@ -75,7 +75,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState()}
     val gradientColors = listOf( Color(0xFFFF9800), Color(0xFFF0396B))
-    var usernameError by remember { mutableStateOf<String?>(null) }
+    var usernameError by remember { mutableStateOf<String?>(null) }//this variable can contain a String OR nothing (null).
     var passwordError by remember { mutableStateOf<String?>(null) }
     val hotWheelsFont = FontFamily(Font(Res.font.neonderthaw, FontWeight.Normal))
     val infiniteTransition = rememberInfiniteTransition(label = "neoFlicker")
@@ -155,17 +155,6 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
                             ),
                         )
                     }
-/*
-                    Text(
-                        text = "Log in to your account",
-                        modifier = Modifier.padding(10.dp),
-                        fontSize = 25.sp,
-                        //MaterialTheme.colorScheme.onPrimaryContainer
-                        //is say give the appropriate or matching automatically
-                        //Remember onPrimaryContainer -> text/icon colour PrimaryContainer -> background
-                        color = Color.White,
-                        fontWeight = FontWeight.Light
-                    )*/
 
                     OutlinedTextField(// TextField itself will create box
                         state = userName,// store whatever user enter

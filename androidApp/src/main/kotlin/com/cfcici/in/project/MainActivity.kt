@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // 1. Initialize Firebase Core first
-        FirebaseApp.initializeApp(this)
+        FirebaseApp.initializeApp(this) // app connected to firebase console. so it gives live update
 
         askNotificationPermission()
 
