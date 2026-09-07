@@ -76,6 +76,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.SweepGradient
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.data.database.UserCar
@@ -104,6 +105,22 @@ import login.shared.generated.resources.matchbox2
 enum class SortOrder{
     NEWEST_FIRST, OLDEST_FIRST////???????
 }
+
+enum class AppTheme(val displayName: String){
+    SUNSET_GARAGE("Sunset garage"),
+    NEON_SPEEDWAY("Neon speedway"),
+    RETRO_DIECAST("Retro diecast"),
+    MIDNIGHT_CHROME("Midnight chrome")
+}
+
+data class SlotColours(val bg: Color, val text: Color)
+
+data class ThemeColours(
+    val headerGradient: List<Color>,
+    val background: Color,
+    val slots: List<SlotColours> // 3 different colours
+)
+
 @OptIn(ExperimentalMaterial3Api::class)///****************
 @Composable
 fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage){
@@ -167,13 +184,16 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 
+
+
     LaunchedEffect(userCCPBrand) {
         displayCarFromThisBrand()
     }
-
+/*
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Black)
-    ) {
+    )
+    {
 
         // 1. MAIN CONTENT (Only visible when NOT adding a car)
         if (!showAddCarDialog) {
@@ -350,6 +370,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 }
             )
         }
+    }
+*/
+    Box(
+        modifier = Modifier.fillMaxSize().background()
+    ){
     }
 
     if (carBeingViewed != null) {

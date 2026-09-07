@@ -28,7 +28,7 @@ coil = "3.5.0"##display/load the saved car images.
 camerax = "1.6.2"## for custom UI camera optinal
 ktor = "3.5.2" # to fetch the api
 krop = "0.3.0-alpha01"
-firebase-bom = "33.2.0"
+firebase-bom = "34.18.0"
 gitlive-firebase = "2.6.0"
 animated-vector-drawable = "1.2.0"
 

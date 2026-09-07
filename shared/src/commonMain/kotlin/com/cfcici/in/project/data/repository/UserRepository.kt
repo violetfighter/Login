@@ -100,8 +100,13 @@ class UserRepository (
         return try {
             Firebase.auth.sendPasswordResetEmail(email)
             Result.success(Unit)
-        } catch (e: Exception) {
-            println("sendPasswordResetEmail failed: ${e.message}")
+        }
+        catch (e: dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException) { // checks if email exists
+            println("Email not found in Firebase &&&")
+            Result.failure(e)
+        }
+        catch (e: Exception) {
+            println("sendPasswordResetEmail failed: ${e.message} &&&")
             Result.failure(e)
         }
     }

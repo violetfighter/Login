@@ -26,6 +26,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
 
     //Flow functions (ongoing stream) — no callback needed, since a Flow is already a value you can hand back directly
     // and let the composable collect from over time:
+    /*
     fun insertUserVM(usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String, onResult: (Boolean) -> Unit){
         viewModelScope.launch {//Run this code asynchronously, and keep it associated with this ViewModel.
             //asynchronous code, it means code that can start a task without making the rest of the program wait for that task to finish.
@@ -53,11 +54,53 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                 }else{
                     onResult(false)
                 }
-            }catch (e: Exception){
+            } catch (e: dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException) {
+                onResult(false)
+                // could pass a specific error message up: "Email already registered"
+            } catch (e: Exception) {
                 e.printStackTrace()
                 onResult(false)
             }
+        }
+    }*/
 
+    fun insertUserVM(
+        usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String,
+        onResult: (Boolean, String?) -> Unit  // success, errorMessage
+    ) {
+        viewModelScope.launch {
+            try {
+
+                val authResult = Firebase.auth.createUserWithEmailAndPassword(emailIDFromVM, passwordFromVM)// create the Auth account, returns uid
+                val authUserId = authResult.user?.uid
+
+                if (authUserId != null) {
+                    val newUser = User(
+                        usernameUser = usernameFromVM,
+                        passwordUser = passwordFromVM,
+                        dateOfBirthUser = dateOfBirthFromVM,
+                        emailIdUser = emailIDFromVM
+                    )
+                    repository.insertUserRepo(newUser)// save data locally
+                    firestoreUserRepository.syncUserToFirestore(authUserId, newUser) // save data in cloud/Firestore
+
+                    onResult(true, null)//back up to the UI
+                } else {
+                    onResult(false, "Account creation failed in cloud or room")//back up to the UI
+                }
+            } catch (e: dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException) { // checks for duplicate emails
+                onResult(false, "Email already registered")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                val message = e.message ?: "No message"
+                val errorType = e::class.simpleName ?: "UnknownError"
+
+                if (message.contains("network", ignoreCase = true) || message.contains("GMS", ignoreCase = true)) {
+                    onResult(false, "Network/Config error: Please check GMS and internet connection")
+                } else {
+                    onResult(false, "Error [$errorType]: $message")
+                }
+            }
         }
     }
 //Your other functions (insertUserVM, updateCarEditVM, etc.) all launch a coroutine because they're calling suspend fun
@@ -117,9 +160,48 @@ class UserViewModel(val repository: UserRepository): ViewModel()
     }
 
     fun loginCheckerVM(usernameFromVM: String, passwordFromVM: String, onResult: (Boolean) -> Unit){
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             val isPasswordAndUsernameExist = repository.loginCheckerRepo(usernameFromVM, passwordFromVM)
             onResult(isPasswordAndUsernameExist)
+        }*/
+        viewModelScope.launch {
+            try {
+                // 1. Fetch user from Room to get their email
+                val localUser = repository.getUserByUsernameRepo(usernameFromVM)// it looks in Room for username = parvathi
+
+                if (localUser != null) {
+                    // 2. Try to sign in to Firebase Auth using the email from Room
+                    val authResult = Firebase.auth.signInWithEmailAndPassword(localUser.emailIdUser, passwordFromVM)// so it stores in locally (Room)
+                    val authId = authResult.user?.uid
+
+                    // App sends Firebase -> Firebase checks its own Authentication database -> if it has it -> then login succeeds
+
+                    if (authId != null) {
+                        // 3. Success! Check if we need to sync a new password to Room/Firestore
+                        // if the new password is same as old password it does nothing but if not it will update
+                        if (localUser.passwordUser != passwordFromVM) {
+                            val updatedUser = localUser.copy(passwordUser = passwordFromVM)
+
+                            // Update Room
+                            repository.updateProfileEditRepo(updatedUser)
+
+                            // Update Firestore
+                            firestoreUserRepository.syncUserToFirestore(authId, updatedUser)
+
+                            println("Password synced across all platforms!")
+                        }
+                        onResult(true)
+                    } else {
+                        onResult(false)
+                    }
+                } else {
+                    // Username not found in Room
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false)
+            }
         }
     }
 
@@ -197,13 +279,24 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
-    fun sendPasswordReset(email: String, onResult: (Boolean) -> Unit) {
+    fun sendPasswordReset(email: String, onResult: (Boolean, Boolean) -> Unit) {
         viewModelScope.launch {
             val result = repository.sendPasswordResetEmail(email)
-            if (!result.isSuccess) {
-                result.exceptionOrNull()?.printStackTrace()
+            
+            if (result.isSuccess) {
+                onResult(true, false)
+            } else {
+                val exception = result.exceptionOrNull()
+                if (exception is dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException) {
+                    println("Error Email doesn't exist @@@")
+                    onResult(false, true) // success=false, emailNotRegistered=true
+                    //first Boolean = "did it succeed" (no)
+                    // second Boolean = "was it specifically because the email doesn't exist" (yes)
+                } else {
+                    println("Error sending reset email: ${exception?.message} @@@")
+                    onResult(false, false) // success=false, emailNotRegistered=false
+                }
             }
-            onResult(result.isSuccess)
         }
     }
 }

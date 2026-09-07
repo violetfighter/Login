@@ -98,22 +98,13 @@ fun SentEmailPage(onBackToLogin: () -> Unit, viewModel: UserViewModel){
                     emailError = null
                     statusMessage = null
 
-                    viewModel.emailExistVM(emailText){
-                        emailExists ->
-                        if (emailExists){
-                            viewModel.sendPasswordReset(emailText) {
-                                    success ->
-                                statusMessage = if (success) {
-                                    "Email sent successfully!"
-                                } else {
-                                    "Failed to send email."
-                                }
-                            }
+                    viewModel.sendPasswordReset(emailText) {
+                            success, emailNotFind ->
+                        statusMessage = when{
+                            success -> "Email Sent"
+                            emailNotFind -> "Email is not Registered"
+                            else -> "Something went wrong @SendEmailPage"
                         }
-                        else{
-                            emailError = "This email is not registered in this app"
-                        }
-
                     }
                 },
                 modifier = Modifier

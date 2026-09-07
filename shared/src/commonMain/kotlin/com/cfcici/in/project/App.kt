@@ -111,6 +111,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
 //________________________________________________________________________________________________//
             // So you don't want the get or give the values to any other page
             // just when user click button go back to login page
+            /*
             composable <NewAccountRoute>{
                 NewAccountPage(
                     onCreateNewAccount = { usernameNewAccountRoute, passwordNewAccountRoute, dataOfBirthNewAccountRoute, emailIdNewAccountRoute->
@@ -129,12 +130,31 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     userViewModel = viewModel
                 )
             }
+            */
+            composable<NewAccountRoute>{
+                NewAccountPage(
+                    onCreateNewAccount = { usernameNewAccountRoute, passwordNewAccountRoute, dataOfBirthNewAccountRoute, emailIdNewAccountRoute, onResult ->
+                        viewModel.insertUserVM(
+                            usernameFromVM = usernameNewAccountRoute,
+                            passwordFromVM = passwordNewAccountRoute,
+                            dateOfBirthFromVM = dataOfBirthNewAccountRoute,
+                            emailIDFromVM = emailIdNewAccountRoute
+                        ) { success, errorMessage ->
+                            onResult(success, errorMessage)
+                        }
+                    },
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute)
+                    },
+                    userViewModel = viewModel
+                )
+            }
 //________________________________________________________________________________________________//
 
             composable<UserCarCollectionRoute> { backStackEntry ->
                 val userCarCollection: UserCarCollectionRoute = backStackEntry.toRoute()
                 UserCarCollectionPage(
-                    userCCPBrand = userCarCollection.brand,// now  userCarCollection.brand will contain whichever brand was clicked
+                    userCCPBrand = userCarCollection.brand,// now userCarCollection.brand will contain whichever brand was clicked
                     userCCPUserId = userCarCollection.userId,
                     goBackToProfile = { navController.popBackStack() },
                     userViewModel = viewModel,

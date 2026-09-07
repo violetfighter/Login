@@ -102,7 +102,7 @@ val avatarStyles = listOf(
     AvatarStyle("bottts", "Bottts"),
     AvatarStyle("pixel-art", "Pixel Art"),
     AvatarStyle("adventurer", "Adventurer"),
-    AvatarStyle("fun-emoji", "Fun Emoji")
+    //AvatarStyle("fun-emoji", "Fun Emoji")
 )
 
 fun avatarUrl(style: String, seed: String): String = "https://api.dicebear.com/9.x/$style/png?seed=$seed"
@@ -874,7 +874,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier
                         .padding(10.dp)
                         .size(600.dp)
-                        .clip(CircleShape)
+                        //.clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
@@ -901,7 +901,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     modifier = Modifier
                         .padding(10.dp)
                         .size(600.dp)
-                        .clip(CircleShape)
+                        //.clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,

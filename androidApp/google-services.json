@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "26833306426",
+    "project_id": "login-abf35",
+    "storage_bucket": "login-abf35.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26833306426:android:00a798a8577d8c595bc603",
+        "android_client_info": {
+          "package_name": "com.cfcici.in.project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "26833306426-uqqhqt8pdtu4q78vtgl4ioth4b62k9i5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cfcici.in.project",
+            "certificate_hash": "f14c0a8297d48108f95c1b64ad6732699cc9a885"
+          }
+        },
+        {
+          "client_id": "26833306426-n3iupse775nj41v5gdnlrp4e8euou7ut.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD6t3o3RZ7AjrjqRmemr0LMwOLMLsRWXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "26833306426-n3iupse775nj41v5gdnlrp4e8euou7ut.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "26833306426-44m5peuii3k5b5fmsbjrbr7bfqhgnlog.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cfcici.in.project.Login"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26833306426:android:cfb19916b23ef9325bc603",
+        "android_client_info": {
+          "package_name": "com.cfcici.in.project.Login"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "26833306426-udlqdhg0lslaf5nrpnipoh9vcbf81l7s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cfcici.in.project.Login",
+            "certificate_hash": "f14c0a8297d48108f95c1b64ad6732699cc9a885"
+          }
+        },
+        {
+          "client_id": "26833306426-n3iupse775nj41v5gdnlrp4e8euou7ut.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD6t3o3RZ7AjrjqRmemr0LMwOLMLsRWXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "26833306426-n3iupse775nj41v5gdnlrp4e8euou7ut.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "26833306426-44m5peuii3k5b5fmsbjrbr7bfqhgnlog.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cfcici.in.project.Login"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

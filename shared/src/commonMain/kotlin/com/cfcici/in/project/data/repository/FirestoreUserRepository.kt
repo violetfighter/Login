@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 // created a class for firebase-firestore related just like regular UserRepository
 class FirestoreUserRepository{
-    private val userCollection = Firebase.firestore.collection("users") // get a reference to the "lusers" collection in Firebase
+    private val userCollection = Firebase.firestore.collection("users") // get a reference to the "users" collection in Firebase
     suspend fun syncUserToFirestore(authUserId: String, user: User){
 
         // Firestore documents are stored as key-value pairs, not Kotlin object directly
@@ -20,7 +20,8 @@ class FirestoreUserRepository{
             "usernameUser" to user.usernameUser,
             "dateOfBirthUser" to user.dateOfBirthUser,
             "emailIdUser" to user.emailIdUser,
-            "userPhotoUser" to user.userPhotoUser
+            "userPhotoUser" to user.userPhotoUser,
+            "password" to user.passwordUser
         )
 
         // .document(authUserId) picks or create a special document inside the collection, named using the person's Auth uid users/8M3R0GhjnyZX5N5HVIj4 for example.
@@ -28,7 +29,7 @@ class FirestoreUserRepository{
         userCollection.document(authUserId).set(userMap)
     }
 
-    //his sets up an ongoing live connection: it returns a stream that emits a new User (or null)
+    //this sets up an ongoing live connection: it returns a stream that emits a new User (or null)
     // every time that document changes in Firestore, from anywhere — your app, the console, another device.
     fun observeUser(authId: String): Flow<User?>{
 
@@ -42,10 +43,10 @@ class FirestoreUserRepository{
             //Rebuilds a User object from the raw Firestore data
             User(
                 usernameUser = snapshot.get("usernameUser") ?: "",
-                passwordUser = "",
+                passwordUser = snapshot.get("password"),
                 dateOfBirthUser = snapshot.get("dateOfBirthUser") ?: "",
                 emailIdUser = snapshot.get("emailIdUser") ?: "",
-                userPhotoUser = snapshot.get("userPhotoUser")
+                userPhotoUser = snapshot.get("userPhotoUser"),
             )
         }
     }

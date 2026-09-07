@@ -77,7 +77,7 @@ import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun NewAccountPage(
-    onCreateNewAccount: (String, String, String, String) -> Unit,
+    onCreateNewAccount: (String, String, String, String, (Boolean, String?) -> Unit) -> Unit,
     onBackToLogin: () -> Unit,
     userViewModel: UserViewModel
 )
@@ -104,7 +104,7 @@ fun NewAccountPage(
     //String? means the value can be either a String or null.
     //(null) is the starting value — meaning initially, there's no error.
 
-    LaunchedEffect(newEmailID.text){
+    LaunchedEffect(newEmailID.text){//When something happens on the screen, run this code as a side effect.
         emailError = emailChecker(newEmailID.text.toString())
     }
 
@@ -271,7 +271,7 @@ fun NewAccountPage(
                                         onDateSelected = {
                                             date -> selectedDate = date
                                             newDOB.edit {//edit { } is the API for programmatically changing what's inside a TextFieldState as opposed to the user typing into it
-                                                replace(0, length, formatDate(date))/////?????
+                                                replace(0, length, formatDate(date))
                                             }
                                         },
                                         onDismiss = {
@@ -379,6 +379,28 @@ fun NewAccountPage(
                                             if(usernameExists){
                                                 usernameError = "Username already exists"
                                             }
+
+                                            if (!emailExists && !usernameExists)
+                                            {
+                                                onCreateNewAccount(newUserName.text.toString(), newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString()) { success, errorMessage ->
+                                                    if (success) {
+                                                        scope.launch {
+                                                            val snackbarJob = launch {
+                                                                snackbarHostState.showSnackbar(
+                                                                    message = "Successfully created the account.",
+                                                                    duration = SnackbarDuration.Short
+                                                                )
+                                                            }
+                                                            delay(1000)
+                                                            snackbarJob.cancel()
+                                                            onBackToLogin()
+                                                        }
+                                                    } else {
+                                                        emailError = errorMessage ?: "Something went wrong — please try again @@@@"
+                                                    }
+                                                }
+                                            }
+                                            /*
                                             if (!emailExists && !usernameExists)
                                             { // Send the values to App so it can save on room database
                                                 onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
@@ -393,7 +415,7 @@ fun NewAccountPage(
                                                     snackbarJob.cancel()
                                                     onBackToLogin()
                                                 }
-                                        }
+                                        }*/
                                     }
                                     }
                                 }

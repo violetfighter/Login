@@ -15,10 +15,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:34.18.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.android.gms:play-services-auth:22.0.0")
     implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-auth")
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
     implementation(project(":shared"))
