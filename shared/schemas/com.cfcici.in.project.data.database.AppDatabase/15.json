@@ -1,0 +1,218 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 15,
+    "identityHash": "281dea49adefee0d95413b8bc562ded8",
+    "entities": [
+      {
+        "tableName": "Users",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `usernameUser` TEXT NOT NULL, `passwordUser` TEXT NOT NULL, `dateOfBirthUser` TEXT NOT NULL, `emailIdUser` TEXT NOT NULL, `userPhotoUser` TEXT, `selectedTheme` TEXT NOT NULL, `isDarkMode` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usernameUser",
+            "columnName": "usernameUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passwordUser",
+            "columnName": "passwordUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateOfBirthUser",
+            "columnName": "dateOfBirthUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emailIdUser",
+            "columnName": "emailIdUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userPhotoUser",
+            "columnName": "userPhotoUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "selectedTheme",
+            "columnName": "selectedTheme",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDarkMode",
+            "columnName": "isDarkMode",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "userId"
+          ]
+        }
+      },
+      {
+        "tableName": "UserOwnedCar",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userCarIdUser` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userIdUser` INTEGER NOT NULL, `brandUser` TEXT NOT NULL, `modelUser` TEXT NOT NULL, `yearUser` INTEGER, `colourUser` TEXT NOT NULL, `seriesUser` TEXT, `typeOfSeriesUser` TEXT, `collectorNoUser` TEXT, `carPhotoUser` TEXT NOT NULL, FOREIGN KEY(`userIdUser`) REFERENCES `Users`(`userId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "userCarIdUser",
+            "columnName": "userCarIdUser",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userIdUser",
+            "columnName": "userIdUser",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brandUser",
+            "columnName": "brandUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelUser",
+            "columnName": "modelUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yearUser",
+            "columnName": "yearUser",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "colourUser",
+            "columnName": "colourUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seriesUser",
+            "columnName": "seriesUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "typeOfSeriesUser",
+            "columnName": "typeOfSeriesUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "collectorNoUser",
+            "columnName": "collectorNoUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "carPhotoUser",
+            "columnName": "carPhotoUser",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "userCarIdUser"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_UserOwnedCar_userIdUser",
+            "unique": false,
+            "columnNames": [
+              "userIdUser"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_UserOwnedCar_userIdUser` ON `${TABLE_NAME}` (`userIdUser`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Users",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userIdUser"
+            ],
+            "referencedColumns": [
+              "userId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "UserSelectedCarBrand",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userSelectedCarBrandId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userIdFromUsers` INTEGER NOT NULL, `selectedBrandName` TEXT NOT NULL, FOREIGN KEY(`userIdFromUsers`) REFERENCES `Users`(`userId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "userSelectedCarBrandId",
+            "columnName": "userSelectedCarBrandId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userIdFromUsers",
+            "columnName": "userIdFromUsers",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedBrandName",
+            "columnName": "selectedBrandName",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "userSelectedCarBrandId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_UserSelectedCarBrand_userIdFromUsers",
+            "unique": false,
+            "columnNames": [
+              "userIdFromUsers"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_UserSelectedCarBrand_userIdFromUsers` ON `${TABLE_NAME}` (`userIdFromUsers`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Users",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userIdFromUsers"
+            ],
+            "referencedColumns": [
+              "userId"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '281dea49adefee0d95413b8bc562ded8')"
+    ]
+  }
+}

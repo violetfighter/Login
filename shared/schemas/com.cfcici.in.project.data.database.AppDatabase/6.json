@@ -1,0 +1,147 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "ea0c0f0091ac6110208419745a25c9d7",
+    "entities": [
+      {
+        "tableName": "Users",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `usernameUser` TEXT NOT NULL, `passwordUser` TEXT NOT NULL, `dateOfBirthUser` TEXT NOT NULL, `emailIdUser` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "usernameUser",
+            "columnName": "usernameUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "passwordUser",
+            "columnName": "passwordUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateOfBirthUser",
+            "columnName": "dateOfBirthUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emailIdUser",
+            "columnName": "emailIdUser",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "userId"
+          ]
+        }
+      },
+      {
+        "tableName": "UserOwnedCar",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userCarIdUser` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `userIdUser` INTEGER NOT NULL, `brandUser` TEXT NOT NULL, `modelUser` TEXT NOT NULL, `yearUser` INTEGER, `colourUser` TEXT NOT NULL, `seriesUser` TEXT, `typeOfSeriesUser` TEXT, `collectorNoUser` TEXT, `photoUser` TEXT NOT NULL, FOREIGN KEY(`userIdUser`) REFERENCES `Users`(`userId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "userCarIdUser",
+            "columnName": "userCarIdUser",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userIdUser",
+            "columnName": "userIdUser",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brandUser",
+            "columnName": "brandUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelUser",
+            "columnName": "modelUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yearUser",
+            "columnName": "yearUser",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "colourUser",
+            "columnName": "colourUser",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seriesUser",
+            "columnName": "seriesUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "typeOfSeriesUser",
+            "columnName": "typeOfSeriesUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "collectorNoUser",
+            "columnName": "collectorNoUser",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "photoUser",
+            "columnName": "photoUser",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "userCarIdUser"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_UserOwnedCar_userIdUser",
+            "unique": false,
+            "columnNames": [
+              "userIdUser"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_UserOwnedCar_userIdUser` ON `${TABLE_NAME}` (`userIdUser`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Users",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userIdUser"
+            ],
+            "referencedColumns": [
+              "userId"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ea0c0f0091ac6110208419745a25c9d7')"
+    ]
+  }
+}
