@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -44,60 +44,67 @@ kotlin {
     }
     
     sourceSets {
-        androidMain.dependencies {
-            implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
-            implementation(libs.androidx.camerax.camera2)
-            implementation(libs.androidx.camerax.lifecycle)
-            implementation(libs.androidx.camerax.view)
-            implementation(libs.ktor.client.okhttp)
-
+        androidMain {
+            dependencies {
+                implementation(project.dependencies.platform(libs.firebase.bom))
+                implementation(libs.compose.uiToolingPreview)
+                implementation(libs.compose.uiTooling)
+                implementation(libs.androidx.camerax.camera2)
+                implementation(libs.androidx.camerax.lifecycle)
+                implementation(libs.androidx.camerax.view)
+                implementation(libs.ktor.client.okhttp)
+            }
         }
-        commonMain.dependencies {
-            implementation(libs.gitlive.firebase.messaging)
-            implementation(libs.gitlive.firebase.auth)
-            implementation(libs.gitlive.firebase.common)
-            implementation(libs.gitlive.firebase.firestore) // for data storage/sync
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.contentNegotiation)
-            implementation(libs.ktor.client.json)
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.icons.core)
-            implementation(libs.compose.icons.extended)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.formvalidator)
-            implementation(libs.haze)
-            implementation(libs.haze.blur)
-            implementation(libs.haze.materials)
+        commonMain {
+            dependencies {
+                implementation("io.github.vinceglb:confettikit:0.9.0")
+                implementation(libs.gitlive.firebase.messaging)
+                implementation(libs.gitlive.firebase.auth)
+                implementation(libs.gitlive.firebase.common)
+                implementation(libs.gitlive.firebase.firestore) // for data storage/sync
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.contentNegotiation)
+                implementation(libs.ktor.client.json)
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.foundation)
+                implementation(libs.compose.material3)
+                implementation(libs.compose.icons.core)
+                implementation(libs.compose.icons.extended)
+                implementation(libs.compose.ui)
+                implementation(libs.compose.components.resources)
+                implementation(libs.compose.uiToolingPreview)
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.formvalidator)
+                implementation(libs.haze)
+                implementation(libs.haze.blur)
+                implementation(libs.haze.materials)
 
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.sqlite.bundled)
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.compose.navigation)
-            implementation(libs.peekaboo.ui)
-            implementation(libs.peekaboo.image.picker)
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network.ktor)
-            implementation(libs.krop.ui)
-
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
+                implementation(libs.koin.core)
+                implementation(libs.koin.compose)
+                implementation(libs.koin.compose.viewmodel)
+                implementation(libs.koin.compose.navigation)
+                implementation(libs.peekaboo.ui)
+                implementation(libs.peekaboo.image.picker)
+                implementation(libs.coil.compose)
+                implementation(libs.coil.network.ktor)
+                implementation(libs.krop.ui)
+            }
         }
 
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+        iosMain {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        commonTest {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
         }
     }
 }

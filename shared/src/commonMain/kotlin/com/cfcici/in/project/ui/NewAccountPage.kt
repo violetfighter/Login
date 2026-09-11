@@ -1,5 +1,15 @@
 package com.cfcici.`in`.project.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,8 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.maxLength
@@ -49,6 +62,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,8 +75,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
@@ -74,6 +92,10 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.math.roundToInt
+import kotlin.time.Clock
+
+enum class NewAccountState {FORM, SUCCESS}
 
 @Composable
 fun NewAccountPage(
@@ -104,8 +126,38 @@ fun NewAccountPage(
     //String? means the value can be either a String or null.
     //(null) is the starting value — meaning initially, there's no error.
 
-    LaunchedEffect(newEmailID.text){//When something happens on the screen, run this code as a side effect.
-        emailError = emailChecker(newEmailID.text.toString())
+    var screenState by remember { mutableStateOf(NewAccountState.FORM) } ///????
+    val formAlpha by animateFloatAsState(
+        targetValue = if(screenState == NewAccountState.FORM) 1f else 0f,///????
+        animationSpec = tween(400),
+        label = "formAlpha"
+    )
+
+    var emailErrorShaker by remember { mutableStateOf(0) }
+    var usernameErrorShaker by remember { mutableStateOf(0) }
+    var passwordErrorShaker by remember { mutableStateOf(0) }
+    var dobErrorShaker by remember { mutableStateOf(0) }
+
+    LaunchedEffect(screenState){
+        if (screenState == NewAccountState.SUCCESS){
+            delay(1300)//lets the checkmark bounce in and sit for a beat before navigating
+           // onNewAccountSuccess()
+        }
+    }
+
+
+
+    //LaunchedEffect(newEmailID.text){//When something happens on the screen, run this code as a side effect.
+        //emailError = emailChecker(newEmailID.text.toString())
+    //}
+    LaunchedEffect(newEmailID.text) {
+        if (newEmailID.text.isNotEmpty()) {
+            if (!emailChecker(newEmailID.text.toString())) {
+                emailError = "Invalid email format"
+            } else {
+                emailError = null
+            }
+        }
     }
 
     LaunchedEffect(isDobPressed) {
@@ -121,14 +173,17 @@ fun NewAccountPage(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                //.background(Color.Black)
-                .background(
-                    Brush.linearGradient(colors = listOf(Color(0xFFF0396B), Color(0xFF1A1A1A), Color(0xFFF0555C)))
-                )
-                .hazeSource(state = hazeState)// mark this as the blur source
-                .statusBarsPadding(), // pushes content below the statues bar
+                .background(Color(0xFF140F22)
+                    //Brush.linearGradient(colors = listOf(Color(0xFFF0396B), Color(0xFF1A1A1A), Color(0xFFF0555C)))
+                ),
+                //.hazeSource(state = hazeState)// mark this as the blur source
+                //.statusBarsPadding(), // pushes content below the statues bar
             contentAlignment = Alignment.Center
-        ){
+        )
+        {
+            NeonSpeedwayBackground(//keeps running continuously behind everything
+             modifier = Modifier.fillMaxSize()
+            )
             Card(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -136,14 +191,10 @@ fun NewAccountPage(
                     //.height(5.dp)
                     .padding(20.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .hazeBlur(
-                        input = HazeInput.Sources(hazeState),
-                        style = HazeBlurStyle {
-                            blurRadius(50.dp)
-                        }
-                    ),
+                    ,
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Black.copy(alpha = 0.5f)
+                            //containerColor = Color.Transparent
                 )
 
             ){
@@ -151,7 +202,8 @@ fun NewAccountPage(
                     modifier = Modifier
                         //.fillMaxSize()
                         .fillMaxWidth()
-                        .imePadding()
+                        .imePadding()//Dynamically adjusts bottom padding when the keyboard opens
+                        .graphicsLayer(alpha = formAlpha)
                         .verticalScroll(rememberScrollState())
                         .padding(24.dp),
                     verticalArrangement = Arrangement.Center,
@@ -179,6 +231,7 @@ fun NewAccountPage(
                         inputTransformation = InputTransformation.maxLength(16),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .shake(trigger = usernameErrorShaker)
                             .onFocusChanged{
                                 if(it.isFocused)// When your click on the inbox it gives true
                                     usernameError = null },
@@ -205,7 +258,9 @@ fun NewAccountPage(
                     OutlinedTextField(
                         state = newEmailID,
                         label = { Text("Email ID") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shake(trigger = emailErrorShaker)
                             .onFocusChanged{
                                 if(it.isFocused)
                                     emailError = null
@@ -241,6 +296,7 @@ fun NewAccountPage(
                         textStyle = TextStyle(fontSize = 20.sp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .shake(trigger = dobErrorShaker)
                             .onFocusChanged{
                                 if(it.isFocused)
                                     dateOfBirthError = null
@@ -294,7 +350,9 @@ fun NewAccountPage(
                         label = {Text("Password")},
                         shape = RoundedCornerShape(50.dp),
                         inputTransformation = InputTransformation.maxLength(16),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shake(trigger = passwordErrorShaker)
                             .onFocusChanged{
                                 passwordFocused = it.isFocused
                                 if (it.isFocused)
@@ -329,29 +387,45 @@ fun NewAccountPage(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0396B), contentColor = Color.White),
                         onClick =
                             {
-                                if(newEmailID.text.isEmpty()){
-                                    emailError = "Email is required"
-                                } else{
-                                    emailError = emailChecker(newEmailID.text.toString()) }
+                                var isValid = true
 
-                                if (newUserName.text.isEmpty()){
+                                if (newEmailID.text.isEmpty()) {
+                                    emailError = "Email is required"
+                                    emailErrorShaker++
+                                    isValid = false
+                                } else if (!emailChecker(newEmailID.text.toString())) {
+                                    emailError = "Invalid email format"
+                                    emailErrorShaker++
+                                    isValid = false
+                                } else {
+                                    emailError = null
+                                }
+
+                                if (newUserName.text.isEmpty()) {
                                     usernameError = "Username is required"
-                                }else
+                                    usernameErrorShaker++
+                                    isValid = false
+                                } else
                                     usernameError = null
 
-                                if(newDOB.text.isEmpty()){
+                                if (newDOB.text.isEmpty()) {
                                     dateOfBirthError = ""
-                                }else
+                                    dobErrorShaker++
+                                    isValid = false
+                                } else
                                     dateOfBirthError = null
 
-                                if(newPassword.text.isEmpty()){
+                                if (newPassword.text.isEmpty()) {
                                     passwordError = "Password is required"
-                                } else if(isValidPassword(passwordPP = newPassword.text.toString()).isNotEmpty()){
+                                    passwordErrorShaker++
+                                    isValid = false
+                                } else if (isValidPassword(passwordPP = newPassword.text.toString()).isNotEmpty()) {
                                     passwordError = "Password is invalid"
-                                }
-                                else
+                                    passwordErrorShaker++
+                                    isValid = false
+                                } else
                                     passwordError = null
-
+                                /*
                                if (newUserName.text.isEmpty() || newPassword.text.isEmpty() || newDOB.text.isEmpty() || newEmailID.text.isEmpty() || passwordError != null || emailError != null)
                                 {
                                     scope.launch {
@@ -364,43 +438,52 @@ fun NewAccountPage(
                                         delay(2000)
                                         snackbarJob.cancel()
                                     }
-                                }
-                                else{
-                                    userViewModel.emailExistVM((newEmailID.text.toString()))
-                                    {
-                                        emailExists ->
+                                }*/
 
-                                        userViewModel.usernameExistsVM(newUserName.text.toString())
-                                        { usernameExists ->
+                                if(isValid) {
 
-                                            if(emailExists){
-                                                emailError = "Email already exists"
-                                            }
-                                            if(usernameExists){
-                                                usernameError = "Username already exists"
-                                            }
 
-                                            if (!emailExists && !usernameExists)
-                                            {
-                                                onCreateNewAccount(newUserName.text.toString(), newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString()) { success, errorMessage ->
-                                                    if (success) {
-                                                        scope.launch {
-                                                            val snackbarJob = launch {
-                                                                snackbarHostState.showSnackbar(
-                                                                    message = "Successfully created the account.",
-                                                                    duration = SnackbarDuration.Short
-                                                                )
-                                                            }
-                                                            delay(1000)
-                                                            snackbarJob.cancel()
-                                                            onBackToLogin()
+                                userViewModel.emailExistVM((newEmailID.text.toString()))
+                                { emailExists ->
+
+                                    userViewModel.usernameExistsVM(newUserName.text.toString())
+                                    { usernameExists ->
+
+                                        if (emailExists) {
+                                            emailError = "Email already exists"
+                                            emailErrorShaker++
+                                        }
+                                        if (usernameExists) {
+                                            usernameError = "Username already exists"
+                                            usernameErrorShaker++
+                                        }
+
+                                        if (!emailExists && !usernameExists) {
+                                            onCreateNewAccount(
+                                                newUserName.text.toString(),
+                                                newPassword.text.toString(),
+                                                newDOB.text.toString(),
+                                                newEmailID.text.toString()
+                                            ) { success, errorMessage ->
+                                                if (success) {
+                                                    scope.launch {
+                                                        val snackbarJob = launch {
+                                                            snackbarHostState.showSnackbar(
+                                                                message = "Successfully created the account.",
+                                                                duration = SnackbarDuration.Short
+                                                            )
                                                         }
-                                                    } else {
-                                                        emailError = errorMessage ?: "Something went wrong — please try again @@@@"
+                                                        delay(1000)
+                                                        snackbarJob.cancel()
+                                                        onBackToLogin()
                                                     }
+                                                } else {
+                                                    emailError = errorMessage
+                                                        ?: "Something went wrong — please try again @@@@"
                                                 }
                                             }
-                                            /*
+                                        }
+                                        /*
                                             if (!emailExists && !usernameExists)
                                             { // Send the values to App so it can save on room database
                                                 onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
@@ -417,8 +500,9 @@ fun NewAccountPage(
                                                 }
                                         }*/
                                     }
-                                    }
                                 }
+                            }
+
                             }
                     ) {
                         Text(text = "Create")
@@ -448,6 +532,7 @@ fun NewAccountPage(
                     }
                 }
             }
+
         }
     }
 }
@@ -547,13 +632,219 @@ fun formatDate(dateMillis: Long?): String {
     return "${date.dayOfMonth}/${date.monthNumber}/${date.year}"// display the DD/MM/YYYY
 }
 
-fun emailChecker(email: String): String?{//gives string
+fun emailChecker(email: String): Boolean{//gives string
     val regex = Regex(pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
     return when{
-        email.isEmpty() -> null//LaunchedEffect will always check the inbox. If you don't use it will show error from the beginning itself
-        !regex.matches(email) -> "Invalid email format"
-        else -> null
+        email.isEmpty() -> true//LaunchedEffect will always check the inbox. If you don't use it will show error from the beginning itself
+        !regex.matches(email) -> false
+        else -> true
     }
 }
+
+fun Modifier.shake(
+    trigger: Int,
+    iterations: Int = 4,
+    translateX: Float = 10f,
+    rotateY: Float = 7f,
+    duration: Int = 80
+): Modifier = composed {
+
+    val shake = remember { Animatable(0f) }
+
+    LaunchedEffect(trigger) {
+        if (trigger > 0) {
+            repeat(iterations) { i ->
+
+                val direction = if (i % 2 == 0) 1f else -1f
+
+                shake.animateTo(
+                    targetValue = direction,
+                    animationSpec = tween(duration)
+                )
+            }
+
+            shake.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(duration)
+            )
+        }
+    }
+
+    graphicsLayer {
+        translationX = shake.value * translateX
+        rotationY = shake.value * rotateY
+    }
+}
+//to get animated balls movement in the background
+@Composable
+fun NeonSpeedwayBackground(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "NewAccountBg")
+    val orb1 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "orb1"
+    )
+    val orb2 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "orb2"
+    )
+
+    val orb4 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(9000, easing = LinearEasing),
+            RepeatMode.Reverse
+        ),
+        label = "orb4"
+    )
+
+    val orb5 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(13000, easing = LinearEasing),
+            RepeatMode.Reverse
+        ),
+        label = "orb5"
+    )
+
+    val orb6 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(17000, easing = LinearEasing),
+            RepeatMode.Reverse
+        ),
+        label = "orb6"
+    )
+
+    val orb7 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(11000, easing = LinearEasing),
+            RepeatMode.Reverse
+        ),
+        label = "orb7"
+    )
+
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+//**************************************************************************************************
+        // shade out circle
+
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0x4DD4537E), Color.Transparent)
+            ),
+            radius = 220f,
+            center = Offset(w * (0.1f + 0.8f * orb1), h * (0.1f + 0.8f * orb2))
+        )
+
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0x593C3489), Color.Transparent)
+            ),
+            radius = 260f,// fixed size of a circle
+            center = Offset(w * (0.9f - 0.8f * orb2), h * (0.2f + 0.7f * orb1))
+        )
+
+
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF574FBB), Color.Transparent)
+            ),
+            radius = 230f,// fixed size of a circle
+            center = Offset(w * (0.2f + 0.6f * orb1), h * (0.8f - 0.6f * orb2))
+        )
+
+//**************************************************************************************************
+        // see circle all time
+/*
+        val center3 = Offset(w * (0.2f + 0.6f * orb1), h * (0.8f - 0.6f * orb2))
+        val radius3 = w * 0.75f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF574FBB), Color.Transparent),
+                center = center3,
+
+            ),
+            radius = 230f,
+            center = center3
+        )
+        */
+
+//**************************************************************************************************
+        //Glowy/Under the screen circle
+
+        val center4 = Offset(
+            w * (0.1f + 0.8f * orb4),
+            h * (0.2f + 0.2f * orb4)
+        )
+        val radius4 = w * 0.75f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0x4DD4537E), Color.Transparent),
+                center = center4,
+                radius = 350f
+            ),
+            radius = radius4,
+            center = center4
+        )
+
+        val center5 = Offset(
+            w * (0.7f + 0.15f * orb5),
+            h * (0.1f + 0.8f * orb5)
+        )
+        val radius5 = w * 0.65f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF574FBB), Color.Transparent),
+                center = center5,
+                radius = 250f//this controls the gradient, not the actual circle size.
+            ),
+            radius = radius5,
+            center = center5
+        )
+
+        val center6 = Offset(
+            w * (0.05f + 0.5f * orb6),
+            h * (0.9f - 0.7f * orb6)
+        )
+        val radius6 = w * 0.55f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF784FBB), Color.Transparent),
+                center = center6,
+                radius = 450f
+            ),
+            radius = radius6,
+            center = center6
+        )
+
+        val center7 = Offset(
+            w * (0.9f - 0.7f * orb7),
+            h * (0.7f - 0.4f * orb7)
+        )
+        val radius7 = w * 0.45f
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFFAD456F), Color.Transparent),
+                center = center7,
+                radius = 200f
+            ),
+            radius = radius7,
+            center = center7
+        )
+    }
+}
+
+// I need confetti/firework when user create new account. It should be glowy shiny each one of them like illuminated yellow.
+
+
 
 
