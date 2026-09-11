@@ -1,6 +1,7 @@
 package com.cfcici.`in`.project.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -79,6 +80,11 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import com.cfcici.`in`.project.viewmodel.UserViewModel
@@ -90,16 +96,15 @@ import dev.chrisbanes.haze.blur.hazeBlur
 import io.github.vinceglb.confettikit.compose.ConfettiKit
 import io.github.vinceglb.confettikit.core.Angle
 import io.github.vinceglb.confettikit.core.Party
-import io.github.vinceglb.confettikit.core.Spread
 import io.github.vinceglb.confettikit.core.emitter.Emitter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.math.roundToInt
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
+
+import kotlin.time.Duration.Companion.milliseconds
+
 
 enum class NewAccountState {FORM, SUCCESS}
 
@@ -478,9 +483,16 @@ fun NewAccountPage(
                                                 ) { success, errorMessage ->
                                                     if (success) {
                                                         scope.launch {
+                                                            //val snackbarJob = launch {
+                                                                //snackbarHostState.showSnackbar(
+                                                                    //message = "Successfully created the account.",
+                                                                    //duration = SnackbarDuration.Short
+                                                                //)
+                                                           // }
                                                             showConfetti = true
+                                                            delay(timeMillis = 4000)
+                                                            //snackbarJob.cancel()
                                                             onBackToLogin()
-
                                                         }
                                                     } else {
                                                         emailError = errorMessage
@@ -523,24 +535,43 @@ fun NewAccountPage(
                 }
             }
             if (showConfetti) {
+                //Solid background layer to mask/hide the "Create New Account" form
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF140F22))
+                )
+
+                //Tick mark positioned in the center, behind the confetti
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AnimatedSuccessTick()
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "You Successfully Created New Account!",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF0555C),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                //Confetti explosion rendered over the tick mark without an opaque background
                 ConfettiKit(
                     modifier = Modifier.fillMaxSize(),
                     parties = listOf(
                         Party(
-                            angle = Angle.TOP,
-                            spread = Spread.WIDE,
-                            speed = 15f,
+                            speed = 0f,
                             maxSpeed = 30f,
                             damping = 0.9f,
-                            colors = listOf(
-                                0xFFFFD700.toInt(),
-                                0xFFFF4081.toInt(),
-                                0xFF7C4DFF.toInt(),
-                                0xFF00C853.toInt()
-                            ),
-                            emitter = Emitter(
-                                duration = 2.seconds
-                            ).perSecond(50)
+                            spread = 360,
+                            colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
+                            emitter = Emitter(duration = 100.milliseconds).max(100),
                         )
                     )
                 )
@@ -548,7 +579,68 @@ fun NewAccountPage(
         }
     }
 }
+@Composable
+fun AnimatedSuccessTick() {
 
+    var startAnimation by remember { mutableStateOf(false) }
+
+    val progress by animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 600,
+            easing = FastOutSlowInEasing
+        ),
+        label = "tick mark"
+    )
+
+    LaunchedEffect(Unit) {
+        startAnimation = true
+    }
+
+    Canvas(
+        modifier = Modifier.size(100.dp)
+    ) {
+
+        val path = Path().apply {
+            moveTo(
+                size.width * 0.25f,
+                size.height * 0.52f
+            )
+
+            lineTo(
+                size.width * 0.43f,
+                size.height * 0.68f
+            )
+
+            lineTo(
+                size.width * 0.75f,
+                size.height * 0.32f
+            )
+        }
+
+        val pathMeasure = PathMeasure()
+        pathMeasure.setPath(path, false)
+
+        val animatedPath = Path()
+
+        pathMeasure.getSegment(
+            startDistance = 0f,
+            stopDistance = pathMeasure.length * progress,
+            destination = animatedPath,
+            startWithMoveTo = true
+        )
+
+        drawPath(
+            path = animatedPath,
+            color = Color(0xFFF0555C),
+            style = Stroke(
+                width = 8.dp.toPx(),
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
+            )
+        )
+    }
+}
 // This calendar is for pop one
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
