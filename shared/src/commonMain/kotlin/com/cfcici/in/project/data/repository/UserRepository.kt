@@ -4,6 +4,7 @@ import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserDao
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import com.cfcici.`in`.project.ui.AppTheme
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.Flow
@@ -109,5 +110,13 @@ class UserRepository (
             println("sendPasswordResetEmail failed: ${e.message} &&&")
             Result.failure(e)
         }
+    }
+
+    suspend fun  updateSelectedThemeRepo(userId: Int, theme: AppTheme){
+        userDaoFromRepo.updateSelectedTheme(userId, theme.name)
+    }
+
+    suspend fun updateDarkModeRepo(userId: Int, isDark: Boolean) {
+        userDaoFromRepo.updateDarkMode(userId, isDark)
     }
 }

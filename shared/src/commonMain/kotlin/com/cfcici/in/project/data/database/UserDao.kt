@@ -88,4 +88,9 @@ the reason we used userIdUser = :userIdDao, when the app used by many people and
     @Query("""DELETE FROM UserSelectedCarBrand WHERE userIdFromUsers = :userIdDao AND selectedBrandName = :selectedBrandDao""")
     suspend fun deleteSelectedBrand(userIdDao: Int, selectedBrandDao: String)
 
+    @Query("UPDATE Users SET selectedTheme = :themeName WHERE userId = :userIdDao")
+    suspend fun updateSelectedTheme(userIdDao: Int, themeName: String)
+
+    @Query("UPDATE Users SET isDarkMode = :isDark WHERE userId = :userIdDao")
+    suspend fun updateDarkMode(userIdDao: Int, isDark: Boolean)
 }

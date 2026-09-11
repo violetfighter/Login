@@ -7,6 +7,7 @@ import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.data.repository.FirestoreUserRepository
 import com.cfcici.`in`.project.data.repository.UserRepository
+import com.cfcici.`in`.project.ui.AppTheme
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
@@ -297,6 +298,20 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                     onResult(false, false) // success=false, emailNotRegistered=false
                 }
             }
+        }
+    }
+
+    fun updateSelectedThemeVM(userId: Int, theme: AppTheme, onResult: () -> Unit){
+        viewModelScope.launch {
+            repository.updateSelectedThemeRepo(userId, theme)
+            onResult()
+        }
+    }
+
+    fun updateDarkModeVM(userId: Int, isDark: Boolean, onResult: () -> Unit) {
+        viewModelScope.launch {
+            repository.updateDarkModeRepo(userId, isDark)
+            onResult()
         }
     }
 }

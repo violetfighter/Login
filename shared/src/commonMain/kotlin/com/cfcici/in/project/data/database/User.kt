@@ -14,7 +14,9 @@ data class User(//Parent of the UserCar
     val passwordUser: String,
     val dateOfBirthUser: String,
     val emailIdUser: String,
-    val userPhotoUser: String? = null // nullable, default to null
+    val userPhotoUser: String? = null, // nullable, default to null
+    val selectedTheme: String = "SUNSET_GARAGE",
+    val isDarkMode: Boolean = true
 )
 @Entity(
     tableName = "UserOwnedCar",

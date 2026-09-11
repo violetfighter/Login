@@ -83,8 +83,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit, onGoToNewAccount: () -> Unit 
         initialValue = 0.5f,
         targetValue = 1.20f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
-        ),
+            animation = tween(durationMillis = 1000, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
         label = "flickerAlpha"
     )
 
