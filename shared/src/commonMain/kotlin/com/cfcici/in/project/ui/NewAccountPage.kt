@@ -87,6 +87,11 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.hazeBlur
+import io.github.vinceglb.confettikit.compose.ConfettiKit
+import io.github.vinceglb.confettikit.core.Angle
+import io.github.vinceglb.confettikit.core.Party
+import io.github.vinceglb.confettikit.core.Spread
+import io.github.vinceglb.confettikit.core.emitter.Emitter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
@@ -94,6 +99,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.roundToInt
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 enum class NewAccountState {FORM, SUCCESS}
 
@@ -138,14 +144,14 @@ fun NewAccountPage(
     var passwordErrorShaker by remember { mutableStateOf(0) }
     var dobErrorShaker by remember { mutableStateOf(0) }
 
+    var showConfetti by remember { mutableStateOf(false) }
+
     LaunchedEffect(screenState){
         if (screenState == NewAccountState.SUCCESS){
             delay(1300)//lets the checkmark bounce in and sit for a beat before navigating
            // onNewAccountSuccess()
         }
     }
-
-
 
     //LaunchedEffect(newEmailID.text){//When something happens on the screen, run this code as a side effect.
         //emailError = emailChecker(newEmailID.text.toString())
@@ -169,20 +175,21 @@ fun NewAccountPage(
         snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
         }
-    ){
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF140F22)
+                .background(
+                    Color(0xFF140F22)
                     //Brush.linearGradient(colors = listOf(Color(0xFFF0396B), Color(0xFF1A1A1A), Color(0xFFF0555C)))
                 ),
-                //.hazeSource(state = hazeState)// mark this as the blur source
-                //.statusBarsPadding(), // pushes content below the statues bar
+            //.hazeSource(state = hazeState)// mark this as the blur source
+            //.statusBarsPadding(), // pushes content below the statues bar
             contentAlignment = Alignment.Center
         )
         {
             NeonSpeedwayBackground(//keeps running continuously behind everything
-             modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             )
             Card(
                 shape = RoundedCornerShape(24.dp),
@@ -190,14 +197,13 @@ fun NewAccountPage(
                     //.fillMaxHeight()
                     //.height(5.dp)
                     .padding(20.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    ,
+                    .clip(RoundedCornerShape(24.dp)),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.Black.copy(alpha = 0.5f)
-                            //containerColor = Color.Transparent
+                    //containerColor = Color.Transparent
                 )
 
-            ){
+            ) {
                 Column(
                     modifier = Modifier
                         //.fillMaxSize()
@@ -227,14 +233,15 @@ fun NewAccountPage(
 
                     OutlinedTextField(
                         state = newUserName,
-                        label = { Text("Username")},
+                        label = { Text("Username") },
                         inputTransformation = InputTransformation.maxLength(16),
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = usernameErrorShaker)
-                            .onFocusChanged{
-                                if(it.isFocused)// When your click on the inbox it gives true
-                                    usernameError = null },
+                            .onFocusChanged {
+                                if (it.isFocused)// When your click on the inbox it gives true
+                                    usernameError = null
+                            },
                         shape = RoundedCornerShape(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle = TextStyle(fontSize = 20.sp),
@@ -261,8 +268,8 @@ fun NewAccountPage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = emailErrorShaker)
-                            .onFocusChanged{
-                                if(it.isFocused)
+                            .onFocusChanged {
+                                if (it.isFocused)
                                     emailError = null
                             },
                         shape = RoundedCornerShape(50.dp),
@@ -297,8 +304,8 @@ fun NewAccountPage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = dobErrorShaker)
-                            .onFocusChanged{
-                                if(it.isFocused)
+                            .onFocusChanged {
+                                if (it.isFocused)
                                     dateOfBirthError = null
                             },
                         readOnly = true, // blocks typing
@@ -313,19 +320,20 @@ fun NewAccountPage(
                             unfocusedLabelColor = Color(0xFFF0555C),
                             focusedLabelColor = Color(0xFFF0555C),
                             errorTextColor = Color.White,
-                            cursorColor = Color.White),
+                            cursorColor = Color.White
+                        ),
                         trailingIcon = {
                             IconButton(
-                                onClick = {showCalendar = true}){
+                                onClick = { showCalendar = true }) {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = "Select the date",
                                     tint = Color(0xFFF0555C)
                                 )
-                                if (showCalendar){
+                                if (showCalendar) {
                                     Calender(
-                                        onDateSelected = {
-                                            date -> selectedDate = date
+                                        onDateSelected = { date ->
+                                            selectedDate = date
                                             newDOB.edit {//edit { } is the API for programmatically changing what's inside a TextFieldState as opposed to the user typing into it
                                                 replace(0, length, formatDate(date))
                                             }
@@ -339,7 +347,7 @@ fun NewAccountPage(
                         },
                         isError = dateOfBirthError != null,
                         supportingText = {
-                            if(dateOfBirthError != null){
+                            if (dateOfBirthError != null) {
                                 Text("Date of Birth is required")
                             }
                         }
@@ -347,13 +355,13 @@ fun NewAccountPage(
 
                     OutlinedTextField(
                         state = newPassword,
-                        label = {Text("Password")},
+                        label = { Text("Password") },
                         shape = RoundedCornerShape(50.dp),
                         inputTransformation = InputTransformation.maxLength(16),
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = passwordErrorShaker)
-                            .onFocusChanged{
+                            .onFocusChanged {
                                 passwordFocused = it.isFocused
                                 if (it.isFocused)
                                     passwordError = null
@@ -372,19 +380,23 @@ fun NewAccountPage(
                         ),
                         isError = passwordError != null,
                         supportingText = {
-                            if(passwordError != null){
+                            if (passwordError != null) {
                                 Text(passwordError!!)
                             }
                         }
                     )
-                    if (passwordFocused){
+
+                    if (passwordFocused) {
                         PopUpMessage(newPassword.text.toString())
                     }
 
 
                     Button(
                         modifier = Modifier.padding(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0396B), contentColor = Color.White),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFF0396B),
+                            contentColor = Color.White
+                        ),
                         onClick =
                             {
                                 var isValid = true
@@ -440,68 +452,45 @@ fun NewAccountPage(
                                     }
                                 }*/
 
-                                if(isValid) {
+                                if (isValid) {
 
+                                    userViewModel.emailExistVM((newEmailID.text.toString()))
+                                    { emailExists ->
 
-                                userViewModel.emailExistVM((newEmailID.text.toString()))
-                                { emailExists ->
+                                        userViewModel.usernameExistsVM(newUserName.text.toString())
+                                        { usernameExists ->
 
-                                    userViewModel.usernameExistsVM(newUserName.text.toString())
-                                    { usernameExists ->
+                                            if (emailExists) {
+                                                emailError = "Email already exists"
+                                                emailErrorShaker++
+                                            }
+                                            if (usernameExists) {
+                                                usernameError = "Username already exists"
+                                                usernameErrorShaker++
+                                            }
+                                            if (!emailExists && !usernameExists) {
+                                                // Send the values to App so it can save on room database
+                                                onCreateNewAccount(
+                                                    newUserName.text.toString(),
+                                                    newPassword.text.toString(),
+                                                    newDOB.text.toString(),
+                                                    newEmailID.text.toString()
+                                                ) { success, errorMessage ->
+                                                    if (success) {
+                                                        scope.launch {
+                                                            showConfetti = true
+                                                            onBackToLogin()
 
-                                        if (emailExists) {
-                                            emailError = "Email already exists"
-                                            emailErrorShaker++
-                                        }
-                                        if (usernameExists) {
-                                            usernameError = "Username already exists"
-                                            usernameErrorShaker++
-                                        }
-
-                                        if (!emailExists && !usernameExists) {
-                                            onCreateNewAccount(
-                                                newUserName.text.toString(),
-                                                newPassword.text.toString(),
-                                                newDOB.text.toString(),
-                                                newEmailID.text.toString()
-                                            ) { success, errorMessage ->
-                                                if (success) {
-                                                    scope.launch {
-                                                        val snackbarJob = launch {
-                                                            snackbarHostState.showSnackbar(
-                                                                message = "Successfully created the account.",
-                                                                duration = SnackbarDuration.Short
-                                                            )
                                                         }
-                                                        delay(1000)
-                                                        snackbarJob.cancel()
-                                                        onBackToLogin()
+                                                    } else {
+                                                        emailError = errorMessage
+                                                            ?: "Something went wrong — please try again @NewAccountPage"
                                                     }
-                                                } else {
-                                                    emailError = errorMessage
-                                                        ?: "Something went wrong — please try again @@@@"
                                                 }
                                             }
                                         }
-                                        /*
-                                            if (!emailExists && !usernameExists)
-                                            { // Send the values to App so it can save on room database
-                                                onCreateNewAccount(newUserName.text.toString(),newPassword.text.toString(), newDOB.text.toString(), newEmailID.text.toString())
-                                                scope.launch {
-                                                    val snackbarJob = launch {
-                                                    snackbarHostState.showSnackbar(
-                                                        message = "Successfully created the account.",
-                                                        duration = SnackbarDuration.Short
-                                                    )
-                                                }
-                                                    delay(1000)
-                                                    snackbarJob.cancel()
-                                                    onBackToLogin()
-                                                }
-                                        }*/
                                     }
                                 }
-                            }
 
                             }
                     ) {
@@ -510,7 +499,8 @@ fun NewAccountPage(
 
                     Row(
                         modifier = Modifier.padding(5.dp).fillMaxSize(),
-                        horizontalArrangement = Arrangement.Center)
+                        horizontalArrangement = Arrangement.Center
+                    )
                     {
                         Text(
                             text = ("Already have an account? "),
@@ -524,7 +514,7 @@ fun NewAccountPage(
                             text = ("Login"),
                             modifier = Modifier
                                 .padding(top = 30.dp, start = 3.dp)
-                                .clickable{onBackToLogin()},
+                                .clickable { onBackToLogin() },
                             color = Color(0xFFFF9800),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal
@@ -532,7 +522,29 @@ fun NewAccountPage(
                     }
                 }
             }
-
+            if (showConfetti) {
+                ConfettiKit(
+                    modifier = Modifier.fillMaxSize(),
+                    parties = listOf(
+                        Party(
+                            angle = Angle.TOP,
+                            spread = Spread.WIDE,
+                            speed = 15f,
+                            maxSpeed = 30f,
+                            damping = 0.9f,
+                            colors = listOf(
+                                0xFFFFD700.toInt(),
+                                0xFFFF4081.toInt(),
+                                0xFF7C4DFF.toInt(),
+                                0xFF00C853.toInt()
+                            ),
+                            emitter = Emitter(
+                                duration = 2.seconds
+                            ).perSecond(50)
+                        )
+                    )
+                )
+            }
         }
     }
 }
