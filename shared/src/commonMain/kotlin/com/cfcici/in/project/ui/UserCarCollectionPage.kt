@@ -166,23 +166,6 @@ data class ThemeColors(
 )
 
 fun themeColors(theme: AppTheme, isDark: Boolean): ThemeColors = when ( theme ) {
-    AppTheme.SUNSET_GARAGE -> if(!isDark) ThemeColors( // if it is light mode
-        headerGradient = listOf(Color(0xFFD85A30), Color(0xFFD4537E)),
-        background = Color(0xFFFBF6F0),
-        slots = listOf(
-            SlotColors(Color(0xFFFAECE7), Color(0xFF4A1B0C)),
-            SlotColors(Color(0xFFFBEAF0), Color(0xFF4B1528)),
-            SlotColors(Color(0xFFFAEEDA), Color(0xFF412402))
-        )
-    )else ThemeColors( // if it is dark mode
-        headerGradient = listOf(Color(0xFF712B13), Color(0xFF72243E)),
-        background = Color(0xFF1A1210),
-        slots = listOf(
-            SlotColors(Color(0xFF712B13), Color(0xFFF0997B)),
-            SlotColors(Color(0xFF72243E), Color(0xFFED93B1)),
-            SlotColors(Color(0xFF633806), Color(0xFFEF9F27))
-        )
-    )
 
     AppTheme.NEON_SPEEDWAY -> if(!isDark) ThemeColors(
         headerGradient = listOf(Color(0xFF534AB7), Color(0xFFD4537E)),
@@ -199,6 +182,24 @@ fun themeColors(theme: AppTheme, isDark: Boolean): ThemeColors = when ( theme ) 
             SlotColors(Color(0xFF3C3489), Color(0xFFAFA9EC)),
             SlotColors(Color(0xFF085041), Color(0xFF9FE1CB)),
             SlotColors(Color(0xFF72243E), Color(0xFFED93B1))
+        )
+    )
+
+    AppTheme.SUNSET_GARAGE -> if(!isDark) ThemeColors( // if it is light mode
+        headerGradient = listOf(Color(0xFFD85A30), Color(0xFFD4537E)),
+        background = Color(0xFFFBF6F0),
+        slots = listOf(
+            SlotColors(Color(0xFFFAECE7), Color(0xFF4A1B0C)),
+            SlotColors(Color(0xFFFBEAF0), Color(0xFF4B1528)),
+            SlotColors(Color(0xFFFAEEDA), Color(0xFF412402))
+        )
+    )else ThemeColors( // if it is dark mode
+        headerGradient = listOf(Color(0xFF712B13), Color(0xFF72243E)),
+        background = Color(0xFF1A1210),
+        slots = listOf(
+            SlotColors(Color(0xFF712B13), Color(0xFFF0997B)),
+            SlotColors(Color(0xFF72243E), Color(0xFFED93B1)),
+            SlotColors(Color(0xFF633806), Color(0xFFEF9F27))
         )
     )
 
@@ -518,7 +519,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
     {
         if(!showAddCarDialog){
             Column (
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize()
             )
             {
                 Box(
@@ -537,8 +538,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                         )
                         {
                             Column(
-                                modifier = Modifier
-                                    .weight(1f)
+                                modifier = Modifier.weight(1f)
                             ) {
 
                                 Text(
@@ -807,7 +807,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
         androidx.compose.animation.AnimatedVisibility(
             visible = showCardDetails != null,
-            enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)), // CHANGED: added fadeIn so the scrim fades in together with the scale
+            enter = scaleIn(animationSpec = tween(300)) + fadeIn(animationSpec = tween(300)), // added fadeIn so the scrim fades in together with the scale
             exit = scaleOut(animationSpec = tween(300)) + fadeOut(animationSpec = tween(300))
         )
         {
@@ -818,8 +818,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.6f)) // ADDED — this is the scrim. Without it, the grid cards behind show through at the edges, which is exactly the glitch in your first screenshot
-                    .clickable( // ADDED — tapping anywhere on the dimmed background closes the popup
+                    .background(Color.Black.copy(alpha = 0.6f)) // this is the scrim. Without it, the grid cards behind show through at the edges, which is exactly the glitch in your first screenshot
+                    .clickable( // tapping anywhere on the dimmed background closes the popup
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }) { showCardDetails = null },
                 contentAlignment = Alignment.Center
@@ -827,7 +827,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                 Card( // .background() — Card gives proper elevation/shape and stops taps on it from bubbling to the scrim behind
                     modifier = Modifier
                         .height(450.dp)
-                        .fillMaxWidth(0.85f) // CHANGED: was .size(600.dp) — percentage width keeps it correctly proportioned on any screen instead of a fixed pixel size that can overflow
+                        .fillMaxWidth(0.85f)
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }

@@ -14,11 +14,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,17 +33,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NoPhotography
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Upload
@@ -74,13 +86,18 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.sp
@@ -91,6 +108,8 @@ import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
+import login.shared.generated.resources.Amarante_Regular
+import org.jetbrains.compose.resources.Font
 import kotlin.let
 
 
@@ -125,6 +144,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     var passwordDisplay by remember { mutableStateOf(false) }
     var passwordFocus by remember { mutableStateOf(false) }
     var updateButton by remember { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
 
     var showCalendar by remember { mutableStateOf(false) }
     val dobInteractionSource = remember { MutableInteractionSource() }
@@ -133,6 +153,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     var showProfilePhotoOptions by remember { mutableStateOf(false) }
     var showCamera by remember { mutableStateOf(false) }
     var pendingCamera by remember { mutableStateOf(false) }
+    val currentUser = user
 
     val haptics = LocalHapticFeedback.current
     var showFullImage by remember { mutableStateOf(false) }
@@ -167,6 +188,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             )
         }
     }
+    val currentTheme = user?.selectedTheme
+        ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
+        ?: AppTheme.NEON_SPEEDWAY
+    val isDarkMode = user?.isDarkMode ?: isSystemInDarkTheme()
+    val colors = themeColors(currentTheme, isDarkMode)
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
+    val textColor = colors.slots[0].text
+    val accent = colors.headerGradient[0]
 
     val scope = rememberCoroutineScope()
     val imageCropper = rememberImageCropper()
@@ -278,237 +307,460 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     Box(
         modifier = Modifier
             .fillMaxSize()
-            //.padding(10.dp)
-            .background(Color.Black)
+            .background(colors.background)
     )
     {
-        Column {
+        Column(modifier = Modifier.fillMaxSize())
+        {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(170.dp)
-                    .background(color = Color(0xFFF0396B),
-                        shape = RoundedCornerShape(
-                            topStart = 0.dp,
-                            topEnd = 0.dp,
-                            bottomStart = 20.dp,
-                            bottomEnd = 20.dp)
-                    )
-            )
-            Spacer(modifier = Modifier.height(150.dp))
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(15.dp)
+                    .background(Brush.horizontalGradient(colors.headerGradient))
             )
             {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    TextField(
-                        value = usernameSP,
-                        onValueChange = {usernameSP = it},
-                        readOnly = true,
-                        textStyle = TextStyle(fontSize = 20.sp),
-                        label = { Text(
-                            text = "Username", // Should be username already there
-                            color = Color(0xFFFF9800),
-                            fontSize = 12.sp
-                        )},
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFF0396B),
-                            unfocusedIndicatorColor = Color(0xFFF0396B),
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
-                    )
-                    IconButton(
-                        onClick = { updateButton = true }
-                    ){
-                        Icon(imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    TextField(
-                        value = emailSP,
-                        onValueChange = {emailSP = it},
-                        readOnly = true,
-                        textStyle = TextStyle(fontSize = 20.sp),
-                        label = { Text(
-                            text = "Email Id",
-                            color = Color(0xFFFF9800),
-                            fontSize = 12.sp
-                        )},
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFF0396B),
-                            unfocusedIndicatorColor = Color(0xFFF0396B),
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        )
-                    )
-                    IconButton(// Not at all necessary
-                        onClick = {}
-                    ){
-                        Icon(imageVector = Icons.Default.Lock,
-                            contentDescription = "Lock",
-                            tint = Color.DarkGray,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    TextField(
-                        value = dobSP,
-                        onValueChange = {dobSP = it},
-                        readOnly = true,
-                        textStyle = TextStyle(fontSize = 20.sp),
-                        label = { Text(
-                            text = "Date Of Birth", // Should be username already there
-                            color = Color(0xFFFF9800),
-                            fontSize = 12.sp
-                        )},
-                        interactionSource = dobInteractionSource,
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFF0396B),
-                            unfocusedIndicatorColor = Color(0xFFF0396B),
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                    )
-                    IconButton(
-                        onClick = {showCalendar = true }
-                    ){
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
+                        .statusBarsPadding(), // pushes below status bar
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 )
                 {
-                    TextField(
-                        value = passwordSP,
-                        onValueChange = {passwordSP = it},
-                        readOnly = true,
-                        textStyle = TextStyle(fontSize = 20.sp),
-                        label = { Text(
-                            text = "Password", // should alert the user using email
-                            color = Color(0xFFFF9800),
-                            fontSize = 12.sp
-                        )},
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color(0xFFF0396B),
-                            unfocusedIndicatorColor = Color(0xFFF0396B),
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        visualTransformation =
-                            if(passwordDisplay){
-                                VisualTransformation.None
-                            }else{
-                                PasswordVisualTransformation()
-                            },
-                        trailingIcon = {
-                            val passwordIcon = if(passwordDisplay)
-                                Icons.Filled.Visibility
-                            else
-                                Icons.Filled.VisibilityOff
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
 
-                            IconButton(
-                                onClick = {
-                                    passwordDisplay = !passwordDisplay
-                                }
-                            ){
-                                Icon(
-                                    imageVector = passwordIcon,
-                                    contentDescription = if(passwordDisplay){"Hide Password"} else {"Show Password"},
-                                    tint = Color.DarkGray
-                                )
+                        Text(
+                            text = "Settings",
+                            color = Color.White,
+                            fontFamily = usernameFont,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 30.sp
+                        )
+
+                        IconButton( // need to change the sizing or something
+                            onClick = {
+                                goBackToProfilePage(usernameSP, userIdSP)
                             }
+                        ){
+                            Icon(
+                                imageVector = Icons.Default.ArrowBackIosNew,
+                                contentDescription = "",
+                                tint = Color.White,
+                            )
+                        }
+
+                    }
+
+                    IconButton(
+                        onClick = {
+                            userViewModel.updateDarkModeVM(userIdSP, !isDarkMode) {}
                         },
                         modifier = Modifier
-                            .onFocusChanged{
-                                passwordFocus = it.isFocused
-                            },
-                    )
-                    IconButton(
-                        onClick = {}
+                            .size(48.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.2f),
+                                shape = CircleShape
+                            )
                     ){
-                        Icon(imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                        Icon(
+                            imageVector = if (isDarkMode)
+                                Icons.Default.LightMode
+                            else
+                                Icons.Default.DarkMode,
+                            contentDescription = "dark mode - light mode",
                             tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(90.dp))
-            Row (
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ){
-                IconButton(
-                    onClick = {
-                        goBackToProfilePage(usernameSP, userIdSP)
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            )
+            {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onClick = {// shows bigger picture
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showFullImage = true },
+                            onLongClick = {showProfilePhotoOptions = true}),
+                    contentAlignment = Alignment.Center
+
+                )
+                {
+                    //display the user selected picture instantly
+                    //3
+                    if (selectedProfileBitmap != null) {
+                        Image(
+                            bitmap = selectedProfileBitmap!!,
+                            contentDescription = "Profile picture",
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
                     }
-                ){
-                    Icon(
-                        imageVector = Icons.Default.ArrowBackIosNew,
-                        contentDescription = "",
-                        tint = Color.White
+
+                    // previously saved photo, loaded from disk via its saved path
+                    //1
+                    else if(currentUser?.userPhotoUser != null){
+                        val photoValue = currentUser.userPhotoUser
+                        val model = if (photoValue.startsWith("http")){
+                            photoValue // it's a remote DiceBear URL, use as-is
+                        }else{
+                            imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                        }
+                        AsyncImage(
+                            //model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                            model = model,
+                            contentDescription = "Profile picture",
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    else {
+                        // no photo at all, default photo
+                        //2
+                        Box(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape)
+                                .background(colors.slots[2].bg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Default Profile picture",
+                                tint = textColor,
+                                modifier = Modifier.size(100.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
+                        .padding(horizontal = 18.dp)
+                )
+                {
+                    ProfileDetailRow(
+                        label = " Username ",
+                        value = user?.usernameUser ?: "",
+                        icon = Icons.Default.Person,
+                        colors = colors,
+                        onClick = {
+                            usernameSP = user?.usernameUser ?: ""
+                            updateButton = true
+                        }
+                    )
+
+                    ProfileDetailRow(
+                        label = " Email Id ",
+                        value = user?.emailIdUser ?: "",
+                        icon = Icons.Default.Email,
+                        colors = colors,
+                        clickable = false
+                    )
+
+                    ProfileDetailRow(
+                        label = " Date of Birth",
+                        value = user?.dateOfBirthUser ?: "",
+                        icon = Icons.Default.CalendarMonth,
+                        colors = colors,
+                        onClick = { showCalendar = true }
+                    )
+
+                    ProfileDetailRow(
+                        label = " Password ",
+                        value = "••••••••••",
+                        icon = Icons.Default.Lock,
+                        colors = colors,
+                        showDivider = false,
+                        onClick = {
+                            showPassword = true
+                        }
                     )
                 }
 
-                IconButton(
-                    onClick = {deleteUserPermanently = userIdSP} // User delete completely
-                ){
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                )
+                {
+                    Text(
+                        text = "THEME",
+                        color = textColor.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 10.dp)
+                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ThemeSwatchCard(
+                            theme = AppTheme.NEON_SPEEDWAY,
+                            isDark = isDarkMode,
+                            selected = currentTheme == AppTheme.NEON_SPEEDWAY,
+                            modifier = Modifier.weight(1f),
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.NEON_SPEEDWAY) {} }
+                        )
+                        ThemeSwatchCard(
+                            theme = AppTheme.SUNSET_GARAGE,
+                            isDark = isDarkMode,
+                            selected = currentTheme == AppTheme.SUNSET_GARAGE,
+                            modifier = Modifier.weight(1f),
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.SUNSET_GARAGE) {} }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ThemeSwatchCard(
+                            theme = AppTheme.RETRO_DIECAST,
+                            isDark = isDarkMode,
+                            selected = currentTheme == AppTheme.RETRO_DIECAST,
+                            modifier = Modifier.weight(1f),
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.RETRO_DIECAST) {} }
+                        )
+                        ThemeSwatchCard(
+                            theme = AppTheme.MIDNIGHT_CHROME,
+                            isDark = isDarkMode,
+                            selected = currentTheme == AppTheme.MIDNIGHT_CHROME,
+                            modifier = Modifier.weight(1f),
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.MIDNIGHT_CHROME) {} }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                        .clickable{ deleteUserPermanently = userIdSP },
+                    horizontalArrangement = Arrangement.SpaceBetween
+                )
+                {
+                    Text(
+                        text = "Delete Account",
+                        color = textColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "",
-                        tint = Color.White
+                        contentDescription = "Delete",
+                        tint = textColor
                     )
                 }
+
+                /*
+
+                {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+
+
+                        TextField(
+                            value = usernameSP,
+                            onValueChange = {usernameSP = it},
+                            readOnly = true,
+                            textStyle = TextStyle(fontSize = 20.sp),
+                            label = { Text(
+                                text = "Username", // Should be username already there
+                                color = Color(0xFFFF9800),
+                                fontSize = 12.sp
+                            )},
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color(0xFFF0396B),
+                                unfocusedIndicatorColor = Color(0xFFF0396B),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+                        IconButton(
+                            onClick = { updateButton = true }
+                        ){
+                            Icon(imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        TextField(
+                            value = emailSP,
+                            onValueChange = {emailSP = it},
+                            readOnly = true,
+                            textStyle = TextStyle(fontSize = 20.sp),
+                            label = { Text(
+                                text = "Email Id",
+                                color = Color(0xFFFF9800),
+                                fontSize = 12.sp
+                            )},
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color(0xFFF0396B),
+                                unfocusedIndicatorColor = Color(0xFFF0396B),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            )
+                        )
+                        IconButton(// Not at all necessary
+                            onClick = {}
+                        ){
+                            Icon(imageVector = Icons.Default.Lock,
+                                contentDescription = "Lock",
+                                tint = Color.DarkGray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        TextField(
+                            value = dobSP,
+                            onValueChange = {dobSP = it},
+                            readOnly = true,
+                            textStyle = TextStyle(fontSize = 20.sp),
+                            label = { Text(
+                                text = "Date Of Birth", // Should be username already there
+                                color = Color(0xFFFF9800),
+                                fontSize = 12.sp
+                            )},
+                            interactionSource = dobInteractionSource,
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color(0xFFF0396B),
+                                unfocusedIndicatorColor = Color(0xFFF0396B),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                        )
+                        IconButton(
+                            onClick = {showCalendar = true }
+                        ){
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    )
+                    {
+                        TextField(
+                            value = passwordSP,
+                            onValueChange = {passwordSP = it},
+                            readOnly = true,
+                            textStyle = TextStyle(fontSize = 20.sp),
+                            label = { Text(
+                                text = "Password", // should alert the user using email
+                                color = Color(0xFFFF9800),
+                                fontSize = 12.sp
+                            )},
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color(0xFFF0396B),
+                                unfocusedIndicatorColor = Color(0xFFF0396B),
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            visualTransformation =
+                                if(passwordDisplay){
+                                    VisualTransformation.None
+                                }else{
+                                    PasswordVisualTransformation()
+                                },
+                            trailingIcon = {
+                                val passwordIcon = if(passwordDisplay)
+                                    Icons.Filled.Visibility
+                                else
+                                    Icons.Filled.VisibilityOff
+
+                                IconButton(
+                                    onClick = {
+                                        passwordDisplay = !passwordDisplay
+                                    }
+                                ){
+                                    Icon(
+                                        imageVector = passwordIcon,
+                                        contentDescription = if(passwordDisplay){"Hide Password"} else {"Show Password"},
+                                        tint = Color.DarkGray
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .onFocusChanged{
+                                    passwordFocus = it.isFocused
+                                },
+                        )
+                        IconButton(
+                            onClick = {}
+                        ){
+                            Icon(imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }*/
             }
         }
+/*
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -522,7 +774,6 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 //)
         )
         {
-            val currentUser = user
 
             Box(
                 modifier = Modifier
@@ -597,7 +848,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 )
             }
         }
-
+    */
         if(deleteUserPermanently != null){
             AlertDialog(
                 //deleteUserPermanently = null make Alert Dialog disappear
@@ -1017,6 +1268,63 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     // .let{} is only inside if branch → it only available in that one branch, not in else.
 
 
+    if (showPassword) {
+        AlertDialog(
+            onDismissRequest = {
+                showPassword = false
+            },
+            containerColor = Color(0xFF1A1A1A),
+            title = {
+                Text(
+                    text = "Password",
+                    color = Color(0xFFF0396B)
+                )
+            },
+            text = {
+                TextField(
+                    value = passwordSP,
+                    onValueChange = {
+                        passwordSP = it
+                    },
+                    textStyle = TextStyle(fontSize = 25.sp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.DarkGray,
+                        unfocusedIndicatorColor = Color.DarkGray,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Send password reset email to Firebase later
+                    }
+                ) {
+                    Text(
+                        "Change Password",
+                        color = Color(0xFFFF9800)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showPassword = false
+                    }
+                ) {
+                    Text(
+                        "Cancel",
+                        color = Color(0xFFF0396B)
+                    )
+                }
+            }
+        )
+    }
     if (updateButton) {
         AlertDialog(
             onDismissRequest = {
@@ -1119,6 +1427,81 @@ fun Avatars(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun ProfileDetailRow(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    colors: ThemeColors,
+    showDivider: Boolean = true,
+    clickable: Boolean = true,
+    onClick: (() -> Unit)? = null
+) {
+    val textColor = colors.slots[0].text
+    val accent = colors.headerGradient[0]
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .let { if (clickable && onClick != null) it.clickable { onClick() } else it }
+                .padding(vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(accent.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+            }
+            Spacer(modifier = Modifier.width(width = 14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(label, color = textColor.copy(alpha = 0.6f), fontSize = 11.sp)
+                Text(value, color = textColor, fontSize = 14.sp)
+            }
+            if (clickable && onClick != null) {
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = textColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))
+            }
+        }
+        if (showDivider) {
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(textColor.copy(alpha = 0.08f)))
+        }
+    }
+}
+
+@Composable
+fun ThemeSwatchCard(
+    theme: AppTheme,
+    isDark: Boolean,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val swatchColors = themeColors(theme, isDark)
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        border = if (selected) BorderStroke(2.dp, swatchColors.slots[0].text) else null,
+        colors = CardDefaults.cardColors(containerColor = swatchColors.slots[2].bg.copy(alpha = 0.4f))
+    ) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Brush.horizontalGradient(swatchColors.headerGradient))
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(theme.displayName, color = swatchColors.slots[0].text, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
     }
 }
 

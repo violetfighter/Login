@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -38,11 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.maxLength
@@ -63,7 +59,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -71,7 +66,6 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
@@ -86,15 +80,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.IntOffset
 import com.cfcici.`in`.project.viewmodel.UserViewModel
-import dev.chrisbanes.haze.HazeInput
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.blur.hazeBlur
 import io.github.vinceglb.confettikit.compose.ConfettiKit
-import io.github.vinceglb.confettikit.core.Angle
 import io.github.vinceglb.confettikit.core.Party
 import io.github.vinceglb.confettikit.core.emitter.Emitter
 import kotlinx.coroutines.delay
@@ -125,7 +112,7 @@ fun NewAccountPage(
     var passwordFocused by remember { mutableStateOf(false) }
     val gradientColors = listOf(Color(0xFFF0396B), Color(0xFFF0555C), Color(0xFFF0883C))
     val scope = rememberCoroutineScope()
-    val hazeState = remember { HazeState() }
+    //val hazeState = remember { HazeState() }
     val dobInteractionSource = remember { MutableInteractionSource() }
     val isDobPressed by dobInteractionSource.collectIsPressedAsState()
     //reads from that same object and gives you a live Boolean — true while the field is actively being pressed, false otherwise.
@@ -506,7 +493,7 @@ fun NewAccountPage(
 
                             }
                     ) {
-                        Text(text = "Create")
+                        Text(text = "Create") // make create loading animation
                     }
 
                     Row(

@@ -10,7 +10,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
-@Database(entities = [User::class, UserCar::class, UserSelectedBrandCars::class], version = 15)
+@Database(entities = [User::class, UserCar::class, UserSelectedBrandCars::class], version = 16)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
@@ -24,7 +24,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 
 internal const val dbFileName = "app_room_db.db"
 
-val MIGRATION_ADD_THEME = object : Migration(14, 15) {
+val MIGRATION_ADD_THEME = object : Migration(15, 16) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE Users ADD COLUMN isDarkMode INTEGER NOT NULL DEFAULT 0")
     }
