@@ -64,6 +64,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SearchBarDefaults.colors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -195,6 +196,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     val colors = themeColors(currentTheme, isDarkMode)
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val textColor = colors.slots[0].text
+    val backgroundColor = colors.slots[2].bg
     val accent = colors.headerGradient[0]
 
     val scope = rememberCoroutineScope()
@@ -327,17 +329,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     verticalAlignment = Alignment.CenterVertically
                 )
                 {
-                    Column(
+                    Row(
                         modifier = Modifier.weight(1f)
                     ) {
-
-                        Text(
-                            text = "Settings",
-                            color = Color.White,
-                            fontFamily = usernameFont,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 30.sp
-                        )
 
                         IconButton( // need to change the sizing or something
                             onClick = {
@@ -351,6 +345,13 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             )
                         }
 
+                        Text(
+                            text = "Settings",
+                            color = Color.White,
+                            fontFamily = usernameFont,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 30.sp
+                        )
                     }
 
                     IconButton(
@@ -853,28 +854,30 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             AlertDialog(
                 //deleteUserPermanently = null make Alert Dialog disappear
                 onDismissRequest = {deleteUserPermanently = null},
-                containerColor = Color(0xFF1A1A1A),
+                containerColor = backgroundColor,
                 title = {
-                    Text("Delete the account", color = Color(0xFFFF9800))
+                    Text("Delete Account", color = textColor.copy(alpha = 0.6f))
                 },
                 text = {
-                    Text("Are you sure you want to delete the account permanently?", color = Color.LightGray)
+                    Text("Are you sure you want to delete the account permanently?", color = textColor)
                 },
                 confirmButton = {
                     TextButton(
-                        onClick = {deleteUserPermanently = null}
-                    ){
-                        Text("Cancel", color = Color(0xFFFF9800))
+                        onClick = {
+                            user?.let{ currentUser ->
+                                userViewModel.deleteUserVM(currentUser){}
+                            }
+                            onBackToLogin()
+                        }){
+                        Text("Delete", color = textColor.copy(alpha = 0.6f))
                     }
+
                 },
                 dismissButton = {
-                    TextButton(onClick = {
-                        user?.let{ currentUser ->
-                            userViewModel.deleteUserVM(currentUser){}
-                        }
-                        onBackToLogin()
-                    }){
-                        Text("Delete", color = Color(0xFFF0396B))
+                    TextButton(
+                        onClick = {deleteUserPermanently = null}
+                    ){
+                        Text("Cancel", color = textColor.copy(alpha = 0.6f))
                     }
                 }
             )
@@ -885,11 +888,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 onDismissRequest = {
                     showProfilePhotoOptions = false
                 },
-                containerColor = Color(0xFF1A1A1A),
+                containerColor = backgroundColor,
                 title = {
                     Text(
                         text = "Profile Picture",
-                        color = Color(0xFFF0396B)
+                        color = textColor
                     )
                 },
                 text = {
@@ -900,6 +903,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     )
                     {
                         Avatars (
+                            colors = colors,
                             onAvatarSelected = {url ->
                                 showProfilePhotoOptions = false
                                 // had a problem with showing instantly update of profile pic, but when I added these two lines, its gone
@@ -918,9 +922,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(30.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1A1A1A)
+                                containerColor = backgroundColor
                             ),
-                            border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                            border = BorderStroke(1.dp, textColor),
                             onClick = {
                                 showProfilePhotoOptions = false
                                 image.launch()
@@ -937,11 +941,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     modifier = Modifier.padding(8.dp),
                                     imageVector = Icons.Default.Upload,
                                     contentDescription = "Upload",
-                                    tint = Color.White
+                                    tint = textColor
                                 )
                                 Text(text = "Upload Photo",
                                     fontSize = 13.sp,
-                                    color = Color.White
+                                    color = textColor
                                 )
                             }
                         }
@@ -950,9 +954,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(30.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1A1A1A)
+                                containerColor = backgroundColor
                             ),
-                            border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                            border = BorderStroke(1.dp, textColor),
                             onClick = {
                                 showProfilePhotoOptions = false
                                 pendingCamera = true
@@ -967,12 +971,12 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     modifier = Modifier.padding(8.dp),
                                     imageVector = Icons.Default.PhotoCamera,
                                     contentDescription = "Camera",
-                                    tint = Color.White
+                                    tint = textColor
                                 )
                                 Text(
                                     text = "Take Photo",
                                     fontSize = 13.sp,
-                                    color = Color.White
+                                    color = textColor
                                 )
                             }
                         }
@@ -981,9 +985,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(30.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF1A1A1A)
+                                containerColor = backgroundColor
                             ),
-                            border = BorderStroke(1.dp, Color(0xFFF0396B)),
+                            border = BorderStroke(1.dp, textColor),
                             onClick = {
                                 selectedImageBytes = null
                                 selectedProfileBitmap = null
@@ -1008,12 +1012,12 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     modifier = Modifier.padding(8.dp),
                                 imageVector = Icons.Default.NoPhotography, /////Should change the icon
                                 contentDescription = "Default Photo",
-                                tint = Color.White
+                                tint = textColor
                                 )
                                 Text(
                                     text = "No Photo",
                                     fontSize = 13.sp,
-                                    color = Color.White
+                                    color = textColor
                                 )
                             }
                         }
@@ -1027,7 +1031,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     ){
                         Text(
                             text = "Cancel",
-                            color = Color(0xFFFF9800)
+                            color = textColor
                         )
                     }
                 }
@@ -1124,8 +1128,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
-                        .size(600.dp)
-                        //.clip(CircleShape)
+                        .size(400.dp)
+                        .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
@@ -1133,7 +1137,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             translationX = offset.x,
                             translationY = offset.y
                             ),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
             }
 
@@ -1151,8 +1155,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
-                        .size(600.dp)
-                        //.clip(CircleShape)
+                        .size(400.dp)
+                        .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
                             scaleX = zoom,
@@ -1160,28 +1164,36 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             translationX = offset.x,
                             translationY = offset.y
                         ),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
             }
             else {
                 // no photo at all, default photo
                 //2
-                Image(
-                    painter = painterResource(Res.drawable.profile_icon),
-                    contentDescription = "Default Profile picture",
+                Box(
                     modifier = Modifier
-                        .size(300.dp)
+                        .size(400.dp)
                         .clip(CircleShape)
-                        .transformable(state = state)
+                        .background(colors.slots[2].bg),
+                    contentAlignment = Alignment.Center
+                ){
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Default Profile picture",
+                        tint = textColor,
+                        modifier = Modifier
+                            .size(266.67.dp)
+                            .clip(CircleShape)
+                            .transformable(state = state)
                         //.graphicsLayer(
-                            //scaleX = zoom,
-                            //scaleY = zoom,
-                            //translationX = offset.x,
-                            //translationY = offset.y
-                       // )
-                        ,
-                    contentScale = ContentScale.Crop
-                )
+                        //scaleX = zoom,
+                        //scaleY = zoom,
+                        //translationX = offset.x,
+                        //translationY = offset.y
+                        // )
+
+                    )
+                }
             }
         }
     }
@@ -1190,7 +1202,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             Text(
                 "Cancel",
-                color = Color(0xFFF0396B),
+                color = textColor,
                 modifier = Modifier
                     .padding(start = 20.dp, top = 50.dp)
                     .clickable { showCamera = false }
@@ -1273,11 +1285,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             onDismissRequest = {
                 showPassword = false
             },
-            containerColor = Color(0xFF1A1A1A),
+            containerColor = backgroundColor,
             title = {
                 Text(
                     text = "Password",
-                    color = Color(0xFFF0396B)
+                    color = textColor.copy(alpha = 0.6f)
                 )
             },
             text = {
@@ -1289,13 +1301,13 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     textStyle = TextStyle(fontSize = 25.sp),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.DarkGray,
-                        unfocusedIndicatorColor = Color.DarkGray,
+                        focusedIndicatorColor = textColor.copy(alpha = 0.6f),
+                        unfocusedIndicatorColor = textColor.copy(alpha = 0.6f),
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
                     )
                 )
             },
@@ -1307,7 +1319,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 ) {
                     Text(
                         "Change Password",
-                        color = Color(0xFFFF9800)
+                        color = textColor.copy(alpha = 0.6f)
                     )
                 }
             },
@@ -1319,7 +1331,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 ) {
                     Text(
                         "Cancel",
-                        color = Color(0xFFF0396B)
+                        color = textColor.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -1330,11 +1342,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             onDismissRequest = {
                 updateButton = false
             },
-            containerColor = Color(0xFF1A1A1A),
+            containerColor = backgroundColor,
             title = {
                 Text(
                     text = "Edit Username",
-                    color = Color(0xFFF0396B)
+                    color = textColor.copy(alpha = 0.6f)
                 )
             },
             text = {
@@ -1346,13 +1358,13 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     textStyle = TextStyle(fontSize = 25.sp),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.DarkGray,
-                        unfocusedIndicatorColor = Color.DarkGray,
+                        focusedIndicatorColor = textColor.copy(alpha = 0.6f),
+                        unfocusedIndicatorColor = textColor.copy(alpha = 0.6f),
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
                     ),
                 )
             },
@@ -1375,7 +1387,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         }
                     }
                 ){
-                    Text("Save", color = Color(0xFFFF9800))
+                    Text("Save", color = textColor.copy(alpha = 0.6f))
                 }
             },
             dismissButton = {
@@ -1384,7 +1396,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         updateButton = false
                     }
                 ){
-                    Text("Cancel", color = Color(0xFFF0396B))
+                    Text("Cancel", color = textColor.copy(alpha = 0.6f))
                 }
             }
 
@@ -1395,8 +1407,10 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 ///*************************************************************************************************
 @Composable
 fun Avatars(
+    colors: ThemeColors,
     onAvatarSelected: (String) -> Unit
 ){
+
     LazyColumn(
         modifier = Modifier.height(280.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1405,7 +1419,7 @@ fun Avatars(
             Column {
                 Text(
                     text = style.label,
-                    color = Color.White,
+                    color = colors.slots[0].text,
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
                 LazyRow(
