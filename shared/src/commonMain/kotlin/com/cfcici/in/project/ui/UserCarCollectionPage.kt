@@ -143,7 +143,7 @@ import login.shared.generated.resources.Tomica
 import login.shared.generated.resources.black
 import login.shared.generated.resources.inno64
 import login.shared.generated.resources.maisto_logo_640x320
-import login.shared.generated.resources.matchbox2
+import login.shared.generated.resources.Matchbox_2
 import kotlin.math.absoluteValue
 
 enum class SortOrder{
@@ -549,7 +549,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                     fontSize = 30.sp
                                 )
                                 Text(
-                                    text = "$totalCarThisBrandOwns cars in your collection",
+                                    text = if(totalCarThisBrandOwns == 1) "$totalCarThisBrandOwns car in your collection" else "$totalCarThisBrandOwns cars in your collection",
                                     color = Color.White.copy(alpha = 0.85f),
                                     fontFamily = usernameFont,
                                     fontSize = 16.sp,

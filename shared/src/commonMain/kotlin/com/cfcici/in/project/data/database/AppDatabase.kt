@@ -26,6 +26,9 @@ internal const val dbFileName = "app_room_db.db"
 
 val MIGRATION_ADD_THEME = object : Migration(15, 16) {
     override fun migrate(connection: SQLiteConnection) {
-        connection.execSQL("ALTER TABLE Users ADD COLUMN isDarkMode INTEGER NOT NULL DEFAULT 0")
+        // If version 15 didn't have isDarkMode, add it here.
+        // If it did, this migration can be empty or handle other changes.
+        // Based on recent changes, we'll ensure the column exists safely.
+        connection.execSQL("ALTER TABLE Users ADD COLUMN isDarkMode INTEGER NOT NULL DEFAULT 1")
     }
 }

@@ -330,7 +330,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 )
                 {
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         IconButton( // need to change the sizing or something
@@ -1340,8 +1341,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     if (updateButton) {
         AlertDialog(
             onDismissRequest = {
-                updateButton = false
-            },
+                updateButton = false },
             containerColor = backgroundColor,
             title = {
                 Text(
@@ -1457,6 +1457,8 @@ fun ProfileDetailRow(
 ) {
     val textColor = colors.slots[0].text
     val accent = colors.headerGradient[0]
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
+
 
     Column {
         Row(
@@ -1467,15 +1469,22 @@ fun ProfileDetailRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(accent.copy(alpha = 0.15f)),
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(accent.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(16.dp))
             }
             Spacer(modifier = Modifier.width(width = 14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(label, color = textColor.copy(alpha = 0.6f), fontSize = 11.sp)
-                Text(value, color = textColor, fontSize = 14.sp)
+                Text(label, color = textColor.copy(alpha = 0.6f), fontSize = 11.sp, fontFamily = usernameFont)
+                Text(value, color = textColor, fontSize = 14.sp, fontFamily = usernameFont)
             }
             if (clickable && onClick != null) {
                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = textColor.copy(alpha = 0.4f), modifier = Modifier.size(18.dp))

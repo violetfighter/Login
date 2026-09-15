@@ -21,10 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import login.shared.generated.resources.Amarante_Regular
+import login.shared.generated.resources.Res
+import org.jetbrains.compose.resources.Font
 
 @Composable
 fun PasswordPage(
@@ -36,6 +40,7 @@ fun PasswordPage(
 {//to get user password from login page
     // We need to check is password visible or not
     // So we created boolean state
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     var passwordDisplay by remember { mutableStateOf(false) }// gives password = false
     var passwordFocused by remember { mutableStateOf(false) }
     Column(
@@ -78,7 +83,7 @@ fun PasswordPage(
                     )
                 }
             },
-            label = {Text("Enter your password")},
+            label = {Text("Enter your password", fontFamily = usernameFont)},
             shape = RoundedCornerShape(50.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFF0396B),
@@ -112,11 +117,13 @@ fun PasswordPage(
         }*/
     }
 }
+
 // When user click the box it shows the message
 @Composable
 fun PopUpMessage(password: (String))
 {
 
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val message  = isValidPassword(password)
 
     Surface(
@@ -133,7 +140,8 @@ fun PopUpMessage(password: (String))
 
             message.forEach {  error ->
                 Text(text = error,
-                    color = Color(0xFFF83C3C)
+                    color = Color(0xFFF83C3C),
+                    fontFamily = usernameFont
                 )}
         }
     }

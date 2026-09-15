@@ -80,6 +80,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import io.github.vinceglb.confettikit.compose.ConfettiKit
 import io.github.vinceglb.confettikit.core.Party
@@ -89,6 +90,9 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import login.shared.generated.resources.Amarante_Regular
+import login.shared.generated.resources.Res
+import org.jetbrains.compose.resources.Font
 
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -102,6 +106,7 @@ fun NewAccountPage(
     userViewModel: UserViewModel
 )
 {
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val newUserName = rememberTextFieldState()
     val newPassword = rememberTextFieldState()
     val newEmailID = rememberTextFieldState()
@@ -124,7 +129,8 @@ fun NewAccountPage(
     //String? means the value can be either a String or null.
     //(null) is the starting value — meaning initially, there's no error.
 
-    var screenState by remember { mutableStateOf(NewAccountState.FORM) } ///????
+    var screenState by remember { mutableStateOf(NewAccountState.FORM) }
+    var isLoading by remember { mutableStateOf(false) }
     val formAlpha by animateFloatAsState(
         targetValue = if(screenState == NewAccountState.FORM) 1f else 0f,///????
         animationSpec = tween(400),
@@ -213,6 +219,7 @@ fun NewAccountPage(
                         text = "Create New Account",
                         fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
+                        fontFamily = usernameFont,
                         textAlign = TextAlign.Center,
                         style = TextStyle(
                             brush = Brush.linearGradient(
@@ -225,7 +232,7 @@ fun NewAccountPage(
 
                     OutlinedTextField(
                         state = newUserName,
-                        label = { Text("Username") },
+                        label = { Text("Username", fontFamily = usernameFont) },
                         inputTransformation = InputTransformation.maxLength(16),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -236,7 +243,7 @@ fun NewAccountPage(
                             },
                         shape = RoundedCornerShape(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        textStyle = TextStyle(fontSize = 20.sp),
+                        textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFFF0555C),
                             unfocusedTextColor = Color.White,
@@ -256,7 +263,7 @@ fun NewAccountPage(
 
                     OutlinedTextField(
                         state = newEmailID,
-                        label = { Text("Email ID") },
+                        label = { Text("Email ID", fontFamily = usernameFont) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = emailErrorShaker)
@@ -266,7 +273,7 @@ fun NewAccountPage(
                             },
                         shape = RoundedCornerShape(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        textStyle = TextStyle(fontSize = 20.sp),
+                        textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFFF0555C),
                             unfocusedTextColor = Color.White,
@@ -289,10 +296,10 @@ fun NewAccountPage(
 
                     OutlinedTextField(
                         state = newDOB,
-                        label = { Text("Date of Birth") },
+                        label = { Text("Date of Birth", fontFamily = usernameFont) },
                         shape = RoundedCornerShape(50.dp),
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        textStyle = TextStyle(fontSize = 20.sp),
+                        textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         modifier = Modifier
                             .fillMaxWidth()
                             .shake(trigger = dobErrorShaker)
@@ -340,14 +347,14 @@ fun NewAccountPage(
                         isError = dateOfBirthError != null,
                         supportingText = {
                             if (dateOfBirthError != null) {
-                                Text("Date of Birth is required")
+                                Text("Date of Birth is required", fontFamily = usernameFont)
                             }
                         }
                     )
 
                     OutlinedTextField(
                         state = newPassword,
-                        label = { Text("Password") },
+                        label = { Text("Password", fontFamily = usernameFont) },
                         shape = RoundedCornerShape(50.dp),
                         inputTransformation = InputTransformation.maxLength(16),
                         modifier = Modifier
@@ -359,7 +366,7 @@ fun NewAccountPage(
                                     passwordError = null
                             },
                         lineLimits = TextFieldLineLimits.SingleLine,
-                        textStyle = TextStyle(fontSize = 20.sp),
+                        textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFFF0555C),
                             unfocusedTextColor = Color.White,
@@ -445,7 +452,7 @@ fun NewAccountPage(
                                 }*/
 
                                 if (isValid) {
-
+                                    isLoading = true
                                     userViewModel.emailExistVM((newEmailID.text.toString()))
                                     { emailExists ->
 
@@ -455,10 +462,12 @@ fun NewAccountPage(
                                             if (emailExists) {
                                                 emailError = "Email already exists"
                                                 emailErrorShaker++
+                                                isLoading = false
                                             }
                                             if (usernameExists) {
                                                 usernameError = "Username already exists"
                                                 usernameErrorShaker++
+                                                isLoading = false
                                             }
                                             if (!emailExists && !usernameExists) {
                                                 // Send the values to App so it can save on room database
@@ -468,6 +477,7 @@ fun NewAccountPage(
                                                     newDOB.text.toString(),
                                                     newEmailID.text.toString()
                                                 ) { success, errorMessage ->
+                                                    isLoading = false
                                                     if (success) {
                                                         scope.launch {
                                                             //val snackbarJob = launch {
@@ -477,7 +487,7 @@ fun NewAccountPage(
                                                                 //)
                                                            // }
                                                             showConfetti = true
-                                                            delay(timeMillis = 4000)
+                                                            delay(timeMillis = 3500)
                                                             //snackbarJob.cancel()
                                                             onBackToLogin()
                                                         }
@@ -493,7 +503,15 @@ fun NewAccountPage(
 
                             }
                     ) {
-                        Text(text = "Create") // make create loading animation
+                        if (isLoading) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(text = "Create", fontFamily = usernameFont) // make create loading animation
+                        }
                     }
 
                     Row(
@@ -507,16 +525,18 @@ fun NewAccountPage(
                                 .padding(top = 30.dp),
                             fontSize = 15.sp,
                             color = Color.White,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = usernameFont
                         )
                         Text(
                             text = ("Login"),
                             modifier = Modifier
                                 .padding(top = 30.dp, start = 3.dp)
                                 .clickable { onBackToLogin() },
-                            color = Color(0xFFFF9800),
+                            color = Color(0xFFD4537E),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = usernameFont
                         )
                     }
                 }
@@ -544,7 +564,8 @@ fun NewAccountPage(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF0555C),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontFamily = usernameFont
                     )
                 }
 
@@ -632,6 +653,7 @@ fun AnimatedSuccessTick() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calender(
+
     // Reason we use long is that selected date is represented by milliseconds
     // July 30, 2026 -> some long number
     // Reason we use long is that selected date is represented by milliseconds
@@ -640,6 +662,7 @@ fun Calender(
     onDismiss: () -> Unit // a function that takes nothing and return nothing
 // it mainly used to close the calendar.
 ){
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val datePickerState = rememberDatePickerState(// Stores the info
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
@@ -649,10 +672,24 @@ fun Calender(
     )
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
-            surface = Color(0xFF1A1A1A),
-            surfaceContainerHigh = Color(0xFF1A1A1A),
+            surface = Color(0xFF140F22),
+            surfaceContainerHigh = Color(0xFF140F22),
             onSurface = Color.White,
             primary = Color(0xFFF0396B)
+        ),
+        typography = MaterialTheme.typography.copy(
+            titleLarge = MaterialTheme.typography.titleLarge.copy(
+                fontFamily = usernameFont
+            ),
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(
+                fontFamily = usernameFont
+            ),
+            bodyLarge = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = usernameFont
+            ),
+            labelLarge = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = usernameFont
+            )
         )
     ) {
 
@@ -670,40 +707,40 @@ fun Calender(
                         onDismiss()
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFFF0396B)
+                        contentColor = Color(0xFFAFA9EC)
                     )
                 ) {
-                    Text("OK")
+                    Text("OK", fontFamily = usernameFont)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = onDismiss,
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFFF0396B)
+                        contentColor = Color(0xFFAFA9EC)
                     )
                 ) {
-                    Text("Cancel")
+                    Text(text = "Cancel", fontFamily = usernameFont)
                 }
             }
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    containerColor = Color(0xFF1A1A1A),
-                    titleContentColor = Color(0xFFFF9800),
-                    headlineContentColor = Color(0xFFF0396B),
+                    containerColor = Color(0xFF140F22),
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color(0xFFAFA9EC),
                     weekdayContentColor = Color(0xFF9E9E9E),
                     subheadContentColor = Color(0xFFBDBDBD),
                     yearContentColor = Color.White,
-                    currentYearContentColor = Color(0xFFF0396B),
+                    currentYearContentColor = Color(0xFFAFA9EC),
                     selectedYearContentColor = Color.White,
                     selectedYearContainerColor = Color(0xFFF0396B),
                     dayContentColor = Color.White,
                     selectedDayContentColor = Color.White,
                     selectedDayContainerColor = Color(0xFFF0396B),
-                    todayContentColor = Color(0xFFFF9800),
-                    todayDateBorderColor = Color(0xFFFF9800),
+                    todayContentColor = Color(0xFFAFA9EC),
+                    todayDateBorderColor = Color(0xFFAFA9EC),
                     navigationContentColor = Color.White
                 )
             )
