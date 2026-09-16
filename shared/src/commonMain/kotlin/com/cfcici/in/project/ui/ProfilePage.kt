@@ -199,38 +199,41 @@ fun ProfilePage(usernamePP: String,
 
                         ) {
                             val currentUser = user
-
-                            if(!currentUser?.userPhotoUser.isNullOrBlank()){
-                                val photoValue = currentUser.userPhotoUser
-                                val model = if (photoValue.startsWith("http")){
-                                    photoValue // it's a remote DiceBear URL, use as-is
-                                }else{
-                                    imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
-                                }
-                                AsyncImage(
-                                    //model = imageStorage.getFullPath(currentUser.userPhotoUser),
-                                    model = model,
-                                    contentDescription = "Profile Picture",
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }else
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(colors.slots[2].bg),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Default Profile picture",
-                                        tint = textColor,
-                                        modifier = Modifier.size(50.dp)
+                            Box(
+                                modifier = Modifier.clickable{goToSetting(userIdPP)}
+                            ){
+                                if(!currentUser?.userPhotoUser.isNullOrBlank()){
+                                    val photoValue = currentUser.userPhotoUser
+                                    val model = if (photoValue.startsWith("http")){
+                                        photoValue // it's a remote DiceBear URL, use as-is
+                                    }else{
+                                        imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                                    }
+                                    AsyncImage(
+                                        //model = imageStorage.getFullPath(currentUser.userPhotoUser),
+                                        model = model,
+                                        contentDescription = "Profile Picture",
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
-                                }
+                                }else
+                                    Box(
+                                        modifier = Modifier
+                                            .size(70.dp)
+                                            .clip(CircleShape)
+                                            .background(colors.slots[2].bg),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = "Default Profile picture",
+                                            tint = textColor,
+                                            modifier = Modifier.size(50.dp)
+                                        )
+                                    }
+                            }
 
                             Text(
                                 text = " $usernamePP",
@@ -244,7 +247,7 @@ fun ProfilePage(usernamePP: String,
 
                         IconButton(
                             onClick = {
-                                userViewModel.updateDarkModeVM(userIdPP, !isDarkMode) {}
+                                userViewModel.updateDarkModeVM(userIdPP, isDark = !isDarkMode) {}
                             },
                             modifier = Modifier
                                 .size(48.dp)
@@ -275,7 +278,7 @@ fun ProfilePage(usernamePP: String,
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(80.dp)
+                            .height(90.dp)
                             .clip(shape = RoundedCornerShape(12.dp))
                             .background(Brush.horizontalGradient(colors.headerGradient)),// should be opposite color go the mode
                         contentAlignment = Alignment.CenterStart
@@ -523,43 +526,6 @@ fun ProfilePage(usernamePP: String,
                     onBrandClick = { brand -> goToUserCarCollection(brand.name, userIdPP) }
                 )*/
 
-                Row(
-                    modifier = Modifier
-                        //.align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                    //.padding(vertical = 10.dp)
-                    ,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                )
-                {
-                    IconButton(
-                        modifier = Modifier
-                            .padding(start = 50.dp),
-                        onClick = {
-                            onBackToLogin()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Logout",
-                            tint = textColor
-                        )
-                    }
-
-                    IconButton(
-                        modifier = Modifier
-                            .padding(end = 50.dp),
-                        onClick = {
-                            goToSetting(userIdPP)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = textColor
-                        )
-                    }
-                }
             }
 
         }

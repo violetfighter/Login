@@ -1,5 +1,8 @@
 package com.cfcici.`in`.project
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -75,12 +78,14 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
             }
 //________________________________________________________________________________________________//
 
-            composable<SentEmailRoute>{
+            composable<SentEmailRoute>
+            {
                 SentEmailPage(
                     onBackToLogin = {
                         navController.navigate(LoginRoute)
                     },
-                    viewModel = viewModel)
+                    viewModel = viewModel
+                )
             }
 //________________________________________________________________________________________________//
 // backStack Entry represent the current values of username, password...

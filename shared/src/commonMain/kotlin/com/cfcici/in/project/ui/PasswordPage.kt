@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +36,7 @@ fun PasswordPage(
     password: String,//current password
     passwordChecker: (String) -> Unit,//function that sends the new password back to the parent
     isError: Boolean = false,
+    onPasswordFocus: () -> Unit,
     supportingText: @Composable () -> Unit = {}
 )
 {//to get user password from login page
@@ -79,7 +81,7 @@ fun PasswordPage(
                     Icon(
                         imageVector = passwordIcon,
                         contentDescription = if (passwordDisplay){"Hide Password"} else {"Show Password"},
-                        tint = Color.DarkGray
+                        tint = Color.LightGray
                     )
                 }
             },
@@ -90,8 +92,8 @@ fun PasswordPage(
                 unfocusedBorderColor = Color(0xFFF0396B),
                 focusedTextColor = Color.White,
                 unfocusedTextColor = Color.White,
-                unfocusedLabelColor = Color.DarkGray,
-                focusedLabelColor = Color.DarkGray,
+                unfocusedLabelColor = Color.LightGray,
+                focusedLabelColor = Color(0xFFF0396B),
                 errorTextColor = Color.White,
                 cursorColor = Color.White
             ),
@@ -99,13 +101,18 @@ fun PasswordPage(
                 .width(320.dp)
                 .onFocusChanged {
                     passwordFocused = it.isFocused
+
+                    if (it.isFocused) {
+                        onPasswordFocus()
+                    }
+
                 },
 
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.Lock,
+                    imageVector = Icons.Outlined.Lock,
                     contentDescription = "Password Icon",
-                    tint = Color.White
+                    tint = Color(0xFFF0396B)
                     )
             },
             isError = isError,

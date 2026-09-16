@@ -245,12 +245,12 @@ fun NewAccountPage(
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFF0555C),
+                            focusedBorderColor = Color(0xFFF0396B),
                             unfocusedTextColor = Color.White,
                             focusedTextColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFF0555C),
-                            unfocusedLabelColor = Color(0xFFF0555C),
-                            focusedLabelColor = Color(0xFFF0555C),
+                            unfocusedBorderColor = Color(0xFFF0396B),
+                            unfocusedLabelColor = Color.DarkGray,
+                            focusedLabelColor = Color(0xFFF0396B),
                             errorTextColor = Color.White,
                             cursorColor = Color.White
                         ),
@@ -275,12 +275,12 @@ fun NewAccountPage(
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFF0555C),
+                            focusedBorderColor = Color(0xFFF0396B),
                             unfocusedTextColor = Color.White,
                             focusedTextColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFF0555C),
-                            unfocusedLabelColor = Color(0xFFF0555C),
-                            focusedLabelColor = Color(0xFFF0555C),
+                            unfocusedBorderColor = Color(0xFFF0396B),
+                            unfocusedLabelColor = Color.DarkGray,
+                            focusedLabelColor = Color(0xFFF0396B),
                             errorTextColor = Color.White,
                             cursorColor = Color.White
                         ),
@@ -312,12 +312,12 @@ fun NewAccountPage(
                         //dobInteraction lets know that if it is pressed or clicked to interaction
                         //so it tells outlinedTextField to do whatever next
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFF0555C),
+                            focusedBorderColor = Color(0xFFF0396B),
                             unfocusedTextColor = Color.White,
                             focusedTextColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFF0555C),
-                            unfocusedLabelColor = Color(0xFFF0555C),
-                            focusedLabelColor = Color(0xFFF0555C),
+                            unfocusedBorderColor = Color(0xFFF0396B),
+                            unfocusedLabelColor = Color.DarkGray,
+                            focusedLabelColor = Color(0xFFF0396B),
                             errorTextColor = Color.White,
                             cursorColor = Color.White
                         ),
@@ -327,7 +327,7 @@ fun NewAccountPage(
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = "Select the date",
-                                    tint = Color(0xFFF0555C)
+                                    tint = Color((0xFFF0396B))
                                 )
                                 if (showCalendar) {
                                     Calender(
@@ -368,12 +368,12 @@ fun NewAccountPage(
                         lineLimits = TextFieldLineLimits.SingleLine,
                         textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFF0555C),
+                            focusedBorderColor = Color(0xFFF0396B),
                             unfocusedTextColor = Color.White,
                             focusedTextColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFF0555C),
-                            unfocusedLabelColor = Color(0xFFF0555C),
-                            focusedLabelColor = Color(0xFFF0555C),
+                            unfocusedBorderColor = Color(0xFFF0396B),
+                            unfocusedLabelColor = Color.DarkGray,
+                            focusedLabelColor = Color(0xFFF0396B),
                             errorTextColor = Color.White,
                             cursorColor = Color.White,
                         ),
@@ -563,7 +563,7 @@ fun NewAccountPage(
                         text = "You Successfully Created New Account!",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF0555C),
+                        color = Color(0xFFF0396B),
                         textAlign = TextAlign.Center,
                         fontFamily = usernameFont
                     )
@@ -865,30 +865,7 @@ fun NeonSpeedwayBackground(modifier: Modifier = Modifier) {
 //**************************************************************************************************
         // shade out circle
 
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0x4DD4537E), Color.Transparent)
-            ),
-            radius = 220f,
-            center = Offset(w * (0.1f + 0.8f * orb1), h * (0.1f + 0.8f * orb2))
-        )
 
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0x593C3489), Color.Transparent)
-            ),
-            radius = 260f,// fixed size of a circle
-            center = Offset(w * (0.9f - 0.8f * orb2), h * (0.2f + 0.7f * orb1))
-        )
-
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF574FBB), Color.Transparent)
-            ),
-            radius = 230f,// fixed size of a circle
-            center = Offset(w * (0.2f + 0.6f * orb1), h * (0.8f - 0.6f * orb2))
-        )
 
 //**************************************************************************************************
         // see circle all time
@@ -970,8 +947,6 @@ fun NeonSpeedwayBackground(modifier: Modifier = Modifier) {
         )
     }
 }
-
-// I need confetti/firework when user create new account. It should be glowy shiny each one of them like illuminated yellow.
 
 
 

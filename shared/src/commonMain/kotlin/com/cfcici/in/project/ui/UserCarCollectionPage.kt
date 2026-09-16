@@ -856,11 +856,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                             )
                             Spacer(Modifier.height(16.dp))
 
-                            CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "—", color = slot.text)
+                            CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "", color = slot.text)
                             CarDetailRow(label = "Colour", value = car.colourUser, color = slot.text)
-                            CarDetailRow(label = "Series", value = car.seriesUser ?: "—", color = slot.text)
-                            CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "—", color = slot.text)
-                            CarDetailRow(label = "Collector no.", value = car.collectorNoUser ?: "—", color = slot.text)
+                            CarDetailRow(label = "Series", value = car.seriesUser ?: "", color = slot.text)
+                            CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "", color = slot.text)
+                            CarDetailRow(label = "Collector no.", value = car.collectorNoUser ?: "", color = slot.text)
 
                             Spacer(Modifier.height(16.dp))
 
@@ -1952,10 +1952,10 @@ fun CarCoverflowCarousel(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(16.dp))
-                                CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "—", color = slot.text)
+                                CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "", color = slot.text)
                                 CarDetailRow(label = "Colour", value = car.colourUser, color = slot.text)
-                                CarDetailRow(label = "Series", value = car.seriesUser ?: "—", color = slot.text)
-                                CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "—", color = slot.text)
+                                CarDetailRow(label = "Series", value = car.seriesUser ?: "", color = slot.text)
+                                CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "", color = slot.text)
                                 CarDetailRow(label = "Collector no.", value = car.collectorNoUser ?: "—", color = slot.text)
                                 Spacer(Modifier.height(20.dp))
                                 Text(
@@ -2015,7 +2015,7 @@ fun CarCoverflowCarousel(
             Spacer(modifier = Modifier.height(16.dp))
 
             val currentIndex = pagerState.currentPage % cars.size
-
+            val currentSlot = colors.slots[currentIndex % colors.slots.size]
             val startIndex = maxOf(0, currentIndex - 2)
             val endIndex = minOf(cars.size - 1, currentIndex + 2)
 
@@ -2037,9 +2037,9 @@ fun CarCoverflowCarousel(
                             .clip(CircleShape)
                             .background(
                                 if (isSelected)
-                                    Color.DarkGray
+                                    currentSlot.text
                                 else
-                                    Color.White
+                                    currentSlot.text.copy(alpha = 0.25f)
                             )
                     )
                 }
@@ -2263,61 +2263,6 @@ fun AnimatedYearField(
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(textColor.copy(alpha = 0.08f)))
-        }
-    }
-}
-@Composable
-fun ThemePickerGrid(
-    currentTheme: AppTheme,
-    isDark: Boolean,
-    onThemeSelected: (AppTheme) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(AppTheme.entries) { theme ->
-            val colors = themeColors(theme, isDark)
-            val selected = theme == currentTheme
-
-            Card(
-                onClick = { onThemeSelected(theme) },
-                shape = RoundedCornerShape(16.dp),
-                border = if (selected)
-                    BorderStroke(2.dp, colors.slots[0].text)
-                else null,
-                colors = CardDefaults.cardColors(containerColor = colors.background)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Brush.horizontalGradient(colors.headerGradient))
-                    )
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(theme.displayName,
-                        color = colors.slots[0].text,
-                        fontSize = 13.sp)
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .padding(top = 6.dp)) {
-                        colors.slots.forEach { slot ->
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(slot.bg)
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }

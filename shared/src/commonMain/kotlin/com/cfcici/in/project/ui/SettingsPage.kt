@@ -43,6 +43,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
@@ -60,15 +61,23 @@ import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults.colors
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -330,7 +339,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 )
                 {
                     Row(
-                        modifier = Modifier.weight(1f),
+                        //modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
@@ -449,6 +458,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Column(
@@ -513,7 +523,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         color = textColor.copy(alpha = 0.6f),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 10.dp)
+                        modifier = Modifier.padding(bottom = 10.dp),
+                        fontFamily = usernameFont
                     )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         ThemeSwatchCard(
@@ -567,11 +578,39 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
+                        fontFamily = usernameFont
                     )
 
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
+                        tint = textColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                        .clickable{ onBackToLogin() },
+                    horizontalArrangement = Arrangement.SpaceBetween
+                )
+                {
+                    Text(
+                        text = "Log out",
+                        color = textColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = usernameFont,
+                    )
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Logout",
                         tint = textColor
                     )
                 }
@@ -857,10 +896,10 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 onDismissRequest = {deleteUserPermanently = null},
                 containerColor = backgroundColor,
                 title = {
-                    Text("Delete Account", color = textColor.copy(alpha = 0.6f))
+                    Text("Delete Account", color = textColor.copy(alpha = 0.6f), fontFamily = usernameFont)
                 },
                 text = {
-                    Text("Are you sure you want to delete the account permanently?", color = textColor)
+                    Text("Are you sure you want to delete the account permanently?", color = textColor, fontFamily = usernameFont)
                 },
                 confirmButton = {
                     TextButton(
@@ -870,7 +909,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             }
                             onBackToLogin()
                         }){
-                        Text("Delete", color = textColor.copy(alpha = 0.6f))
+                        Text("Delete", color = textColor.copy(alpha = 0.6f), fontFamily = usernameFont)
                     }
 
                 },
@@ -878,7 +917,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     TextButton(
                         onClick = {deleteUserPermanently = null}
                     ){
-                        Text("Cancel", color = textColor.copy(alpha = 0.6f))
+                        Text("Cancel", color = textColor.copy(alpha = 0.6f), fontFamily = usernameFont)
                     }
                 }
             )
@@ -1129,7 +1168,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
-                        .size(400.dp)
+                        .size(370.dp)
                         .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
@@ -1156,7 +1195,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .padding(10.dp)
-                        .size(400.dp)
+                        .size(370.dp)
                         .clip(CircleShape)
                         .transformable(state = state)
                         .graphicsLayer(
@@ -1173,7 +1212,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 //2
                 Box(
                     modifier = Modifier
-                        .size(400.dp)
+                        .size(370.dp)
                         .clip(CircleShape)
                         .background(colors.slots[2].bg),
                     contentAlignment = Alignment.Center
@@ -1183,7 +1222,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         contentDescription = "Default Profile picture",
                         tint = textColor,
                         modifier = Modifier
-                            .size(266.67.dp)
+                            .size(280.dp)
                             .clip(CircleShape)
                             .transformable(state = state)
                         //.graphicsLayer(
@@ -1245,7 +1284,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     }
 
     if (showCalendar) {
-        Calender(
+        CalenderInSettings(
             onDateSelected = { date ->
                 val newDobString = formatDate(date)// new date
 
@@ -1405,6 +1444,101 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 }
 
 ///*************************************************************************************************
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CalenderInSettings(
+
+    // Reason we use long is that selected date is represented by milliseconds
+    // July 30, 2026 -> some long number
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit // a function that takes nothing and return nothing
+// it mainly used to close the calendar.
+){
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
+    val datePickerState = rememberDatePickerState(// Stores the info
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= kotlin.time.Clock.System.now().toEpochMilliseconds()
+            }
+        }
+    )
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            surface = Color(0xFF140F22),
+            surfaceContainerHigh = Color(0xFF140F22),
+            onSurface = Color.White,
+            primary = Color(0xFFF0396B)
+        ),
+        typography = MaterialTheme.typography.copy( // to change the FontStyle
+            titleLarge = MaterialTheme.typography.titleLarge.copy(
+                fontFamily = usernameFont
+            ),
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(
+                fontFamily = usernameFont
+            ),
+            bodyLarge = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = usernameFont
+            ),
+            labelLarge = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = usernameFont
+            )
+        )
+    ) {
+
+        // this creates the model pop-up
+
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+//When "OK" is tapped: it reads whatever date the user tapped (datePickerState.selectedDateMillis,
+// which is null if nothing was tapped), hands it up to the caller via onDateSelected(...), then closes the dialog via onDismiss().
+                        onDateSelected(datePickerState.selectedDateMillis)
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFFAFA9EC)
+                    )
+                ) {
+                    Text("OK", fontFamily = usernameFont)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFFAFA9EC)
+                    )
+                ) {
+                    Text(text = "Cancel", fontFamily = usernameFont)
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color(0xFF140F22),
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color(0xFFAFA9EC),
+                    weekdayContentColor = Color(0xFF9E9E9E),
+                    subheadContentColor = Color(0xFFBDBDBD),
+                    yearContentColor = Color.White,
+                    currentYearContentColor = Color(0xFFAFA9EC),
+                    selectedYearContentColor = Color.White,
+                    selectedYearContainerColor = Color(0xFFF0396B),
+                    dayContentColor = Color.White,
+                    selectedDayContentColor = Color.White,
+                    selectedDayContainerColor = Color(0xFFF0396B),
+                    todayContentColor = Color(0xFFAFA9EC),
+                    todayDateBorderColor = Color(0xFFAFA9EC),
+                    navigationContentColor = Color.White
+                )
+            )
+        }
+    }
+}
 @Composable
 fun Avatars(
     colors: ThemeColors,
@@ -1504,6 +1638,8 @@ fun ThemeSwatchCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+
+    val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val swatchColors = themeColors(theme, isDark)
     Card(
         onClick = onClick,
@@ -1521,7 +1657,12 @@ fun ThemeSwatchCard(
                     .background(Brush.horizontalGradient(swatchColors.headerGradient))
             )
             Spacer(modifier = Modifier.height(6.dp))
-            Text(theme.displayName, color = swatchColors.slots[0].text, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Text(
+                theme.displayName,
+                color = swatchColors.slots[0].text,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = usernameFont)
             Spacer(modifier = Modifier.height(4.dp))
         }
 
