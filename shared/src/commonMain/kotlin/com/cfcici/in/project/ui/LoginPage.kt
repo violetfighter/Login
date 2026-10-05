@@ -261,23 +261,11 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
 
                                 }
                             else {
-                                isLoading = true
-                                userViewModel.loginCheckerVM( userName.text.toString(), userPassword){
-                                    exists ->
-                                    if (exists){
-                                        userViewModel.getUserByUsernameVM(getUserByUsernameFromVM = userName.text.toString()){
-                                            user -> if(user != null)
-                                            {
-                                                val email = user.emailIdUser// to get emailId from room
-                                               // val userId = user.userId // userId will be helpful to get user car details
-
-                                                onLoginClick(// Send the username and password to App
-                                                    userName.text.toString(),
-                                                    user.userId
-                                                )
-                                            }
-                                        }
-                                    }else{
+                                    isLoading = true
+                                    userViewModel.loginCheckerVM(userName.text.toString(), userPassword) { userId ->
+                                        if (userId != null) {
+                                            onLoginClick(userName.text.toString(), userId)
+                                        }else{
                                         isLoading = false
                                         showInvalidMessage = true
                                     }

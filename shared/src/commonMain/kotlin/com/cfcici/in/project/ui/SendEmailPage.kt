@@ -111,7 +111,7 @@ fun SentEmailPage(onBackToLogin: () -> Unit, viewModel: UserViewModel){
                         emailError = null
                         statusMessage = null
 
-                        viewModel.sendPasswordReset(emailText) {
+                        viewModel.sendPasswordResetVM(emailText) { // remove this firebase
                                 success, emailNotFind ->
                             statusMessage = when{
                                 success -> "Email Sent"

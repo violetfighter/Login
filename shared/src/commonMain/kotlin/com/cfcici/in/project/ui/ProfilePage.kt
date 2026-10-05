@@ -68,7 +68,10 @@ import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import com.cfcici.`in`.project.network.ApiCar
+import com.cfcici.`in`.project.network.ApiUser
 import com.cfcici.`in`.project.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.AutoWorldLogo
 import login.shared.generated.resources.BuragoLogo
@@ -104,7 +107,16 @@ fun ProfilePage(usernamePP: String,
 )
 {
 
-    val user by userViewModel.getUserDetailsVM(userIdPP).collectAsState(initial = null)
+    var user by remember { mutableStateOf<ApiUser?>(null) }
+    val scope = rememberCoroutineScope()
+
+    suspend fun reload() {
+        user = userViewModel.getUserDetailsVM(userIdPP)
+    }
+
+    LaunchedEffect(userIdPP) {
+        reload()
+    }
     val currentTheme = user?.selectedTheme
         ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
         ?: AppTheme.NEON_SPEEDWAY
@@ -113,7 +125,8 @@ fun ProfilePage(usernamePP: String,
     val textColor = colors.slots[0].text
     val backgroundColor = colors.slots[2].bg
     val accent = colors.headerGradient[0]
-    val totalCarUserOwn by userViewModel.totalCarsUserOwnVM(userIdPP).collectAsState(initial = null)
+
+    var totalCarUserOwn by remember { mutableStateOf<Int?>(null) }
 
     val brandLogos = mapOf(
         "HotWheels" to Res.drawable.HotWheelsLogo2,
@@ -146,9 +159,9 @@ fun ProfilePage(usernamePP: String,
     val menuItemData = listOf("HotWheels", "MatchBox", "Tomica", "Kaido House", "Tarmac Works", "Pop Race", "Inno 64",
         "Auto World", "GreenLight", "Johnny Lightning", "Majorette", "M2 Machines", "Jada Toys", "Maisto", "Solido", "MINI GT", "Bburago")
     val snackbarHostState = remember { SnackbarHostState()}
-    val scope = rememberCoroutineScope ()
     var expand by remember { mutableStateOf(false) }// if dropdown is open or closed
     var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }///??????
+    /*
     fun displayBrand(){
         userViewModel.getSelectedCarBrandsVM(userIdPP){ savedBrands ->
             selectedItem = savedBrands
@@ -160,6 +173,13 @@ fun ProfilePage(usernamePP: String,
         boxVisible = true
         linesVisible = true
         displayBrand()
+    }
+*/
+
+    LaunchedEffect(userIdPP) {
+        userViewModel.totalCarsUserOwnVM(userIdPP) { total ->
+            totalCarUserOwn = total
+        }
     }
 
     Scaffold (
@@ -245,9 +265,18 @@ fun ProfilePage(usernamePP: String,
                             )
                         }
 
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp).clickable{onBackToLogin()}
+                        )
+/*
                         IconButton(
                             onClick = {
-                                userViewModel.updateDarkModeVM(userIdPP, isDark = !isDarkMode) {}
+                                userViewModel.updateDarkModeVM(userIdPP, isDark = !isDarkMode) {
+                                    scope.launch { reload() }
+                                }
                             },
                             modifier = Modifier
                                 .size(48.dp)
@@ -256,6 +285,7 @@ fun ProfilePage(usernamePP: String,
                                     shape = CircleShape
                                 )
                         ){
+
                             Icon(
                                 imageVector = if (isDarkMode)
                                     Icons.Default.LightMode
@@ -265,13 +295,13 @@ fun ProfilePage(usernamePP: String,
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
-                        }
+                        }*/
                     }
                 }
 
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        //.weight(1f)
                         .verticalScroll(state = rememberScrollState())
                         .padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
@@ -287,7 +317,7 @@ fun ProfilePage(usernamePP: String,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                         ){
                             Text(
-                                text = "$totalCarUserOwn",
+                                text = "${totalCarUserOwn ?: 0}",//While the request is loading, totalCarUserOwn is null, so your card shows the text "null" thats why using ?: 0
                                 color = Color.White,
                                 fontFamily = usernameFont,
                                 fontWeight = FontWeight.Bold,
@@ -499,8 +529,8 @@ fun ProfilePage(usernamePP: String,
                             //onClick = { goToUserCarCollection(item, userIdPP) }
                         )
                     }
-                }*/
-/*
+                }
+
                 BrandOrbitCarousel(
                     brands = listOf(
                         BrandItem("HotWheels"),
@@ -671,7 +701,7 @@ fun ItemBox(
     val accent = colors.headerGradient[0]
     val slot = colors.slots[itemIndex % colors.slots.size]
 
-    var getCarsFromThisBrand by remember { mutableStateOf<List<UserCar>>(emptyList()) }
+    var getCarsFromThisBrand by remember { mutableStateOf<List<ApiCar>>(emptyList()) }
     val totalCarThisBrandOwns = getCarsFromThisBrand.size
 
     LaunchedEffect(selectedBrandItem.selectedBrandName) {

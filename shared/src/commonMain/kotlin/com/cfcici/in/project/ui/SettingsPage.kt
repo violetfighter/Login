@@ -89,7 +89,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import login.shared.generated.resources.Res
-import login.shared.generated.resources.profile_icon
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -115,6 +114,7 @@ import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.CameraCapture
 import com.cfcici.`in`.project.encodeToByteArray
 import com.cfcici.`in`.project.ImageStorage
+import com.cfcici.`in`.project.network.ApiUser
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
@@ -145,7 +145,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 //           every time the Flow emits a new value (because Room detected the row changed),
 //           collectAsState() updates a State<User?> object behind the scenes, which automatically triggers recomposition of anything reading it.
 {
-    val user by userViewModel.getUserDetailsVM(userIdSP).collectAsState(initial = null)
+    var user by remember { mutableStateOf<ApiUser?>(null) }
     var usernameSP by remember { mutableStateOf("") }
     var emailSP by remember { mutableStateOf("") }
     var dobSP by remember { mutableStateOf("") }
@@ -154,6 +154,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     var passwordDisplay by remember { mutableStateOf(false) }
     var passwordFocus by remember { mutableStateOf(false) }
     var updateButton by remember { mutableStateOf(false) }
+    var usernameError by remember { mutableStateOf<String?>(null) }
     var showPassword by remember { mutableStateOf(false) }
 
     var showCalendar by remember { mutableStateOf(false) }
@@ -226,6 +227,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             )
         )
     }
+    suspend fun reload(){
+        user = userViewModel.getUserDetailsVM(userIdSP)
+    }
     var selectedProfileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }// turns byte to pixeled pics like it shows on UI and this is a local storage not saved on db
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) } // turns to byte
     val image = rememberImagePickerLauncher(
@@ -273,6 +277,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     )
 
                                 userViewModel.updateProfileEditVM(updatedUser) {
+                                    scope.launch { reload() }
                                     println("Cropped profile photo saved")
                                 }
                             }
@@ -284,6 +289,10 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     )
 
     var deleteUserPermanently by remember  {mutableStateOf<Int?>(null)}
+
+    LaunchedEffect(userIdSP){
+        reload()
+    }
 
     LaunchedEffect(pendingCamera) {
         if (pendingCamera) {
@@ -364,9 +373,20 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         )
                     }
 
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Logout",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp).clickable{onBackToLogin()}
+                    )
+
+                    /*
+
                     IconButton(
                         onClick = {
-                            userViewModel.updateDarkModeVM(userIdSP, !isDarkMode) {}
+                            userViewModel.updateDarkModeVM(userIdSP, !isDarkMode) {
+                                scope.launch { reload() }
+                            }
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -384,7 +404,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
-                    }
+                    }*/
                 }
             }
 
@@ -476,6 +496,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         colors = colors,
                         onClick = {
                             usernameSP = user?.usernameUser ?: ""
+                            usernameError = null
                             updateButton = true
                         }
                     )
@@ -520,7 +541,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 {
                     Text(
                         text = "THEME",
-                        color = textColor.copy(alpha = 0.6f),
+                        color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 10.dp),
@@ -532,14 +553,18 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             isDark = isDarkMode,
                             selected = currentTheme == AppTheme.NEON_SPEEDWAY,
                             modifier = Modifier.weight(1f),
-                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.NEON_SPEEDWAY) {} }
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.NEON_SPEEDWAY) {
+                                scope.launch { reload() }
+                            } }
                         )
                         ThemeSwatchCard(
                             theme = AppTheme.SUNSET_GARAGE,
                             isDark = isDarkMode,
                             selected = currentTheme == AppTheme.SUNSET_GARAGE,
                             modifier = Modifier.weight(1f),
-                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.SUNSET_GARAGE) {} }
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.SUNSET_GARAGE) {
+                                scope.launch { reload() }
+                            } }
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -549,16 +574,54 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             isDark = isDarkMode,
                             selected = currentTheme == AppTheme.RETRO_DIECAST,
                             modifier = Modifier.weight(1f),
-                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.RETRO_DIECAST) {} }
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.RETRO_DIECAST) {
+                                scope.launch { reload() }
+                            } }
                         )
                         ThemeSwatchCard(
                             theme = AppTheme.MIDNIGHT_CHROME,
                             isDark = isDarkMode,
                             selected = currentTheme == AppTheme.MIDNIGHT_CHROME,
                             modifier = Modifier.weight(1f),
-                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.MIDNIGHT_CHROME) {} }
+                            onClick = { userViewModel.updateSelectedThemeVM(userIdSP, AppTheme.MIDNIGHT_CHROME) {
+                                scope.launch { reload() }
+                            } }
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
+                        .clickable{
+                            userViewModel.updateDarkModeVM(userIdSP, !isDarkMode) {
+                            scope.launch { reload() }
+                        } },
+                    horizontalArrangement = Arrangement.SpaceBetween
+                )
+                {
+                    Text(
+                        text = if(!isDarkMode) "Dark Mode" else "Light Mode",
+                        color = textColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = usernameFont,
+                    )
+
+                    Icon(
+                        imageVector = if (isDarkMode)
+                            Icons.Default.LightMode
+                        else
+                            Icons.Default.DarkMode,
+                        contentDescription = "dark mode - light mode",
+                        tint = textColor,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -584,33 +647,6 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = textColor
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colors.slots[2].bg.copy(alpha = 0.4f))
-                        .padding(horizontal = 18.dp, vertical = 18.dp)
-                        .clickable{ onBackToLogin() },
-                    horizontalArrangement = Arrangement.SpaceBetween
-                )
-                {
-                    Text(
-                        text = "Log out",
-                        color = textColor,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = usernameFont,
-                    )
-
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Logout",
                         tint = textColor
                     )
                 }
@@ -904,11 +940,12 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            user?.let{ currentUser ->
-                                userViewModel.deleteUserVM(currentUser){}
+                            deleteUserPermanently = null
+                            userViewModel.deleteUserVM(userIdSP) { success ->
+                                if (success) onBackToLogin()
                             }
-                            onBackToLogin()
-                        }){
+                        }
+                    ){
                         Text("Delete", color = textColor.copy(alpha = 0.6f), fontFamily = usernameFont)
                     }
 
@@ -954,7 +991,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                 user?.let {
                                     currentUser ->
                                     val updatedAvatar = currentUser.copy(userPhotoUser = url)
-                                    userViewModel.updateProfileEditVM(updatedAvatar){}
+                                    userViewModel.updateProfileEditVM(updatedAvatar){
+                                        scope.launch { reload() }
+                                    }
                                 }
                             }
                         )
@@ -1001,7 +1040,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                 showProfilePhotoOptions = false
                                 pendingCamera = true
                             }
-                        ) {
+                        )
+                        {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -1036,6 +1076,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     val updatedPhoto = currentUser.copy(userPhotoUser = null )
                                     userViewModel.updateProfileEditVM((updatedPhoto)){
                                         showProfilePhotoOptions = false
+                                        scope.launch { reload() }
                                     }
                                 }
 
@@ -1268,7 +1309,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 
                                 user?.let { currentUser ->
                                     val updatedCameraImage = currentUser.copy(userPhotoUser = imagePath)
-                                    userViewModel.updateProfileEditVM(updatedCameraImage) {}
+                                    userViewModel.updateProfileEditVM(updatedCameraImage) {
+                                        scope.launch { reload() }
+                                    }
                                 }
                             }
                         }
@@ -1285,6 +1328,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 
     if (showCalendar) {
         CalenderInSettings(
+            colors = colors,
             onDateSelected = { date ->
                 val newDobString = formatDate(date)// new date
 
@@ -1292,7 +1336,11 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     if (newDobString.isNotEmpty()){
                         dobSP = newDobString
                         val updatedUserDob = it.copy(dateOfBirthUser = newDobString)
-                        userViewModel.updateProfileEditVM(updatedUserDob){}
+                        userViewModel.dobChangeVM(userIdSP, newDobString) { newDob ->
+                            if (newDob != null) {
+                                scope.launch { reload() }
+                            }
+                        }
 
                         /*
                 same meaning as above code
@@ -1389,40 +1437,44 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 )
             },
             text = {
-                TextField(
-                    value = usernameSP,
-                    onValueChange = {
-                        if (usernameSP.length <= 16) {usernameSP = it}
-                    },
-                    textStyle = TextStyle(fontSize = 25.sp),
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = textColor.copy(alpha = 0.6f),
-                        unfocusedIndicatorColor = textColor.copy(alpha = 0.6f),
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedTextColor = textColor,
-                        unfocusedTextColor = textColor
-                    ),
-                )
+                Column {
+                    TextField(
+                        value = usernameSP,
+                        onValueChange = {
+                            if (it.length <= 16) {
+                                usernameSP = it
+                                usernameError = null
+                            }
+                        },
+                        textStyle = TextStyle(fontSize = 25.sp),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = textColor.copy(alpha = 0.6f),
+                            unfocusedIndicatorColor = textColor.copy(alpha = 0.6f),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedTextColor = textColor,
+                            unfocusedTextColor = textColor
+                        ),
+                    )
+                    usernameError?.let { Text(it, color = Color.Red, fontSize = 12.sp) }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        user?.let{
-                            val updatedUsername = it.copy(usernameUser = usernameSP)
-
-                            if (usernameSP.isNotEmpty())
-                            {
-                                userViewModel.updateProfileEditVM(updatedUsername)
-                                {
+                        if(usernameSP.isNotEmpty()){
+                            userViewModel.usernameChangeVM(userIdSP, usernameSP){ newName ->
+                                if (newName!=null){
                                     updateButton = false
+                                    scope.launch { reload() }
+                                }else{
+                                    usernameError = "Username taken or update failed"
                                 }
                             }
-                                else
-                                    usernameSP = it.usernameUser//reset to original if left empty
-
+                        }else{
+                            usernameSP = user?.usernameUser?:""
                         }
                     }
                 ){
@@ -1451,10 +1503,13 @@ fun CalenderInSettings(
 
     // Reason we use long is that selected date is represented by milliseconds
     // July 30, 2026 -> some long number
+    colors: ThemeColors,
     onDateSelected: (Long?) -> Unit,
     onDismiss: () -> Unit // a function that takes nothing and return nothing
 // it mainly used to close the calendar.
 ){
+
+
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val datePickerState = rememberDatePickerState(// Stores the info
         selectableDates = object : SelectableDates {

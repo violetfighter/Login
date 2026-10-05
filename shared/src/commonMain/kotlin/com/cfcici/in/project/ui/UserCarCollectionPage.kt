@@ -50,6 +50,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Tag
@@ -59,12 +60,10 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Upload
@@ -87,7 +86,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
-import login.shared.generated.resources.HotWheels
 import org.jetbrains.compose.resources.Font
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -97,7 +95,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -120,35 +117,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
 import com.cfcici.`in`.project.ImageStorage
-import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.CameraCapture
+import com.cfcici.`in`.project.network.ApiCar
+import com.cfcici.`in`.project.network.ApiUser
 import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
-import login.shared.generated.resources.AutoWorldLogo
-import login.shared.generated.resources.BuragoLogo
-import login.shared.generated.resources.GreenLight
-import login.shared.generated.resources.JohnnyLightning
-import login.shared.generated.resources.KaidoHouse
-import login.shared.generated.resources.Logo_jada_toys
-import login.shared.generated.resources.M2M
-import login.shared.generated.resources.Majorette
-import login.shared.generated.resources.MiniGT
-import login.shared.generated.resources.PopRace
-import login.shared.generated.resources.Tarmac
-import login.shared.generated.resources.Tomica
-import login.shared.generated.resources.black
-import login.shared.generated.resources.inno64
-import login.shared.generated.resources.maisto_logo_640x320
-import login.shared.generated.resources.Matchbox_2
 import kotlin.math.absoluteValue
-
-enum class SortOrder{
-    NEWEST_FIRST, OLDEST_FIRST
-}
 
 enum class AppTheme(val displayName: String){
     SUNSET_GARAGE("Sunset garage"),
@@ -241,7 +220,7 @@ fun themeColors(theme: AppTheme, isDark: Boolean): ThemeColors = when ( theme ) 
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage)
+fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Unit, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage)
 {
 
     var deleteCarPermanently by remember { mutableStateOf<Int?>(null) }
@@ -249,11 +228,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     var showAddCarDialog by remember { mutableStateOf(false) }
 
-    val user by userViewModel.getUserDetailsVM(userCCPUserId).collectAsState(initial = null)
+    var user by remember { mutableStateOf<ApiUser?>(null) }
     val currentTheme = user?.selectedTheme
         ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
-        ?: AppTheme.SUNSET_GARAGE
-    
+        ?: AppTheme.NEON_SPEEDWAY
+
     val isDarkMode = user?.isDarkMode ?: isSystemInDarkTheme()
     val colors = themeColors(currentTheme, isDarkMode)
     val iconColor = colors.slots[0].text
@@ -262,7 +241,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
     //From all my cars, give me only the cars that belong to the brand the user clicked.
     var searchText by remember { mutableStateOf("") }
-    var getCarsFromThisBrand by remember { mutableStateOf<List<UserCar>>(emptyList()) }
+    var getCarsFromThisBrand by remember { mutableStateOf<List<ApiCar>>(emptyList()) }
     val totalCarThisBrandOwns = getCarsFromThisBrand.size
 
    // var expand by remember { mutableStateOf(false) }
@@ -270,55 +249,36 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
     var isSearchActive by remember { mutableStateOf(false) }
     val searchFocusRequester = remember { FocusRequester() }
 
-    /*val brandBackground = mapOf(
-        "HotWheels" to Res.drawable.HotWheels,
-        "MatchBox" to Res.drawable.matchbox2,
-        "Tomica" to Res.drawable.Tomica,
-        "Kaido House" to Res.drawable.KaidoHouse,
-        "Tarmac Works" to Res.drawable.Tarmac,
-        "Pop Race" to Res.drawable.PopRace,
-        "Inno 64" to Res.drawable.inno64,
-        "Auto World" to Res.drawable.AutoWorldLogo,
-        "GreenLight" to Res.drawable.GreenLight,
-        "Johnny Lightning" to Res.drawable.JohnnyLightning,
-        "Majorette" to Res.drawable.Majorette,
-        "M2 Machines" to Res.drawable.M2M,
-        "Jada Toys" to Res.drawable.Logo_jada_toys,
-        "Maisto" to Res.drawable.maisto_logo_640x320,
-        "Solido" to Res.drawable.black,
-        "MINI GT" to Res.drawable.MiniGT,
-        "Bburago" to Res.drawable.BuragoLogo
-    )*/
-    var sortOrder by remember { mutableStateOf<SortOrder?>(null) }
 
     //val logo = brandBackground[userCCPBrand] ?: Res.drawable.HotWheels // fallback drawable
     val filteringForCarSearch = getCarsFromThisBrand.filter { car -> searchText.isBlank()||
-            car.modelUser.contains(searchText, ignoreCase = true) ||
-            car.yearUser?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
-            car.seriesUser?.contains(searchText, ignoreCase = true)  == true ||
-            car.colourUser.contains(searchText, ignoreCase = true) ||
-            car.typeOfSeriesUser?.contains(searchText, ignoreCase = true) == true ||
-            car.collectorNoUser?.contains(searchText, ignoreCase = true) == true
+            car.modelCar.contains(searchText, ignoreCase = true) ||
+            car.yearCar?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
+            car.seriesCar?.contains(searchText, ignoreCase = true)  == true ||
+            car.colourCar.contains(searchText, ignoreCase = true) ||
+            car.typeOfSeriesCar?.contains(searchText, ignoreCase = true) == true ||
+            car.collectorNoCar?.contains(searchText, ignoreCase = true) == true
     }
-        .let { list ->
-            when (sortOrder) {
-                SortOrder.NEWEST_FIRST -> list.sortedByDescending { it.yearUser ?: 0 }
-                SortOrder.OLDEST_FIRST -> list.sortedBy { it.yearUser ?: 0 }
-                null -> list
-            }
-        }
 
     var contextMenuCarId by remember { mutableStateOf<Int?>(null) } // you need UserId
-    var carBeingEdit by remember { mutableStateOf<UserCar?>(null) }
-    var carBeingViewed by remember { mutableStateOf<UserCar?>(null) }
-    var showCardDetails by remember { mutableStateOf<UserCar?>(null) }
+    var carBeingEdit by remember { mutableStateOf<ApiCar?>(null) }
+    var carBeingViewed by remember { mutableStateOf<ApiCar?>(null) }
+    var showCardDetails by remember { mutableStateOf<ApiCar?>(null) }
     val focusManager = LocalFocusManager.current
-    var showLargePic by remember { mutableStateOf<UserCar?>(null) }
+    var showLargePic by remember { mutableStateOf<ApiCar?>(null) }
 
     fun displayCarFromThisBrand(){
         userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
                 cars -> getCarsFromThisBrand = cars
         }
+    }
+
+    suspend fun reload() {
+        user = userViewModel.getUserDetailsVM(userCCPUserId)
+    }
+
+    LaunchedEffect(userCCPUserId) {
+        reload()
     }
 
     LaunchedEffect(userCCPBrand) {
@@ -331,6 +291,17 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
         }
     }
 /*
+    // calling api
+    LaunchedEffect(Unit) {
+        try {
+            val cars = CarApi().getCars()
+            println("GOT CARS @@@@@@: $cars")
+        } catch (e: Exception) {
+            println("ERROR @@@@@@@: ${e.message}")
+        }
+    }
+
+
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Black)
     )
@@ -556,9 +527,22 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                 )
                             }
 
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clickable{onBackToLogin()}
+                            )
+
+                            /*
+
                             IconButton(
                                 onClick = {
-                                    userViewModel.updateDarkModeVM(userCCPUserId, !isDarkMode) {}
+                                    userViewModel.updateDarkModeVM(userCCPUserId, !isDarkMode) {
+                                        scope.launch { reload() }
+                                    }
                                 },
                                 modifier = Modifier
                                     .size(48.dp)
@@ -567,6 +551,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                         shape = CircleShape
                                     )
                             ){
+
                                 Icon(
                                     imageVector = if (isDarkMode)
                                         Icons.Default.LightMode
@@ -576,7 +561,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                     tint = Color.White,
                                     modifier = Modifier.size(24.dp)
                                 )
-                            }
+
+                            }*/
                         }
                 }
 
@@ -630,7 +616,6 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                 )
                             }
                             IconButton(
-                                //modifier = Modifier.padding()
                                 onClick = {goBackToProfile()}
                             ){
                                 Icon(
@@ -756,10 +741,10 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                             verticalAlignment = Alignment.CenterVertically
                                         )
                                         {
-                                            if (car.carPhotoUser.isNotEmpty()) {
+                                            if (car.carPhotoCar.isNotEmpty()) {
                                                 AsyncImage(
-                                                    model = imageStorage.getFullPath(fileName = car.carPhotoUser),
-                                                    contentDescription = car.modelUser,
+                                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                                    contentDescription = car.modelCar,
                                                     modifier = Modifier
                                                         .size(70.dp)
                                                         .clip(RoundedCornerShape(10.dp)),
@@ -768,7 +753,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                             }
                                             Spacer(modifier = Modifier.width(10.dp))
                                             Text(
-                                                car.modelUser,
+                                                car.modelCar,
                                                 color = slot.text,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -783,13 +768,25 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                         }
                     }
                 } else {
-                    Spacer(modifier = Modifier.weight(1f))
+                    //Spacer(modifier = Modifier.weight(1f))
+
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Text(
+                            text = "Garage is Empty",
+                            color = iconColor.copy(alpha = 0.6f),
+                            fontFamily = usernameFont
+                        )
+                    }
                 }
             }
         }else{
             AddNewCar(
                 userCCPBrand = userCCPBrand,
                 userCCPUserId = userCCPUserId,
+                onBackToLogin = onBackToLogin,
                 userViewModel = userViewModel,
                 imageStorage = imageStorage,
                 colors = colors,
@@ -846,7 +843,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center) {
                             Text(
-                                text = car.modelUser,
+                                text = car.modelCar,
                                 color = slot.text,
                                 fontFamily = usernameFont,
                                 fontWeight = FontWeight.Bold,
@@ -856,11 +853,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                             )
                             Spacer(Modifier.height(16.dp))
 
-                            CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "", color = slot.text)
-                            CarDetailRow(label = "Colour", value = car.colourUser, color = slot.text)
-                            CarDetailRow(label = "Series", value = car.seriesUser ?: "", color = slot.text)
-                            CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "", color = slot.text)
-                            CarDetailRow(label = "Collector no.", value = car.collectorNoUser ?: "", color = slot.text)
+                            CarDetailRow(label = "Year", value = car.yearCar?.toString() ?: "", color = slot.text)
+                            CarDetailRow(label = "Colour", value = car.colourCar, color = slot.text)
+                            CarDetailRow(label = "Series", value = car.seriesCar ?: "", color = slot.text)
+                            CarDetailRow(label = "Type of series", value = car.typeOfSeriesCar ?: "", color = slot.text)
+                            CarDetailRow(label = "Collector no.", value = car.collectorNoCar ?: "", color = slot.text)
 
                             Spacer(Modifier.height(16.dp))
 
@@ -891,7 +888,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                                     tint = slot.text)
                             }
                             IconButton(
-                                onClick = { deleteCarPermanently = car.userCarIdUser },
+                                onClick = { deleteCarPermanently = car.userCarIdCar },
                                 modifier = Modifier
                                     .background(color = slot.text.copy(alpha = 0.15f), CircleShape)
                             ) {
@@ -903,15 +900,15 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                     }
                 }
 
-                if (deleteCarPermanently == car.userCarIdUser) {
+                if (deleteCarPermanently == car.userCarIdCar) {
                     AlertDialog(
                         onDismissRequest = { deleteCarPermanently = null },
                         containerColor = slot.bg,
-                        title = { Text(car.modelUser, color = slot.text) },
+                        title = { Text(car.modelCar, color = slot.text) },
                         text = { Text("Are you sure you want to delete this?", color = slot.text.copy(alpha = 0.6f)) },
                         confirmButton = {
                             TextButton(onClick = {
-                                userViewModel.deleteUserOwnedCarVM(car) { displayCarFromThisBrand() }
+                                userViewModel.deleteUserOwnedCarVM(car.userIdCar) { displayCarFromThisBrand() }
                                 showCardDetails = null // ADDED: closes the popup too, since the car it was showing no longer exists
                                 deleteCarPermanently = null
                             }) { Text("Delete", color = slot.text) }
@@ -967,10 +964,10 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center) {
 
-                            if (car.carPhotoUser.isNotEmpty()) {
+                            if (car.carPhotoCar.isNotEmpty()) {
                                 AsyncImage(
-                                    model = imageStorage.getFullPath(fileName = car.carPhotoUser),
-                                    contentDescription = car.modelUser,
+                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    contentDescription = car.modelCar,
                                     modifier = Modifier
                                         .size(350.dp)
                                         .clip(RoundedCornerShape(10.dp)),
@@ -1002,14 +999,14 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             onDismissRequest = {carBeingViewed = null},
             containerColor = Color(0xFF1A1A1A),
             title = {
-                Text(selectedCarForMenu.modelUser, color = Color(0xFFF0396B), fontSize = 30.sp)
+                Text(selectedCarForMenu.modelCar, color = Color(0xFFF0396B), fontSize = 30.sp)
             },
             text = {
                 Column {
-                    if (selectedCarForMenu.carPhotoUser.isNotEmpty()) {
+                    if (selectedCarForMenu.carPhotoCar.isNotEmpty()) {
                         AsyncImage(
-                            model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoUser),
-                            contentDescription = selectedCarForMenu.modelUser,
+                            model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoCar),
+                            contentDescription = selectedCarForMenu.modelCar,
                             modifier = Modifier
                                 .size(400.dp)
                                 .clip(RectangleShape),
@@ -1029,13 +1026,13 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
     }
 
     if (contextMenuCarId != null) {
-        val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdUser == contextMenuCarId }
+        val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdCar == contextMenuCarId }
 
         AlertDialog(
             onDismissRequest = { contextMenuCarId = null },
             containerColor = Color(0xFF1A1A1A),
             title = {
-                Text(selectedCarForMenu.modelUser, color = Color.White)
+                Text(selectedCarForMenu.modelCar, color = Color.White)
             },
             text = {
                 Text("What would you like to do with this car?", color = Color.LightGray)
@@ -1051,7 +1048,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
             },
             dismissButton = {
                 TextButton(onClick = {
-                    userViewModel.deleteUserOwnedCarVM(selectedCarForMenu) {
+                    userViewModel.deleteUserOwnedCarVM(selectedCarForMenu.userCarIdCar) {
                         displayCarFromThisBrand()// refresh it
                     }
                     contextMenuCarId = null
@@ -1065,7 +1062,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, goBackToPro
 
 @Composable
 //if you are using : UserCar you are passing all the parameter in the UserCar instead of only one datatype
-fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar: (UserCar) -> Unit, onShortClick: (UserCar) -> Unit)
+fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: (ApiCar) -> Unit, onShortClick: (ApiCar) -> Unit)
 {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val haptics = LocalHapticFeedback.current
@@ -1101,10 +1098,10 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
 
             )
             {
-                if (selectedCar.carPhotoUser.isNotEmpty()) {
+                if (selectedCar.carPhotoCar.isNotEmpty()) {
                     AsyncImage(
-                        model = imageStorage.getFullPath(fileName = selectedCar.carPhotoUser),
-                        contentDescription = selectedCar.modelUser,
+                        model = imageStorage.getFullPath(fileName = selectedCar.carPhotoCar),
+                        contentDescription = selectedCar.modelCar,
                         modifier = Modifier
                             .size(90.dp)
                             .clip(RectangleShape),
@@ -1129,7 +1126,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
                 // even gap between every child no matter how many rows you have it will automatically space it equally
             ) {
                 Text(
-                    text = selectedCar.modelUser,
+                    text = selectedCar.modelCar,
                     color = Color.White,
                     fontFamily = usernameFont,
                     fontSize = 20.sp,
@@ -1142,14 +1139,14 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
                 Row {
                     // Because Text expect string you should convert to string
                     Text(
-                        text = selectedCar.yearUser?.toString() ?: "",
+                        text = selectedCar.yearCar?.toString() ?: "",
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Text(
-                        text = selectedCar.colourUser,
+                        text = selectedCar.colourCar,
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1160,7 +1157,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
                 Row {
                     // Because Text expect string you should convert to string
                     Text(
-                        text = selectedCar.collectorNoUser.toString(),
+                        text = selectedCar.collectorNoCar.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1169,7 +1166,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Text(
-                        text = selectedCar.seriesUser.toString(),
+                        text = selectedCar.seriesCar.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1179,7 +1176,7 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
                     Spacer(Modifier.width(30.dp))
 
                     Text(
-                        text = selectedCar.typeOfSeriesUser.toString(),
+                        text = selectedCar.typeOfSeriesCar.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1193,29 +1190,29 @@ fun EachCarTab(selectedCar: UserCar, imageStorage: ImageStorage, onLongPressCar:
 }
 
 @Composable
-fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewModel, imageStorage: ImageStorage, colors: ThemeColors,
-              onDismissRequest: () -> Unit, onConfirmation: ()-> Unit, existingCar: UserCar? = null) // ? = -> we use AddNewCar two ways 1. add new car (empty form) 2. selected car (filled form)
+fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage, colors: ThemeColors,
+              onDismissRequest: () -> Unit, onConfirmation: ()-> Unit, existingCar: ApiCar? = null) // ? = -> we use AddNewCar two ways 1. add new car (empty form) 2. selected car (filled form)
 {
     var oldPhotoDeleted by remember { mutableStateOf(false) }
     var showingExistingPhoto by remember { mutableStateOf(false) }
    // New car -> existingCar is null -> ""
     // Edit -> existingCar has a car -> model name appears automatically
     val modelName = rememberTextFieldState(
-        initialText = existingCar?.modelUser?: ""
+        initialText = existingCar?.modelCar?: ""
     )
     val modelColour = rememberTextFieldState(
-        initialText = existingCar?.colourUser?: ""
+        initialText = existingCar?.colourCar?: ""
     )
     val seriesOfModel = rememberTextFieldState(
-        initialText = existingCar?.seriesUser?: ""
+        initialText = existingCar?.seriesCar?: ""
     )
     val typeOfSeries = rememberTextFieldState(
-        initialText = existingCar?.typeOfSeriesUser?: ""
+        initialText = existingCar?.typeOfSeriesCar?: ""
     )
     val modelCollectionNumber = rememberTextFieldState(
-        initialText = existingCar?.collectorNoUser?: ""
+        initialText = existingCar?.collectorNoCar?: ""
     )
-    var selectedYear by remember { mutableStateOf(existingCar?.yearUser?.toString()?: "") }// initially drop down will close
+    var selectedYear by remember { mutableStateOf(existingCar?.yearCar?.toString()?: "") }// initially drop down will close
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }// ByteArray lowest-level way to represent any file's content the photos, music, and video in byte
     var showCamera by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -1300,6 +1297,15 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                 )
             }
             */
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Logout,
+                contentDescription = "Logout",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable{onBackToLogin()}
+            )
         }
         /*
         {
@@ -1494,9 +1500,9 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                     }
                 }
             }
-            else if (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted)
+            else if (existingCar?.carPhotoCar?.isNotEmpty() == true && !oldPhotoDeleted)
             {
-                val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoUser)
+                val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoCar)
                 val existingCarBitmap = remember(bytes) { bytes?.decodeToImageBitmap() }
 
 
@@ -1547,15 +1553,17 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         }
                     }
                 }
-
             }
     } else {
         if (modelPhotoError != null) {
             Text(
                 text = "Photo of the model is required",
                 color = Color(0xFFE05252),
+                textAlign = TextAlign.Center,
                 fontSize = 13.sp,
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp)
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
@@ -1625,7 +1633,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
 
                     // after deleting the old photo, existingCar.carPhotoUser still contains the old path because existingCar itself hasn't changed.
                     val hasPhoto = selectedImageBytes?.isNotEmpty() == true ||
-                            (existingCar?.carPhotoUser?.isNotEmpty() == true && !oldPhotoDeleted)
+                            (existingCar?.carPhotoCar?.isNotEmpty() == true && !oldPhotoDeleted)
 
 
                     if (modelName.text.isEmpty()) {
@@ -1639,7 +1647,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         modelColourError = null
 
                     if (selectedImageBytes == null &&
-                        existingCar?.carPhotoUser?.isNotEmpty() != true
+                        existingCar?.carPhotoCar?.isNotEmpty() != true
                     ) {
                         modelPhotoError = ""
                     } else {
@@ -1662,7 +1670,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                         var imagePath = if (oldPhotoDeleted) {
                             ""
                         } else {
-                            existingCar?.carPhotoUser ?: ""
+                            existingCar?.carPhotoCar ?: ""
                         }
 
                         //selectedImageBytes have the user selected photo
@@ -1693,22 +1701,30 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, userViewModel: UserViewM
                                 modelCollectionNumber.text.toString(),
                                 imagePath,
 
-                                onResult = { onConfirmation() }
+                                onResult = { success, error ->
+                                    if (success) {
+                                        onConfirmation()
+                                    } else {
+                                        // show the error, e.g. in a Text or snackbar
+                                    }
+                                }
                             )
                         } else { // if it's existingCar not empty go for this
                             val updatedCar =
                                 existingCar.copy(//copy() keeps the fields you didn't change, especially the car's ID.
                                     // This is an existing car, so update it.
                                     // The old photo is kept unless the user selects a new photo.
-                                    modelUser = modelName.text.toString(),
-                                    yearUser = selectedYear.toIntOrNull(),
-                                    colourUser = modelColour.text.toString(),
-                                    seriesUser = seriesOfModel.text.toString(),
-                                    typeOfSeriesUser = typeOfSeries.text.toString(),
-                                    collectorNoUser = modelCollectionNumber.text.toString(),
-                                    carPhotoUser = imagePath
+                                    modelCar = modelName.text.toString(),
+                                    yearCar = selectedYear,
+                                    colourCar = modelColour.text.toString(),
+                                    seriesCar = seriesOfModel.text.toString(),
+                                    typeOfSeriesCar = typeOfSeries.text.toString(),
+                                    collectorNoCar = modelCollectionNumber.text.toString(),
+                                    carPhotoCar = imagePath
                                 )
-                            userViewModel.updateCarEditVM(updatedCar, onResult = onConfirmation)
+                            userViewModel.updateCarEditVM(updatedCar) { success ->
+                                if (success) onConfirmation()
+                            }
                         }
                     }
                 }
@@ -1775,12 +1791,12 @@ fun YearDropDown(selectedYear: String, onYearSelected: (String) -> Unit) { // ne
 
 @Composable
 fun CarCoverflowCarousel(
-    cars: List<UserCar>,
+    cars: List<ApiCar>,
     imageStorage: ImageStorage,
     colors: ThemeColors,
     modifier: Modifier = Modifier, //lets the caller control size instead of a fixed height baked in here
     onDeleteClick: () -> Unit,
-    onEditClick: (UserCar) -> Unit,
+    onEditClick: (ApiCar) -> Unit,
     userViewModel: UserViewModel
 )
 {
@@ -1823,7 +1839,7 @@ fun CarCoverflowCarousel(
 
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
 
-                val isFlipped = flippedCars[car.userCarIdUser] == true
+                val isFlipped = flippedCars[car.userCarIdCar] == true
                 val flipRotation by animateFloatAsState(
                     targetValue = if(isFlipped) 180f else 0f,
                     animationSpec = tween(durationMillis = 500),
@@ -1860,7 +1876,7 @@ fun CarCoverflowCarousel(
                         .clip(RoundedCornerShape(24.dp))
                         .background(slot.bg)
                         .clickable {
-                            flippedCars[car.userCarIdUser] = !isFlipped },
+                            flippedCars[car.userCarIdCar] = !isFlipped },
                     contentAlignment = Alignment.Center
                 )
                 {
@@ -1869,10 +1885,10 @@ fun CarCoverflowCarousel(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally)
                         {
-                            if (car.carPhotoUser.isNotEmpty()) {
+                            if (car.carPhotoCar.isNotEmpty()) {
                                 AsyncImage(
-                                    model = imageStorage.getFullPath(fileName = car.carPhotoUser),
-                                    contentDescription = car.modelUser,
+                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    contentDescription = car.modelCar,
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(20.dp)),
@@ -1898,7 +1914,7 @@ fun CarCoverflowCarousel(
                             Spacer(Modifier.height(16.dp))
 
                             Text(
-                                text = car.modelUser,
+                                text = car.modelCar,
                                 color = slot.text,
                                 fontFamily = usernameFont,
                                 fontWeight = FontWeight.Bold,
@@ -1943,7 +1959,7 @@ fun CarCoverflowCarousel(
                                     .padding(horizontal = 20.dp, vertical = 48.dp))
                             {
                                 Text(
-                                    text = car.modelUser,
+                                    text = car.modelCar,
                                     color = slot.text,
                                     fontFamily = usernameFont,
                                     fontWeight = FontWeight.Bold,
@@ -1952,11 +1968,11 @@ fun CarCoverflowCarousel(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(16.dp))
-                                CarDetailRow(label = "Year", value = car.yearUser?.toString() ?: "", color = slot.text)
-                                CarDetailRow(label = "Colour", value = car.colourUser, color = slot.text)
-                                CarDetailRow(label = "Series", value = car.seriesUser ?: "", color = slot.text)
-                                CarDetailRow(label = "Type of series", value = car.typeOfSeriesUser ?: "", color = slot.text)
-                                CarDetailRow(label = "Collector no.", value = car.collectorNoUser ?: "—", color = slot.text)
+                                CarDetailRow(label = "Year", value = car.yearCar?.toString() ?: "", color = slot.text)
+                                CarDetailRow(label = "Colour", value = car.colourCar, color = slot.text)
+                                CarDetailRow(label = "Series", value = car.seriesCar ?: "", color = slot.text)
+                                CarDetailRow(label = "Type of series", value = car.typeOfSeriesCar ?: "", color = slot.text)
+                                CarDetailRow(label = "Collector no.", value = car.collectorNoCar?: "—", color = slot.text)
                                 Spacer(Modifier.height(20.dp))
                                 Text(
                                     text = "Tap to flip back",
@@ -1966,7 +1982,7 @@ fun CarCoverflowCarousel(
                                 )
                             }
                             IconButton(
-                                onClick = {deleteCarPermanently = car.userCarIdUser},
+                                onClick = {deleteCarPermanently = car.userCarIdCar},
                                 modifier = Modifier
                                     .align(Alignment.BottomStart)
                                     .graphicsLayer{rotationY = 180f}
@@ -1980,19 +1996,19 @@ fun CarCoverflowCarousel(
                                 )
                             }
 
-                            if (deleteCarPermanently == car.userCarIdUser){
+                            if (deleteCarPermanently == car.userCarIdCar){
                                 AlertDialog(
                                     onDismissRequest = { deleteCarPermanently = null },
                                     containerColor = slot.bg,
                                     title = {
-                                        Text(car.modelUser, color = slot.text)
+                                        Text(car.modelCar, color = slot.text)
                                     },
                                     text = {
                                         Text("Are you sure you want to delete this?", color = slot.text.copy(alpha = 0.6f))
                                     },
                                     confirmButton = {
                                         TextButton(onClick = {
-                                            userViewModel.deleteUserOwnedCarVM(car){
+                                            userViewModel.deleteUserOwnedCarVM(car.userCarIdCar){
                                                 onDeleteClick()
                                             }
                                         }) {

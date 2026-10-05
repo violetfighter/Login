@@ -1,8 +1,5 @@
 package com.cfcici.`in`.project
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -11,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.cfcici.`in`.project.data.database.AppDatabase
 import com.cfcici.`in`.project.data.repository.UserRepository
+import com.cfcici.`in`.project.network.ApiDao
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
 import com.cfcici.`in`.project.ui.ProfilePage
@@ -47,7 +45,7 @@ data class SettingRoute(
 
 @Composable
 fun App(db: AppDatabase, imageStorage: ImageStorage) {
-    val repository = UserRepository(db.userDao())
+    val repository = UserRepository(db.userDao(), ApiDao())
     val viewModel = UserViewModel(repository)
     MaterialTheme {
         val navController = rememberNavController()
@@ -160,6 +158,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                 val userCarCollection: UserCarCollectionRoute = backStackEntry.toRoute()
                 UserCarCollectionPage(
                     userCCPBrand = userCarCollection.brand,// now userCarCollection.brand will contain whichever brand was clicked
+                    onBackToLogin = { navController.navigate(LoginRoute) },
                     userCCPUserId = userCarCollection.userId,
                     goBackToProfile = { navController.popBackStack() },
                     userViewModel = viewModel,
