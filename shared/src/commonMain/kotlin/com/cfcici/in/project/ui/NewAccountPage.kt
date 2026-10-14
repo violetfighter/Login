@@ -93,7 +93,6 @@ import kotlinx.datetime.toLocalDateTime
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
 import org.jetbrains.compose.resources.Font
-
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -201,7 +200,8 @@ fun NewAccountPage(
                     //containerColor = Color.Transparent
                 )
 
-            ) {
+            )
+            {
                 Column(
                     modifier = Modifier
                         //.fillMaxSize()
@@ -541,6 +541,7 @@ fun NewAccountPage(
                     }
                 }
             }
+
             if (showConfetti) {
                 //Solid background layer to mask/hide the "Create New Account" form
                 Box(

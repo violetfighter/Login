@@ -7,6 +7,7 @@ import com.cfcici.`in`.project.network.ApiCar
 import com.cfcici.`in`.project.network.ApiDao
 import com.cfcici.`in`.project.network.ApiUser
 import com.cfcici.`in`.project.network.CreateUserRequest
+import com.cfcici.`in`.project.network.ForgotPasswordResult
 import com.cfcici.`in`.project.network.LoginResultApiUser
 import com.cfcici.`in`.project.ui.AppTheme
 import dev.gitlive.firebase.Firebase
@@ -17,6 +18,9 @@ class UserRepository (
     private val userDaoFromRepo: UserDao,
     private val apiDao: ApiDao
 ){
+
+    suspend fun uploadImageRepo(bytes: ByteArray): String? = apiDao.uploadImage(bytes)
+
 
     suspend fun insertUserRepo(userRepo: CreateUserRequest): Boolean{
         //userDaoFromRepo.insert(userRepo)
@@ -55,6 +59,10 @@ class UserRepository (
         //val existingUser = userDaoFromRepo.getEmailIdDuplication(email)
         //return existingUser != null
         return apiDao.emailExistsApi(emailRepo)
+    }
+
+    suspend fun verifyPasswordRepo(emailRepo: String, codeRepo: String): Boolean{
+        return apiDao.verifyPassword(emailRepo, codeRepo)
     }
 
     /*
@@ -129,6 +137,10 @@ class UserRepository (
         return apiDao.darkModeApi(userId, isDark)
     }
 
+    suspend fun newPasswordRepo(email: String, newPassword: String): Boolean{
+        return apiDao.newPasswordApi(email, newPassword)
+    }
+
     suspend fun usernameChangeRepo(userId: Int, username: String): String?{
         return apiDao.usernameChange(userId, username)
     }
@@ -137,4 +149,6 @@ class UserRepository (
         return apiDao.dobChange(userId, username)
     }
 
+    suspend fun forgotPasswordRepo(userEmail: String): ForgotPasswordResult =
+        apiDao.forgotPassword(userEmail)
 }

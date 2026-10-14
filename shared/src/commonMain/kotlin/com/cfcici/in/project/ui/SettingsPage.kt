@@ -137,7 +137,11 @@ val avatarStyles = listOf(
 fun avatarUrl(style: String, seed: String): String = "https://api.dicebear.com/9.x/$style/png?seed=$seed"
 
 @Composable
-fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage,  onBackToLogin: () -> Unit)
+fun SettingsPage(userIdSP: Int,
+                 goBackToProfilePage:(String, Int) -> Unit,
+                 onSentEmailPage:() -> Unit,
+                 userViewModel: UserViewModel, imageStorage: ImageStorage,
+                 onBackToLogin: () -> Unit)
 
 //Reason why we use collectAsState
 //Subscribes to the Flow — it starts collecting values from userViewModel.getUser(userIdSP) the moment your composable enters composition.
@@ -230,8 +234,30 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
     suspend fun reload(){
         user = userViewModel.getUserDetailsVM(userIdSP)
     }
+
     var selectedProfileBitmap by remember { mutableStateOf<ImageBitmap?>(null) }// turns byte to pixeled pics like it shows on UI and this is a local storage not saved on db
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) } // turns to byte
+    var deleteUserPermanently by remember  {mutableStateOf<Int?>(null)}
+
+    var photoError by remember { mutableStateOf<String?>(null) }
+
+    fun uploadAndSavePhoto(croppedBytes: ByteArray) {
+        photoError = null
+        userViewModel.uploadImageVM(croppedBytes) { path ->     // path = "/uploads/abc.jpg" or null
+            if (path != null) {
+                user?.let { currentUser ->
+                    userViewModel.updateProfileEditVM(currentUser.copy(userPhotoUser = path)) {
+                        scope.launch { reload() }
+                    }
+                }
+            } else {
+                selectedProfileBitmap = null                    // don't show a photo that wasn't saved
+                selectedImageBytes = null
+                photoError = "Could not upload photo. Please try again."
+            }
+        }
+    }
+
     val image = rememberImagePickerLauncher(
         selectionMode = SelectionMode.Single,
         scope = scope,
@@ -253,13 +279,15 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
 
                         is CropResult.Success -> {
                             val croppedBitmap = result.bitmap
-
-                            // Convert cropped bitmap back to bytes
                             val croppedBytes = croppedBitmap.encodeToByteArray()
 
                             selectedImageBytes = croppedBytes
                             selectedProfileBitmap = croppedBitmap
 
+                            uploadAndSavePhoto(croppedBytes)
+                        }
+
+                            /*
                             val fileName =
                                 "profile_${userIdSP}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}.jpg"
 
@@ -280,15 +308,15 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                     scope.launch { reload() }
                                     println("Cropped profile photo saved")
                                 }
-                            }
-                        }
+                            }*/
+
+
                     }
                 }
             }
         }
     )
 
-    var deleteUserPermanently by remember  {mutableStateOf<Int?>(null)}
 
     LaunchedEffect(userIdSP){
         reload()
@@ -444,11 +472,19 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                     //1
                     else if(currentUser?.userPhotoUser != null){
                         val photoValue = currentUser.userPhotoUser
+/*
                         val model = if (photoValue.startsWith("http")){
                             photoValue // it's a remote DiceBear URL, use as-is
                         }else{
                             imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                        }*/
+
+                        val model = when {
+                            photoValue.startsWith("http") -> photoValue                         // DiceBear avatars
+                            photoValue.startsWith("/uploads/") -> "http://10.11.253.70:5214$photoValue"   // server photos
+                            else -> imageStorage.getFullPath(photoValue)                        // old local files
                         }
+
                         AsyncImage(
                             //model = imageStorage.getFullPath(currentUser.userPhotoUser),
                             model = model,
@@ -477,6 +513,9 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             )
                         }
                     }
+                }
+                photoError?.let {
+                    Text(it, color = Color.Red, fontSize = 12.sp, fontFamily = usernameFont)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -1226,10 +1265,16 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             //1
             else if(currentUser?.userPhotoUser != null){
                 val photoValue = currentUser.userPhotoUser
+                /*
                 val model = if (photoValue.startsWith("http")) {
                     photoValue
                 } else {
                     imageStorage.getFullPath(photoValue)
+                }*/
+                val model = when {
+                    photoValue.startsWith("http") -> photoValue
+                    photoValue.startsWith("/uploads/") -> "http://10.11.253.70:5214$photoValue"
+                    else -> imageStorage.getFullPath(photoValue)
                 }
                 AsyncImage(
                     model = model,
@@ -1297,6 +1342,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                             is CropError -> {
                                 println("Krop crop error: $result")
                             }
+                            /*
                             is CropResult.Success -> {
                                 val croppedBitmap = result.bitmap
                                 val croppedBytes = croppedBitmap.encodeToByteArray()
@@ -1313,6 +1359,16 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                                         scope.launch { reload() }
                                     }
                                 }
+                            }*/
+
+                            is CropResult.Success -> {
+                                val croppedBitmap = result.bitmap
+                                val croppedBytes = croppedBitmap.encodeToByteArray()
+
+                                selectedImageBytes = croppedBytes
+                                selectedProfileBitmap = croppedBitmap
+
+                                uploadAndSavePhoto(croppedBytes)
                             }
                         }
                     }
@@ -1377,9 +1433,14 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             title = {
                 Text(
                     text = "Password",
-                    color = textColor.copy(alpha = 0.6f)
+                    color = textColor.copy(alpha = 0.6f),
+                    fontFamily = usernameFont
                 )
             },
+
+            text = {Text("Do you want to change the password?", color = textColor, fontFamily = usernameFont)}
+
+            /*
             text = {
                 TextField(
                     value = passwordSP,
@@ -1398,16 +1459,19 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         unfocusedTextColor = textColor
                     )
                 )
-            },
+            }*/
+            ,
             confirmButton = {
                 TextButton(
                     onClick = {
+                        onSentEmailPage()
                         // Send password reset email to Firebase later
                     }
                 ) {
                     Text(
                         "Change Password",
-                        color = textColor.copy(alpha = 0.6f)
+                        color = textColor.copy(alpha = 0.6f),
+                        fontFamily = usernameFont
                     )
                 }
             },
@@ -1419,7 +1483,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                 ) {
                     Text(
                         "Cancel",
-                        color = textColor.copy(alpha = 0.6f)
+                        color = textColor.copy(alpha = 0.6f),
+                        fontFamily = usernameFont
                     )
                 }
             }
@@ -1433,7 +1498,8 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
             title = {
                 Text(
                     text = "Edit Username",
-                    color = textColor.copy(alpha = 0.6f)
+                    color = textColor.copy(alpha = 0.6f),
+                    fontFamily = usernameFont
                 )
             },
             text = {
@@ -1487,7 +1553,7 @@ fun SettingsPage(userIdSP: Int, goBackToProfilePage:(String, Int) -> Unit, userV
                         updateButton = false
                     }
                 ){
-                    Text("Cancel", color = textColor.copy(alpha = 0.6f))
+                    Text("Cancel", color = textColor.copy(alpha = 0.6f), fontFamily = usernameFont)
                 }
             }
 
@@ -1671,6 +1737,7 @@ fun ProfileDetailRow(
                     modifier = Modifier.size(16.dp))
             }
             Spacer(modifier = Modifier.width(width = 14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(label, color = textColor.copy(alpha = 0.6f), fontSize = 11.sp, fontFamily = usernameFont)
                 Text(value, color = textColor, fontSize = 14.sp, fontFamily = usernameFont)

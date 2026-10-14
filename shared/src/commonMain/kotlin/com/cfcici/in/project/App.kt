@@ -11,6 +11,7 @@ import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.network.ApiDao
 import com.cfcici.`in`.project.ui.LoginPage
 import com.cfcici.`in`.project.ui.NewAccountPage
+import com.cfcici.`in`.project.ui.PasswordResetPage
 import com.cfcici.`in`.project.ui.ProfilePage
 import com.cfcici.`in`.project.ui.SentEmailPage
 import com.cfcici.`in`.project.ui.SettingsPage
@@ -20,6 +21,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 object LoginRoute // Object means it doesn't accept any values
+
+@Serializable
+data class PasswordResetRoute(
+    val email: String
+)
 
 @Serializable//?
 data class ProfileRoute(
@@ -79,9 +85,8 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
             composable<SentEmailRoute>
             {
                 SentEmailPage(
-                    onBackToLogin = {
-                        navController.navigate(LoginRoute)
-                    },
+                    onBackToLogin = { navController.navigate(LoginRoute) },
+                    onCodeVerified = {email, _-> navController.navigate(PasswordResetRoute(email = email))},
                     viewModel = viewModel
                 )
             }
@@ -109,6 +114,18 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                     },
                     userViewModel = viewModel,
                     imageStorage = imageStorage
+                )
+            }
+//________________________________________________________________________________________________//
+
+            composable<PasswordResetRoute> { backStackEntry ->
+                val passwordReset: PasswordResetRoute = backStackEntry.toRoute()
+                PasswordResetPage(
+                    emailPR = passwordReset.email,
+                    onBackToLogin = {
+                        navController.navigate(LoginRoute)
+                    },
+                    userViewModel = viewModel
                 )
             }
 //________________________________________________________________________________________________//
@@ -178,6 +195,7 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                             )
                         )
                     },
+                    onSentEmailPage = {navController.navigate(SentEmailRoute)},
                     userViewModel = viewModel,
                     imageStorage = imageStorage,
                     onBackToLogin = {

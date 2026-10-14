@@ -3,6 +3,8 @@ package com.cfcici.`in`.project.network
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
@@ -10,18 +12,45 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlin.collections.emptyList
 
+enum class ForgotPasswordResult { SUCCESS, EMAIL_NOT_FOUND, ERROR }
 class ApiDao(
     //gives UserApi class an HTTP client that it can use to communicate with your .NET API
 
     // Calls the API
 
-
     private val client: HttpClient = httpClient
 ) {
+
+    suspend fun uploadImage(bytes: ByteArray): String? = try {
+        val response = client.submitFormWithBinaryData(
+            url = "http://10.11.253.70:5214/api/images/Upload",
+            formData = formData {
+                append("file", bytes, Headers.build {
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                    // Ktor automatically adds form-data; name="file".
+                    // Only pass filename here to avoid duplicate name="file" headers:
+                    append(HttpHeaders.ContentDisposition, "filename=\"photo.jpg\"")
+                })
+            }
+        )
+        if (response.status.isSuccess()) {
+            response.bodyAsText().trim() // Trim quote marks or trailing whitespace
+        } else {
+            println("Upload failed with status: ${response.status}")
+            null
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
 
     suspend fun createUser(user: CreateUserRequest): Boolean {
         return try {
@@ -189,7 +218,7 @@ class ApiDao(
             val response = client.delete("http://10.11.253.70:5214/api/cars/DeleteCar") {
                 parameter("deleteCarFromOutside", carId)
             }
-            println("Delete Car status: ########## ${response.status}")
+            println("Delete Car @@@@@ $carId status: ########## ${response.status} and body ${response.bodyAsText()}")
             response.status.isSuccess()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -241,6 +270,19 @@ class ApiDao(
         }
     }
 
+    suspend fun newPasswordApi(email: String, newPassword: String): Boolean{
+        return try {
+            val response = client.patch("http://10.11.253.70:5214/api/users/NewPassword"){
+                parameter("userEmailFromOutside", email)
+                parameter("newPasswordFromOutside", newPassword)
+            }
+            response.status.isSuccess()
+        }catch (e: Exception){
+            e.printStackTrace()
+            false
+        }
+    }
+
 
     suspend fun createCarApi(cars: ApiCar): Boolean {
         return try {
@@ -258,14 +300,46 @@ class ApiDao(
         }
     }
 
-    suspend fun totalCarUserOwnApi(userCarId: Int): Int?{
+    suspend fun totalCarUserOwnApi(userIdCar: Int): Int?{
         return try {
-            client.get("http://10.11.253.70:5214/api/cars/TotalCarUserOwns"){
-                parameter("userIdFromOutside", userCarId)
-            }.body<TotalCarUserOwnApiUser>().totalCars
+            val response = client.get("http://10.11.253.70:5214/api/cars/TotalCarUserOwns"){
+                parameter("userIdFromOutside", userIdCar)
+            }.body<TotalCarUserOwnApiUser>()
+            println("Total Car Update ${response.totalCarsApi}")
+            response.totalCarsApi
         }catch (e: Exception){
             e.printStackTrace()
             null
+        }
+    }
+
+    suspend fun forgotPassword(email: String): ForgotPasswordResult {
+        return try {
+            val response = client.post("http://10.11.253.70:5214/api/users/ForgotPassword") {
+                parameter("userEmailFromOutside", email)
+            }
+            when {
+                response.status.isSuccess() -> ForgotPasswordResult.SUCCESS
+                response.status == HttpStatusCode.NotFound -> ForgotPasswordResult.EMAIL_NOT_FOUND
+                else -> ForgotPasswordResult.ERROR
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ForgotPasswordResult.ERROR
+        }
+    }
+
+    suspend fun verifyPassword(email: String, code: String): Boolean{
+        return try {
+            val response = client.get("http://10.11.253.70:5214/api/passwords/VerifingCode"){
+                parameter("emailFromOutside", email)
+                parameter("codeFromOutside", code)
+            }
+            println("VERIFY RESPONSE: ${response.status} ${response.bodyAsText()}")
+            response.status.isSuccess()
+        } catch (e: Exception){
+            e.printStackTrace()
+            false
         }
     }
 

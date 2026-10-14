@@ -43,12 +43,13 @@ data class ApiUser(
 )
 
 @Serializable
-data class TotalCarUserOwnApiUser(val totalCars: Int) // Remember "totalCars" name should match with C# function
+data class TotalCarUserOwnApiUser(val totalCarsApi: Int) // Remember "totalCars" name should match with C# function
 @Serializable
 data class EmailExistsApiUser(val emailExistApi: Boolean)
 
 @Serializable
 data class UsernameExistsApiUser(val usernameExistApi: Boolean)
+
 
 @Serializable
 data class UsernameChangeApiUser(val usernameChangeApi: String)

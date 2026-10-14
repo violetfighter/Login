@@ -119,6 +119,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import coil3.compose.AsyncImage
@@ -128,6 +129,14 @@ import com.cfcici.`in`.project.network.ApiUser
 import com.preat.peekaboo.image.picker.SelectionMode
 import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
 import kotlin.math.absoluteValue
+
+const val SERVER_URL = "http://10.11.253.70:5214"
+
+fun photoModel(path: String, imageStorage: ImageStorage): String = when {
+    path.startsWith("http") -> path                      // DiceBear avatars
+    path.startsWith("/uploads/") -> "$SERVER_URL$path"   // server photos
+    else -> imageStorage.getFullPath(path)               // old local files
+}
 
 enum class AppTheme(val displayName: String){
     SUNSET_GARAGE("Sunset garage"),
@@ -266,6 +275,9 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
     var showCardDetails by remember { mutableStateOf<ApiCar?>(null) }
     val focusManager = LocalFocusManager.current
     var showLargePic by remember { mutableStateOf<ApiCar?>(null) }
+    var photoError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
 
     fun displayCarFromThisBrand(){
         userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
@@ -636,7 +648,6 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                     tint = iconColor)
                             }
                         }
-
                     }
                     // Search field overlays on top, growing/shrinking left-anchored
                     if(isSearchActive){
@@ -671,7 +682,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                         Icon(
                                             imageVector = Icons.Default.Close,
                                             contentDescription = "Close search",
-                                            tint = iconColor)
+                                            tint = iconColor
+                                        )
                                     }
                                 }
                             },
@@ -743,7 +755,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                         {
                                             if (car.carPhotoCar.isNotEmpty()) {
                                                 AsyncImage(
-                                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                                    //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                                    model = photoModel(car.carPhotoCar, imageStorage),
                                                     contentDescription = car.modelCar,
                                                     modifier = Modifier
                                                         .size(70.dp)
@@ -764,7 +777,6 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                     }
                                 }
                             }
-
                         }
                     }
                 } else {
@@ -818,7 +830,9 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                     .background(Color.Black.copy(alpha = 0.6f)) // this is the scrim. Without it, the grid cards behind show through at the edges, which is exactly the glitch in your first screenshot
                     .clickable( // tapping anywhere on the dimmed background closes the popup
                         indication = null,
-                        interactionSource = remember { MutableInteractionSource() }) { showCardDetails = null },
+                        interactionSource = remember { MutableInteractionSource() }
+                    )
+                    { showCardDetails = null },
                 contentAlignment = Alignment.Center
             ) {
                 Card( // .background() — Card gives proper elevation/shape and stops taps on it from bubbling to the scrim behind
@@ -908,13 +922,17 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                         text = { Text("Are you sure you want to delete this?", color = slot.text.copy(alpha = 0.6f)) },
                         confirmButton = {
                             TextButton(onClick = {
-                                userViewModel.deleteUserOwnedCarVM(car.userIdCar) { displayCarFromThisBrand() }
+                                userViewModel.deleteUserOwnedCarVM(car.userCarIdCar) { displayCarFromThisBrand() }
                                 showCardDetails = null // ADDED: closes the popup too, since the car it was showing no longer exists
                                 deleteCarPermanently = null
-                            }) { Text("Delete", color = slot.text) }
+                            }) { Text("Delete",
+                                color = slot.text) }
                         },
                         dismissButton = {
-                            TextButton(onClick = { deleteCarPermanently = null }) { Text("Cancel", color = slot.text) }
+                            TextButton(onClick = { deleteCarPermanently = null }) {
+                                Text(
+                                    "Cancel",
+                                    color = slot.text) }
                         }
                     )
                 }
@@ -966,7 +984,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
 
                             if (car.carPhotoCar.isNotEmpty()) {
                                 AsyncImage(
-                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    model = photoModel(car.carPhotoCar, imageStorage),
                                     contentDescription = car.modelCar,
                                     modifier = Modifier
                                         .size(350.dp)
@@ -1005,7 +1024,8 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                 Column {
                     if (selectedCarForMenu.carPhotoCar.isNotEmpty()) {
                         AsyncImage(
-                            model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoCar),
+                            //model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoCar),
+                            model = photoModel(selectedCarForMenu.carPhotoCar, imageStorage),
                             contentDescription = selectedCarForMenu.modelCar,
                             modifier = Modifier
                                 .size(400.dp)
@@ -1100,7 +1120,8 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
             {
                 if (selectedCar.carPhotoCar.isNotEmpty()) {
                     AsyncImage(
-                        model = imageStorage.getFullPath(fileName = selectedCar.carPhotoCar),
+                        //model = imageStorage.getFullPath(fileName = selectedCar.carPhotoCar),
+                        model = photoModel(selectedCar.carPhotoCar, imageStorage),
                         contentDescription = selectedCar.modelCar,
                         modifier = Modifier
                             .size(90.dp)
@@ -1216,7 +1237,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }// ByteArray lowest-level way to represent any file's content the photos, music, and video in byte
     var showCamera by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val launcher = rememberImagePickerLauncher(
+    val launcher = rememberImagePickerLauncher(// app receives the selected image
         selectionMode = SelectionMode.Single,
         scope = scope,
         onResult = { byteArrays ->
@@ -1666,65 +1687,54 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                         // If this is a new car, there is no old photo, so it starts as empty.
                         //var imagePath = existingCar?.carPhotoUser ?: ""
 
-                        //If the user deleted the old photo, this still keeps the old path.
-                        var imagePath = if (oldPhotoDeleted) {
-                            ""
-                        } else {
-                            existingCar?.carPhotoCar ?: ""
-                        }
-
-                        //selectedImageBytes have the user selected photo
-                        //?.let { } combo means: "if this isn't null, run the block below, and call it bytes inside."
-                        // If it's null (user didn't pick a photo), this whole block is skipped entirely
-                        selectedImageBytes?.let { bytes ->
-
-                            //it is how user photo is saved using userID and timestamp in ms so it guarantees uniqueness no photo collied
-                            val fileName = "car_${userCCPUserId}_${
-                                kotlin.time.Clock.System.now().toEpochMilliseconds()
-                            }.jpg"
-                            imagePath = imageStorage.saveImageToFile(
-                                bytes,
-                                fileName
-                            ) // convert bytes to real image (jpg file) on device's storage
-                        }
-
-                        //if user select add button + it checks
-                        if (existingCar == null) {//if it is empty for this
-                            userViewModel.insertUserOwnedCarVM(
-                                userCCPUserId,
-                                userCCPBrand,
-                                modelName.text.toString(),
-                                selectedYear.toIntOrNull(),
-                                modelColour.text.toString(),
-                                seriesOfModel.text.toString(),
-                                typeOfSeries.text.toString(),
-                                modelCollectionNumber.text.toString(),
-                                imagePath,
-
-                                onResult = { success, error ->
-                                    if (success) {
-                                        onConfirmation()
-                                    } else {
-                                        // show the error, e.g. in a Text or snackbar
+                        fun saveCar(finalPhotoPath: String) {
+                            if (existingCar == null) {
+                                userViewModel.insertUserOwnedCarVM(
+                                    userCCPUserId,
+                                    userCCPBrand,
+                                    modelName.text.toString(),
+                                    selectedYear.toIntOrNull(),
+                                    modelColour.text.toString(),
+                                    seriesOfModel.text.toString(),
+                                    typeOfSeries.text.toString(),
+                                    modelCollectionNumber.text.toString(),
+                                    finalPhotoPath,
+                                    onResult = { success, error ->
+                                        if (success) {
+                                            onConfirmation()
+                                        } else {
+                                            modelPhotoError = error ?: "Failed to save car"
+                                        }
                                     }
-                                }
-                            )
-                        } else { // if it's existingCar not empty go for this
-                            val updatedCar =
-                                existingCar.copy(//copy() keeps the fields you didn't change, especially the car's ID.
-                                    // This is an existing car, so update it.
-                                    // The old photo is kept unless the user selects a new photo.
+                                )
+                            } else {
+                                val updatedCar = existingCar.copy(
                                     modelCar = modelName.text.toString(),
                                     yearCar = selectedYear,
                                     colourCar = modelColour.text.toString(),
                                     seriesCar = seriesOfModel.text.toString(),
                                     typeOfSeriesCar = typeOfSeries.text.toString(),
                                     collectorNoCar = modelCollectionNumber.text.toString(),
-                                    carPhotoCar = imagePath
+                                    carPhotoCar = finalPhotoPath
                                 )
-                            userViewModel.updateCarEditVM(updatedCar) { success ->
-                                if (success) onConfirmation()
+                                userViewModel.updateCarEditVM(updatedCar) { success ->
+                                    if (success) onConfirmation()
+                                }
                             }
+                        }
+
+                        val bytes = selectedImageBytes
+                        if (bytes != null) {
+                            userViewModel.uploadImageVM(bytes) { path ->
+                                if (path == null) {
+                                    modelPhotoError = "Failed to upload photo"
+                                } else {
+                                    saveCar(path)
+                                }
+                            }
+                        } else {
+                            val initialPhoto = if (oldPhotoDeleted) "" else (existingCar?.carPhotoCar ?: "")
+                            saveCar(initialPhoto)
                         }
                     }
                 }
@@ -1887,7 +1897,8 @@ fun CarCoverflowCarousel(
                         {
                             if (car.carPhotoCar.isNotEmpty()) {
                                 AsyncImage(
-                                    model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
+                                    model = photoModel(car.carPhotoCar, imageStorage),
                                     contentDescription = car.modelCar,
                                     modifier = Modifier
                                         .size(300.dp)

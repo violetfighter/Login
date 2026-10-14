@@ -8,6 +8,7 @@ import com.cfcici.`in`.project.data.repository.UserRepository
 import com.cfcici.`in`.project.network.ApiCar
 import com.cfcici.`in`.project.network.CreateUserRequest
 import com.cfcici.`in`.project.network.ApiUser
+import com.cfcici.`in`.project.network.ForgotPasswordResult
 import com.cfcici.`in`.project.ui.AppTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -67,6 +68,9 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }*/
 
+    fun uploadImageVM(bytes: ByteArray, onResult: (String?) -> Unit) {
+        viewModelScope.launch { onResult(repository.uploadImageRepo(bytes)) }
+    }
 
     fun insertUserVM(
         usernameFromVM: String, passwordFromVM: String, dateOfBirthFromVM: String, emailIDFromVM: String,
@@ -138,6 +142,13 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         viewModelScope.launch {
             val isUsernameExist = repository.usernameExistsRepo(usernameIDFromVM)
             onResult(isUsernameExist)
+        }
+    }
+
+    fun verifyPasswordVM(emailVm: String, codeVM: String, onResult: (Boolean) -> Unit){
+        viewModelScope.launch {
+            val verify = repository.verifyPasswordRepo(emailVm, codeVM)
+            onResult(verify)
         }
     }
 
@@ -245,12 +256,12 @@ class UserViewModel(val repository: UserRepository): ViewModel()
             repository.deleteSelectedCarBrandRepo(userIdVM, userCarBrandVM)
             onResult()
         }
-    }*/
+    }
 
     fun sendPasswordResetVM(email: String, onResult: (Boolean, Boolean) -> Unit) {
         viewModelScope.launch {
             val result = repository.sendPasswordResetEmailRepo(email)
-            
+
             if (result.isSuccess) {
                 onResult(true, false)
             } else {
@@ -266,7 +277,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
                 }
             }
         }
-    }
+    }*/
 
     fun updateSelectedThemeVM(userId: Int, theme: AppTheme, onResult: () -> Unit){
         viewModelScope.launch {
@@ -282,6 +293,12 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         }
     }
 
+    fun newPasswordVM(email: String, newPassword: String, onResult: (Boolean) -> Unit){
+        viewModelScope.launch {
+            onResult(repository.newPasswordRepo(email, newPassword))
+        }
+    }
+
     fun usernameChangeVM(userId: Int, username: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             onResult(repository.usernameChangeRepo(userId, username))
@@ -291,6 +308,16 @@ class UserViewModel(val repository: UserRepository): ViewModel()
     fun dobChangeVM(userId: Int, dob: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             onResult(repository.dobChangeRepo(userId, dob))
+        }
+    }
+
+    fun forgotPasswordVM(userEmail: String, onResult: (Boolean, Boolean) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.forgotPasswordRepo(userEmail)
+            onResult(
+                result == ForgotPasswordResult.SUCCESS,
+                result == ForgotPasswordResult.EMAIL_NOT_FOUND
+            )
         }
     }
 }

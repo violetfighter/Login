@@ -2,11 +2,11 @@ package com.cfcici.`in`.project.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Lock
@@ -37,9 +37,11 @@ fun PasswordPage(
     passwordChecker: (String) -> Unit,//function that sends the new password back to the parent
     isError: Boolean = false,
     onPasswordFocus: () -> Unit,
-    supportingText: @Composable () -> Unit = {}
+    supportingText: @Composable () -> Unit = {},
+    passwordLabel: String
 )
-{//to get user password from login page
+{
+    //to get user password from login page
     // We need to check is password visible or not
     // So we created boolean state
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
@@ -47,7 +49,7 @@ fun PasswordPage(
     var passwordFocused by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
 
@@ -85,7 +87,7 @@ fun PasswordPage(
                     )
                 }
             },
-            label = {Text("Enter your password", fontFamily = usernameFont)},
+            label = {Text(passwordLabel, fontFamily = usernameFont)},
             shape = RoundedCornerShape(50.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFF0396B),

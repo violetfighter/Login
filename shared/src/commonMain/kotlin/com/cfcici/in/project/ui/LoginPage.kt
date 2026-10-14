@@ -229,7 +229,8 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
                             if(passwordError != null){
                                 Text(passwordError!!)
                             }
-                        }
+                        },
+                        passwordLabel = "Enter Your Password"
                     )
 
                     Button(
@@ -256,7 +257,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
 
                                 if (userPassword.isEmpty() || userName.text.isEmpty() )
                                 {
-                                    isLoading = false // need add alert dialogue
+                                    isLoading = false // need add alert dialxogue
                                     showFillupMessage = true
 
                                 }
@@ -280,7 +281,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(text = "Create", fontFamily = usernameFont) // make create loading animation
+                            Text(text = "Log In", fontFamily = usernameFont) // make create loading animation
                         }
                     }
 

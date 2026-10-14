@@ -216,12 +216,12 @@ fun ProfilePage(usernamePP: String,
                         Row(
                             modifier = Modifier.weight(1f),
                             verticalAlignment = Alignment.CenterVertically
-
                         ) {
                             val currentUser = user
                             Box(
                                 modifier = Modifier.clickable{goToSetting(userIdPP)}
                             ){
+/*
                                 if(!currentUser?.userPhotoUser.isNullOrBlank()){
                                     val photoValue = currentUser.userPhotoUser
                                     val model = if (photoValue.startsWith("http")){
@@ -229,6 +229,17 @@ fun ProfilePage(usernamePP: String,
                                     }else{
                                         imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
                                     }
+                                    */
+
+                                if(!currentUser?.userPhotoUser.isNullOrBlank()){
+                                    val photoValue = currentUser.userPhotoUser
+                                    val model = when {
+                                        photoValue.startsWith("http") -> photoValue // it's a remote DiceBear URL, use as-is
+                                        photoValue.startsWith("/") -> "http://10.11.253.70:5214$photoValue" // server upload path (/uploads/...)
+                                        else -> imageStorage.getFullPath(photoValue) // local device file path
+                                    }
+
+
                                     AsyncImage(
                                         //model = imageStorage.getFullPath(currentUser.userPhotoUser),
                                         model = model,
@@ -388,13 +399,12 @@ fun ProfilePage(usernamePP: String,
 
                             if(!currentUser?.userPhotoUser.isNullOrBlank()){
                                 val photoValue = currentUser.userPhotoUser
-                                val model = if (photoValue.startsWith("http")){
-                                    photoValue // it's a remote DiceBear URL, use as-is
-                                }else{
-                                    imageStorage.getFullPath(photoValue) // it's a local file, resolve full path
+                                val model = when {
+                                    photoValue.startsWith("http") -> photoValue // full URL
+                                    photoValue.startsWith("/") -> "http://10.11.253.70:5214$photoValue" // server upload path (/uploads/...)
+                                    else -> imageStorage.getFullPath(photoValue) // local device file path
                                 }
                                 AsyncImage(
-                                    //model = imageStorage.getFullPath(currentUser.userPhotoUser),
                                     model = model,
                                     contentDescription = "Profile Picture",
                                     modifier = Modifier
@@ -717,8 +727,8 @@ fun ItemBox(
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp)
-            .clip(RoundedCornerShape(16.dp)) // CLIP FIRST
-            .background(accent.copy(alpha = 0.15f)) // BACKGROUND SECOND
+            .clip(RoundedCornerShape(16.dp))
+            .background(accent.copy(alpha = 0.15f))
             .clickable{ goToUserCarCollection(selectedBrandItem.selectedBrandName, brandId) }
             .padding(horizontal = 14.dp), // Inner padding for all contents
         verticalAlignment = Alignment.CenterVertically
