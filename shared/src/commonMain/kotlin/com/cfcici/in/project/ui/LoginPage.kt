@@ -194,7 +194,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
                             )
                         },
                         inputTransformation = InputTransformation.maxLength(16),
-                        textStyle = TextStyle(fontSize = 20.sp),
+                        textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFFF0396B),
                             unfocusedBorderColor = Color(0xFFF0396B),

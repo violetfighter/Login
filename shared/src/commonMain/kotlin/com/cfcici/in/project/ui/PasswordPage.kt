@@ -58,7 +58,7 @@ fun PasswordPage(
             value = password,
             onValueChange = {if (it.length <=16){ passwordChecker( it )}},
             singleLine = true,
-            textStyle = TextStyle(fontSize = 20.sp),
+            textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
 
             // to hide the text/password
             visualTransformation =

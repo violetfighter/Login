@@ -42,20 +42,10 @@ data class ApiUser(
     val isDarkMode: Boolean = true
 )
 
+
+// you can also avoid Serializable for total car
 @Serializable
 data class TotalCarUserOwnApiUser(val totalCarsApi: Int) // Remember "totalCars" name should match with C# function
-@Serializable
-data class EmailExistsApiUser(val emailExistApi: Boolean)
-
-@Serializable
-data class UsernameExistsApiUser(val usernameExistApi: Boolean)
-
-
-@Serializable
-data class UsernameChangeApiUser(val usernameChangeApi: String)
-
-@Serializable
-data class DobChangeApiUser(val dobChangeApi: String)
 
 @Serializable
 data class LoginCheckerApiUser(val usernameLoginApi: String, val passwordLoginApi: String) // what you send

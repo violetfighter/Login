@@ -133,7 +133,7 @@ class ApiDao(
         return try {
             client.get("http://10.11.253.70:5214/api/users/EmailDuplicate"){
                 parameter("emailFromOutside", email)
-            }.body<EmailExistsApiUser>().emailExistApi//extracts the actual true/false value
+            }.body<Boolean>()//extracts the actual true/false value || server sends just true or false
         } catch (e: Exception){
             e.printStackTrace()
             false
@@ -145,7 +145,7 @@ class ApiDao(
         return try {
             client.get("http://10.11.253.70:5214/api/users/UsernameDuplicate"){
                 parameter("usernameFromOutside", username)
-            }.body<UsernameExistsApiUser>().usernameExistApi // if something is giving like value, true/false we should use this
+            }.body<Boolean>() // if something is giving like value, true/false we should use this
         } catch (e: Exception){
             e.printStackTrace()
             false
@@ -161,7 +161,8 @@ class ApiDao(
             }
             println("Error on Username Change Update in ApiDao ${response.status}")
             if (response.status.isSuccess()){
-                response.body<UsernameChangeApiUser>().usernameChangeApi
+                username
+                //response.body<UsernameChangeApiUser>().usernameChangeApi
             }else{null}
         }catch (e: Exception){
             e.printStackTrace()
@@ -177,7 +178,8 @@ class ApiDao(
             }
             println("Error on DOB Change Update in ApiDao ${response.status}")
             if (response.status.isSuccess()){
-                response.body<DobChangeApiUser>().dobChangeApi
+                dob
+                //response.body<DobChangeApiUser>().dobChangeApi
             }else{null}
 
         }catch (e: Exception){

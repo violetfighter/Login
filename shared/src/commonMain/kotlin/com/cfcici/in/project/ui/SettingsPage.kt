@@ -1499,7 +1499,7 @@ fun SettingsPage(userIdSP: Int,
                 Text(
                     text = "Edit Username",
                     color = textColor.copy(alpha = 0.6f),
-                    fontFamily = usernameFont
+                    fontFamily = usernameFont,
                 )
             },
             text = {
@@ -1512,7 +1512,7 @@ fun SettingsPage(userIdSP: Int,
                                 usernameError = null
                             }
                         },
-                        textStyle = TextStyle(fontSize = 25.sp),
+                        textStyle = TextStyle(fontSize = 25.sp, fontFamily = usernameFont),
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedIndicatorColor = textColor.copy(alpha = 0.6f),
