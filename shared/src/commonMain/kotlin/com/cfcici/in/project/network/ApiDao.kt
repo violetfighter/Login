@@ -1,11 +1,13 @@
 package com.cfcici.`in`.project.network
 
+import com.cfcici.`in`.project.ui.SessionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -87,12 +89,19 @@ class ApiDao(
         }
     }*/
 
-    suspend fun getUserByIdApi(userId: Int): ApiUser?{
+    suspend fun getUserByIdApi(userId: Int): ApiUser? {
         return try {
-            client.get( "http://10.11.253.70:5214/api/users/GetUserInfo" ){
+            val response = client.get("http://10.11.253.70:5214/api/users/GetUserInfo") {
                 parameter("userIdFromOutside", userId)
-            }.body<ApiUser>()
-        }catch (e: Exception){
+                header(HttpHeaders.Authorization, "Bearer ${SessionManager.accessToken}")
+            }
+            if (response.status == HttpStatusCode.Unauthorized) {
+                SessionManager.expire()
+                null
+            } else {
+                response.body<ApiUser>()
+            }
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }
@@ -235,7 +244,11 @@ class ApiDao(
                 setBody(LoginCheckerApiUser(username, password))
             }
             println("Login status: ${response.status}")
-            if (response.status.isSuccess()) response.body<LoginResultApiUser>() else null
+            if (response.status.isSuccess()) {
+                val result = response.body<LoginResultApiUser>()
+                SessionManager.login(result.accessToken)
+                result
+            } else null
         } catch (e: Exception) {
             e.printStackTrace()
             null

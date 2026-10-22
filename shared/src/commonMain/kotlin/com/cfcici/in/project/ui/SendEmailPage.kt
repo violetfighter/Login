@@ -87,14 +87,11 @@ fun SentEmailPage(onBackToLogin: () -> Unit,
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.linearGradient(colors = listOf(Color(0xFF3C3489), Color(0xFF72243E))))
+                .background(Color(0xFF140F22))
+                //.background(Brush.linearGradient(colors = listOf(Color(0xFF140F22), Color(0xFF72243E))))
         )
         {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-            ){
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -135,7 +132,7 @@ fun SentEmailPage(onBackToLogin: () -> Unit,
                     )
 
                     emailError?.let {
-                        Text(text = it, color = Color.Red, fontSize = 13.sp)
+                        Text(text = it, color = Color.Red, fontSize = 13.sp, fontFamily = usernameFont)
                     }
 
                     Button(
@@ -150,10 +147,12 @@ fun SentEmailPage(onBackToLogin: () -> Unit,
                             emailError = null
                             statusMessage = null
 
+                            isLoading = true
                             viewModel.forgotPasswordVM(emailText) { success, emailNotFind ->
+                                isLoading = false
                                 when{
                                     success -> {
-                                        statusMessage = "Email Sent"
+                                        statusMessage =  "Email Sent"
                                         scope.launch {
                                             delay(timeMillis = 1000)
                                             showPincodeCard = true
@@ -165,23 +164,34 @@ fun SentEmailPage(onBackToLogin: () -> Unit,
                                 }
                             }
                         },
+                        enabled = !isLoading, // avoid multiple tab on button while loading
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(26.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0396B))
-                    ) {
-                        Text("Send email",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = usernameFont
-                        )
+                    )
+
+                    {
+                        if (isLoading){
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp)
+                        }else{
+                            Text("Send email",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = usernameFont)
+                        }
+
                     }
 
                     statusMessage?.let {
                         Text(text = it,
                             color = Color.White,
-                            fontSize = 13.sp)
+                            fontSize = 13.sp,
+                            fontFamily = usernameFont)
                     }
 
                     TextButton(
@@ -194,7 +204,7 @@ fun SentEmailPage(onBackToLogin: () -> Unit,
                         )
                     }
                 }
-            }
+
         }
 
         AnimatedVisibility(

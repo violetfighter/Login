@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.maxLength
+import androidx.compose.foundation.text.input.then
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -56,7 +59,10 @@ fun PasswordPage(
     ) {
         OutlinedTextField(
             value = password,
-            onValueChange = {if (it.length <=16){ passwordChecker( it )}},
+            onValueChange = { typed ->
+                val cleaned = typed.filterNot { c -> c.isWhitespace() }.take(16)
+                passwordChecker(cleaned)
+            },
             singleLine = true,
             textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
 

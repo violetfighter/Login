@@ -51,7 +51,7 @@ data class TotalCarUserOwnApiUser(val totalCarsApi: Int) // Remember "totalCars"
 data class LoginCheckerApiUser(val usernameLoginApi: String, val passwordLoginApi: String) // what you send
 
 @Serializable
-data class LoginResultApiUser(val userId: Int, val usernameUser: String)  // what you get back
+data class LoginResultApiUser(val userId: Int, val username: String, val accessToken: String, val tokenType: String, val expiresIn: Int)  // what you get back
 
 /*
 

@@ -29,18 +29,17 @@ import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,31 +47,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
-import com.cfcici.`in`.project.data.database.User
 import com.cfcici.`in`.project.viewmodel.UserViewModel
-import kotlinx.coroutines.delay
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.Res
 import login.shared.generated.resources.neonderthaw
@@ -88,7 +78,6 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
     val userName = rememberTextFieldState()
     var userPassword by remember { mutableStateOf("") }
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState()}
     var isLoading by remember { mutableStateOf(false) }
     var showInvalidMessage  by remember { mutableStateOf(false) }
@@ -184,6 +173,12 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
 
                     OutlinedTextField(// TextField itself will create box
                         state = userName,// store whatever user enter
+                        inputTransformation = InputTransformation{
+                            val noSpaces = asCharSequence().filterNot { it.isWhitespace() } // removes whitespace
+                            if (noSpaces.length != length) {
+                                replace(0, length, noSpaces)
+                            }
+                        }.then(InputTransformation.maxLength(16)),
                         lineLimits = TextFieldLineLimits.SingleLine,
                         label = { Text(text = "Enter Your Username", fontFamily = usernameFont)},
                         leadingIcon = {
@@ -193,7 +188,6 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
                                 tint = Color(0xFFF0396B),
                             )
                         },
-                        inputTransformation = InputTransformation.maxLength(16),
                         textStyle = TextStyle(fontSize = 20.sp, fontFamily = usernameFont),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFFF0396B),
@@ -257,7 +251,7 @@ fun LoginPage(onLoginClick: (String, Int) -> Unit,
 
                                 if (userPassword.isEmpty() || userName.text.isEmpty() )
                                 {
-                                    isLoading = false // need add alert dialxogue
+                                    isLoading = false // need add alert dialogue
                                     showFillupMessage = true
 
                                 }

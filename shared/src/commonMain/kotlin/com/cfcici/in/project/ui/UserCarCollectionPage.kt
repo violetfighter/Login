@@ -1497,7 +1497,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                                 .clip(RoundedCornerShape(16.dp))
                                 .clickable {
                                     selectedImageBitmap = bitmap
-                                    showingExistingPhoto = false
+                                    showingExistingPhoto = true
                                     showImagePreview = true
                                 },
                             contentScale = ContentScale.Crop
@@ -1523,31 +1523,18 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
             }
             else if (existingCar?.carPhotoCar?.isNotEmpty() == true && !oldPhotoDeleted)
             {
-                val bytes = imageStorage.loadImageFromFile(existingCar.carPhotoCar)
-                val existingCarBitmap = remember(bytes) { bytes?.decodeToImageBitmap() }
-
-
-            if (existingCarBitmap != null) {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                     contentAlignment = Alignment.Center
                 ){
                     Box(modifier = Modifier.size(100.dp))
                     {
-                        Image(
-                            bitmap = existingCarBitmap,
+                        AsyncImage(
+                            model = photoModel(existingCar.carPhotoCar, imageStorage),
                             contentDescription = "Selected car photo",
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable
-                                {
-                                    if (bytes != null) {
-                                        selectedImageBitmap = bytes.decodeToImageBitmap()
-                                        showingExistingPhoto = true
-                                        showImagePreview = true
-                                    }
-                                },
+                                .clip(RoundedCornerShape(16.dp)),
                             contentScale = ContentScale.Crop
                         )
 
@@ -1575,8 +1562,8 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                     }
                 }
             }
-    } else {
-        if (modelPhotoError != null) {
+            else {
+                if (modelPhotoError != null) {
             Text(
                 text = "Photo of the model is required",
                 color = Color(0xFFE05252),
