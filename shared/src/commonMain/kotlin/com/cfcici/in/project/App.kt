@@ -40,7 +40,8 @@ object SentEmailRoute
 
 @Serializable
 data class UserCarCollectionRoute(
-    val brand: String,
+    val brandId: Int,
+    val brandName: String,
     val userId: Int
 )
 
@@ -106,11 +107,14 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
                         navController.navigate(SettingRoute(userId = profile.userId))
                     },
 
-                    goToUserCarCollection = {
-                        selectedBrand, userIdPP-> navController.navigate(
-                        UserCarCollectionRoute(
-                            brand = selectedBrand,
-                            userId = userIdPP))
+                    goToUserCarCollection = { brandId, brandName, userId ->
+                        navController.navigate(
+                            UserCarCollectionRoute(
+                                brandId = brandId,
+                                brandName = brandName,
+                                userId = userId
+                            )
+                        )
                     },
                     userViewModel = viewModel,
                     imageStorage = imageStorage
@@ -174,7 +178,8 @@ fun App(db: AppDatabase, imageStorage: ImageStorage) {
             composable<UserCarCollectionRoute> { backStackEntry ->
                 val userCarCollection: UserCarCollectionRoute = backStackEntry.toRoute()
                 UserCarCollectionPage(
-                    userCCPBrand = userCarCollection.brand,// now userCarCollection.brand will contain whichever brand was clicked
+                    userCCPBrandId = userCarCollection.brandId,
+                    userCCPBrandName = userCarCollection.brandName,// now userCarCollection.brand will contain whichever brand was clicked
                     onBackToLogin = { navController.navigate(LoginRoute) },
                     userCCPUserId = userCarCollection.userId,
                     goBackToProfile = { navController.popBackStack() },

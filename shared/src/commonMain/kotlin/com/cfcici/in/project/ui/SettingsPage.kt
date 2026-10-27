@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -49,17 +47,13 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NoPhotography
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -71,7 +65,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBarDefaults.colors
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,7 +73,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -89,11 +81,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import login.shared.generated.resources.Res
-import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -101,14 +91,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.CameraCapture
@@ -203,10 +189,10 @@ fun SettingsPage(userIdSP: Int,
             )
         }
     }
-    val currentTheme = user?.selectedTheme
+    val currentTheme = user?.selected_Theme
         ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
         ?: AppTheme.NEON_SPEEDWAY
-    val isDarkMode = user?.isDarkMode ?: isSystemInDarkTheme()
+    val isDarkMode = user?.is_Dark_Mode ?: isSystemInDarkTheme()
     val colors = themeColors(currentTheme, isDarkMode)
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val textColor = colors.slots[0].text
@@ -246,7 +232,7 @@ fun SettingsPage(userIdSP: Int,
         userViewModel.uploadImageVM(croppedBytes) { path ->     // path = "/uploads/abc.jpg" or null
             if (path != null) {
                 user?.let { currentUser ->
-                    userViewModel.updateProfileEditVM(currentUser.copy(userPhotoUser = path)) {
+                    userViewModel.updateProfileEditVM(currentUser.copy(profile_Picture = path)) {
                         scope.launch { reload() }
                     }
                 }
@@ -337,10 +323,10 @@ fun SettingsPage(userIdSP: Int,
 
     LaunchedEffect(user){
         user?.let{
-            usernameSP = it.usernameUser
-            emailSP = it.emailIdUser
-            dobSP = it.dateOfBirthUser
-            passwordSP = it.passwordUser
+            usernameSP = it.username
+            emailSP = it.email_Id
+            dobSP = it.date_Of_Birth
+            passwordSP = it.password
         }
     }
     /*
@@ -470,8 +456,8 @@ fun SettingsPage(userIdSP: Int,
 
                     // previously saved photo, loaded from disk via its saved path
                     //1
-                    else if(currentUser?.userPhotoUser != null){
-                        val photoValue = currentUser.userPhotoUser
+                    else if(currentUser?.profile_Picture != null){
+                        val photoValue = currentUser.profile_Picture
 /*
                         val model = if (photoValue.startsWith("http")){
                             photoValue // it's a remote DiceBear URL, use as-is
@@ -530,11 +516,11 @@ fun SettingsPage(userIdSP: Int,
                 {
                     ProfileDetailRow(
                         label = " Username ",
-                        value = user?.usernameUser ?: "",
+                        value = user?.username ?: "",
                         icon = Icons.Default.Person,
                         colors = colors,
                         onClick = {
-                            usernameSP = user?.usernameUser ?: ""
+                            usernameSP = user?.username?: ""
                             usernameError = null
                             updateButton = true
                         }
@@ -542,7 +528,7 @@ fun SettingsPage(userIdSP: Int,
 
                     ProfileDetailRow(
                         label = " Email Id ",
-                        value = user?.emailIdUser ?: "",
+                        value = user?.email_Id ?: "",
                         icon = Icons.Default.Email,
                         colors = colors,
                         clickable = false
@@ -550,7 +536,7 @@ fun SettingsPage(userIdSP: Int,
 
                     ProfileDetailRow(
                         label = " Date of Birth",
-                        value = user?.dateOfBirthUser ?: "",
+                        value = user?.date_Of_Birth ?: "",
                         icon = Icons.Default.CalendarMonth,
                         colors = colors,
                         onClick = { showCalendar = true }
@@ -1029,7 +1015,7 @@ fun SettingsPage(userIdSP: Int,
                                 selectedImageBytes = null
                                 user?.let {
                                     currentUser ->
-                                    val updatedAvatar = currentUser.copy(userPhotoUser = url)
+                                    val updatedAvatar = currentUser.copy(profile_Picture = url)
                                     userViewModel.updateProfileEditVM(updatedAvatar){
                                         scope.launch { reload() }
                                     }
@@ -1112,7 +1098,7 @@ fun SettingsPage(userIdSP: Int,
                                 selectedProfileBitmap = null
 
                                 user?.let {currentUser ->
-                                    val updatedPhoto = currentUser.copy(userPhotoUser = null )
+                                    val updatedPhoto = currentUser.copy(profile_Picture = null )
                                     userViewModel.updateProfileEditVM((updatedPhoto)){
                                         showProfilePhotoOptions = false
                                         scope.launch { reload() }
@@ -1263,8 +1249,8 @@ fun SettingsPage(userIdSP: Int,
 
             // previously saved photo, loaded from disk via its saved path
             //1
-            else if(currentUser?.userPhotoUser != null){
-                val photoValue = currentUser.userPhotoUser
+            else if(currentUser?.profile_Picture != null){
+                val photoValue = currentUser.profile_Picture
                 /*
                 val model = if (photoValue.startsWith("http")) {
                     photoValue
@@ -1391,7 +1377,7 @@ fun SettingsPage(userIdSP: Int,
                 user?.let{
                     if (newDobString.isNotEmpty()){
                         dobSP = newDobString
-                        val updatedUserDob = it.copy(dateOfBirthUser = newDobString)
+                        val updatedUserDob = it.copy(date_Of_Birth = newDobString)
                         userViewModel.dobChangeVM(userIdSP, newDobString) { newDob ->
                             if (newDob != null) {
                                 scope.launch { reload() }
@@ -1407,7 +1393,7 @@ fun SettingsPage(userIdSP: Int,
                 }*/
                     }
                     else
-                        dobSP = it.dateOfBirthUser//old date
+                        dobSP = it.date_Of_Birth//old date
                 }
 
             },
@@ -1540,7 +1526,7 @@ fun SettingsPage(userIdSP: Int,
                                 }
                             }
                         }else{
-                            usernameSP = user?.usernameUser?:""
+                            usernameSP = user?.username?:""
                         }
                     }
                 ){

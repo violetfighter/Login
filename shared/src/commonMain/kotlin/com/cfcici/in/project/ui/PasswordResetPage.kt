@@ -214,7 +214,6 @@ fun PasswordResetPage(
                             }
                         }
                     }
-
                 }
 
                 if(showPasswordSameErrorMessage){

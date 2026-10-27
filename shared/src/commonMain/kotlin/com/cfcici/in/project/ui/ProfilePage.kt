@@ -30,20 +30,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,12 +61,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import coil3.compose.AsyncImage
 import com.cfcici.`in`.project.ImageStorage
-import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import com.cfcici.`in`.project.network.AddNewBrandApiUser
 import com.cfcici.`in`.project.network.ApiCar
 import com.cfcici.`in`.project.network.ApiUser
 import com.cfcici.`in`.project.viewmodel.UserViewModel
-import kotlinx.coroutines.launch
 import login.shared.generated.resources.Amarante_Regular
 import login.shared.generated.resources.AutoWorldLogo
 import login.shared.generated.resources.BuragoLogo
@@ -101,7 +95,7 @@ fun ProfilePage(usernamePP: String,
                 userIdPP: Int,
                 onBackToLogin: () -> Unit,
                 goToSetting: (Int) -> Unit,
-                goToUserCarCollection: (String, Int) -> Unit,
+                goToUserCarCollection: (Int, String, Int) -> Unit,
                 userViewModel: UserViewModel,
                 imageStorage: ImageStorage
 )
@@ -117,10 +111,10 @@ fun ProfilePage(usernamePP: String,
     LaunchedEffect(userIdPP) {
         reload()
     }
-    val currentTheme = user?.selectedTheme
+    val currentTheme = user?.selected_Theme
         ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
         ?: AppTheme.NEON_SPEEDWAY
-    val isDarkMode = user?.isDarkMode ?: isSystemInDarkTheme()
+    val isDarkMode = user?.is_Dark_Mode ?: isSystemInDarkTheme()
     val colors = themeColors(currentTheme, isDarkMode)
     val textColor = colors.slots[0].text
     val backgroundColor = colors.slots[2].bg
@@ -148,9 +142,9 @@ fun ProfilePage(usernamePP: String,
         "Bburago" to Res.drawable.BuragoLogo
     )
 
+
     //var selectedItem by remember { mutableStateOf<String?>(null) } if we use this it will only show the one selected item
     var selectedItem by remember { mutableStateOf<List<UserSelectedBrandCars>>(emptyList()) }// it will allow user to select multiple box
-
     // on starting the bar is not visible that's why we put false otherwise till will think bar is visible and animation will not happen
     var boxVisible by remember { mutableStateOf(false) }
     var linesVisible by remember { mutableStateOf(false) }
@@ -161,26 +155,25 @@ fun ProfilePage(usernamePP: String,
     val snackbarHostState = remember { SnackbarHostState()}
     var expand by remember { mutableStateOf(false) }// if dropdown is open or closed
     var contextMenuCarBrandId by remember { mutableStateOf<Int?>(null) }///??????
-    /*
-    fun displayBrand(){
-        userViewModel.getSelectedCarBrandsVM(userIdPP){ savedBrands ->
-            selectedItem = savedBrands
-            // when user loads the page, calls getSelectedCarBrandsVM to get the whatever brands user selected
-        }
-    }
+    var brands by remember { mutableStateOf<List<AddNewBrandApiUser>>(emptyList()) }
 
-    LaunchedEffect(Unit){
-        boxVisible = true
-        linesVisible = true
-        displayBrand()
+
+    LaunchedEffect(Unit) {
+        userViewModel.addNewBrandVM { brands = it }
     }
-*/
+    val sortedBrands = brands.sortedWith(
+        compareBy<AddNewBrandApiUser> {
+            val pos = menuItemData.indexOf(it.Name)
+            if (pos == -1) Int.MAX_VALUE else pos   // new brands go last
+        }.thenBy { it.Brand_Id }                    // new brands stay in the order they were added
+    )
 
     LaunchedEffect(userIdPP) {
         userViewModel.totalCarsUserOwnVM(userIdPP) { total ->
             totalCarUserOwn = total
         }
     }
+
 
     Scaffold (
         snackbarHost = {
@@ -231,8 +224,8 @@ fun ProfilePage(usernamePP: String,
                                     }
                                     */
 
-                                if(!currentUser?.userPhotoUser.isNullOrBlank()){
-                                    val photoValue = currentUser.userPhotoUser
+                                if(!currentUser?.profile_Picture.isNullOrBlank()){
+                                    val photoValue = currentUser.profile_Picture
                                     val model = when {
                                         photoValue.startsWith("http") -> photoValue // it's a remote DiceBear URL, use as-is
                                         photoValue.startsWith("/") -> "http://10.11.253.70:5214$photoValue" // server upload path (/uploads/...)
@@ -353,13 +346,12 @@ fun ProfilePage(usernamePP: String,
                         modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
                     )
 
-                    menuItemData.forEachIndexed { index, brandName ->
-                        // Convert each string to a UserSelectedBrandCars object (or your brand UI item)
-                        val brandItem = remember(brandName) {
+                    sortedBrands.forEachIndexed { index, brand ->
+                        val brandItem = remember(brand) {
                             UserSelectedBrandCars(
-                                userSelectedCarBrandId = index,
+                                userSelectedCarBrandId = brand.Brand_Id,
                                 userIdFromUsers = userIdPP,
-                                selectedBrandName = brandName
+                                selectedBrandName = brand.Name
                             )
                         }
 
@@ -368,8 +360,9 @@ fun ProfilePage(usernamePP: String,
                             itemIndex = index,
                             userViewModel = userViewModel,
                             colors = colors,
-                            brandId = userIdPP,
-                            logo = brandLogos[brandName],
+                            userId = userIdPP,
+                            logo = brandLogos[brand.Name],      // local logo for the 17 defaults
+                            logoFromBackend = brand.Logo,       // server logo for new brands
                             goToUserCarCollection = goToUserCarCollection,
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -701,9 +694,10 @@ fun ItemBox(
     itemIndex: Int,
     userViewModel: UserViewModel,
     colors: ThemeColors,
-    brandId: Int,
+    userId: Int,
     logo: DrawableResource?,
-    goToUserCarCollection: (String, Int) -> Unit,
+    logoFromBackend: String? = null,
+    goToUserCarCollection: (Int, String, Int) -> Unit,
 ) {
     val usernameFont = FontFamily(Font(Res.font.Amarante_Regular))
     val haptics = LocalHapticFeedback.current
@@ -714,10 +708,13 @@ fun ItemBox(
     var getCarsFromThisBrand by remember { mutableStateOf<List<ApiCar>>(emptyList()) }
     val totalCarThisBrandOwns = getCarsFromThisBrand.size
 
+    LaunchedEffect(selectedBrandItem.userSelectedCarBrandId) {
+
+    }
     LaunchedEffect(selectedBrandItem.selectedBrandName) {
         userViewModel.getUserOwnedCarsByBrandVM(
-            brandId,
-            selectedBrandItem.selectedBrandName
+            userId,
+            selectedBrandItem.userSelectedCarBrandId
         ) { cars ->
             getCarsFromThisBrand = cars
         }
@@ -729,8 +726,13 @@ fun ItemBox(
             .height(72.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(accent.copy(alpha = 0.15f))
-            .clickable{ goToUserCarCollection(selectedBrandItem.selectedBrandName, brandId) }
-            .padding(horizontal = 14.dp), // Inner padding for all contents
+            .clickable {
+                goToUserCarCollection(
+                    selectedBrandItem.userSelectedCarBrandId,   // brand id
+                    selectedBrandItem.selectedBrandName,        // brand name
+                    userId                                     // the user id
+                )
+            }            .padding(horizontal = 14.dp), // Inner padding for all contents
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon Box (square aspect, properly rounded)
@@ -748,7 +750,15 @@ fun ItemBox(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
                 )
-            } else {
+            } else if(logoFromBackend != null){
+                AsyncImage(
+                    model = "http://10.11.253.70:5214$logoFromBackend",
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+            else {
                 Icon(
                     imageVector = Icons.Default.DirectionsCar,
                     contentDescription = null,

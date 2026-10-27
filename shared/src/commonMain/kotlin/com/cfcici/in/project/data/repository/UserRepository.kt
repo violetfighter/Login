@@ -1,8 +1,7 @@
 package com.cfcici.`in`.project.data.repository
 
-import com.cfcici.`in`.project.data.database.UserCar
 import com.cfcici.`in`.project.data.database.UserDao
-import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
+import com.cfcici.`in`.project.network.AddNewBrandApiUser
 import com.cfcici.`in`.project.network.ApiCar
 import com.cfcici.`in`.project.network.ApiDao
 import com.cfcici.`in`.project.network.ApiUser
@@ -12,7 +11,6 @@ import com.cfcici.`in`.project.network.LoginResultApiUser
 import com.cfcici.`in`.project.ui.AppTheme
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
-import kotlinx.coroutines.flow.Flow
 
 class UserRepository (
     private val userDaoFromRepo: UserDao,
@@ -51,7 +49,7 @@ class UserRepository (
     suspend fun updateCarEditRepo(userCarRepo: ApiCar): Boolean = apiDao.carEdit(userCarRepo)
     suspend fun updateProfileEditRepo(userProfileRepo: ApiUser): Boolean{
         //return userDaoFromRepo.updateProfileEdit(userProfileRepo)
-        return apiDao.profilePicture(userProfileRepo.usernameUser, userProfileRepo.userPhotoUser)
+        return apiDao.profilePicture(userProfileRepo.username, userProfileRepo.profile_Picture)
 
     }
 
@@ -83,8 +81,12 @@ class UserRepository (
 
 
     // Get cars belonging to one specific brand
-    suspend fun getUserOwnedCarsByBrandRepo(userId: Int, carBrand: String): List<ApiCar> {
-        return apiDao.getCarsByBrandApi(userId, carBrand)
+    suspend fun getUserOwnedCarsByBrandRepo(userId: Int, carBrandId: Int): List<ApiCar> {
+        return apiDao.getCarsByBrandApi(userId, carBrandId)
+    }
+
+    suspend fun addNewBrandRepo(): List<AddNewBrandApiUser>{
+        return apiDao.addNewCarApi()
     }
 
     suspend fun totalCarsUserOwnRepo(userIdRepo: Int): Int? {

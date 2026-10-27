@@ -2,17 +2,13 @@ package com.cfcici.`in`.project.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cfcici.`in`.project.data.database.UserCar
-import com.cfcici.`in`.project.data.database.UserSelectedBrandCars
 import com.cfcici.`in`.project.data.repository.UserRepository
+import com.cfcici.`in`.project.network.AddNewBrandApiUser
 import com.cfcici.`in`.project.network.ApiCar
 import com.cfcici.`in`.project.network.CreateUserRequest
 import com.cfcici.`in`.project.network.ApiUser
 import com.cfcici.`in`.project.network.ForgotPasswordResult
 import com.cfcici.`in`.project.ui.AppTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -79,10 +75,10 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         viewModelScope.launch {
             val success = repository.insertUserRepo(
                 CreateUserRequest(
-                    usernameUser = usernameFromVM,
-                    passwordUser = passwordFromVM,
-                    dateOfBirthUser = dateOfBirthFromVM,
-                    emailIdUser = emailIDFromVM
+                    username = usernameFromVM,
+                    password = passwordFromVM,
+                    date_Of_Birth = dateOfBirthFromVM,
+                    email_Id = emailIDFromVM
                 )
             )
             if (success) {
@@ -178,7 +174,7 @@ class UserViewModel(val repository: UserRepository): ViewModel()
     //Think of it like a walkie-talkie: insertUserOwnedCarVM doesn't know or care what happens after the insert — it just presses the button and says "done"
     // by calling onResult(). Whoever's listening on the other end decides what to do with that signal.
     fun insertUserOwnedCarVM(
-        userIdUserVM: Int, brandFromVM: String, modelFromVM: String, yearFromVM: Int?,
+        userIdUserVM: Int, brandFromVM: Int, modelFromVM: String, yearFromVM: Int?,
         colourFromVM: String, seriesFromVM: String?, typeOfSeriesFromVM: String?,
         collectorNoUserVM: String?, photoUserFromVM: String,
         onResult: (Boolean, String?) -> Unit
@@ -187,15 +183,16 @@ class UserViewModel(val repository: UserRepository): ViewModel()
         viewModelScope.launch {
             val success = repository.insertUserOwnedCarRepo(
                 ApiCar(
-                    userIdCar = userIdUserVM,
-                    brandCar = brandFromVM,
-                    modelCar = modelFromVM,
-                    yearCar = yearFromVM?.toString(),
-                    colourCar = colourFromVM,
-                    seriesCar = seriesFromVM,
-                    typeOfSeriesCar = typeOfSeriesFromVM,
-                    collectorNoCar = collectorNoUserVM,
-                    carPhotoCar = photoUserFromVM
+                    User_Id = userIdUserVM,
+                    //Brand_Name = brandFromVM,
+                    Brand_Id = brandFromVM,
+                    Model_Name = modelFromVM,
+                    Year = yearFromVM?.toString(),
+                    Colour = colourFromVM,
+                    Series = seriesFromVM,
+                    Type_Of_Series = typeOfSeriesFromVM,
+                    Collector_Number = collectorNoUserVM,
+                    Car_Photo = photoUserFromVM
                 )
             )
             if (success) onResult(true, null)
@@ -214,10 +211,16 @@ class UserViewModel(val repository: UserRepository): ViewModel()
 // It then calls onConfirmation() to close the dialog and refresh the car list.
 // We need this because the database operation runs inside a coroutine.
 
-    fun getUserOwnedCarsByBrandVM(userId: Int, carBrand: String, onResult: (List<ApiCar>) -> Unit
+    fun getUserOwnedCarsByBrandVM(userId: Int, carBrandId: Int, onResult: (List<ApiCar>) -> Unit
     ) {
         viewModelScope.launch {
-            onResult(repository.getUserOwnedCarsByBrandRepo(userId, carBrand))
+            onResult(repository.getUserOwnedCarsByBrandRepo(userId, carBrandId))
+        }
+    }
+
+    fun addNewBrandVM(onResult: (List<AddNewBrandApiUser>) -> Unit){
+        viewModelScope.launch {
+            onResult(repository.addNewBrandRepo())
         }
     }
 

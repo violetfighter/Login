@@ -10,36 +10,43 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateUserRequest(
-    val usernameUser: String,
-    val passwordUser: String,
-    val dateOfBirthUser: String,
-    val emailIdUser: String
+    val username: String,
+    val password: String,
+    val date_Of_Birth: String,
+    val email_Id: String
 )
 
+@Serializable
+data class AddNewBrandApiUser(
+    val Brand_Id: Int,
+    val Name: String,
+    val Logo: String ?= null
+)
 @Serializable // convert JSON to kotlin object
 data class ApiCar (
-    val userIdCar: Int,
-    val userCarIdCar: Int = 0,
-    val brandCar: String,
-    val modelCar: String,
-    val colourCar: String,
-    val seriesCar: String? = null,
-    val yearCar: String? = null,
-    val typeOfSeriesCar: String? = null,
-    val collectorNoCar: String? = null,
-    val carPhotoCar: String
+    val Car_Id: Int = 0,
+    val User_Id: Int,
+    val Brand_Id: Int,
+    //val Brand_Name: String,
+    val Model_Name: String,
+    val Colour: String,
+    val Series: String? = null,
+    val Year: String? = null,
+    val Type_Of_Series: String? = null,
+    val Collector_Number: String? = null,
+    val Car_Photo: String
 )
 
 @Serializable
 data class ApiUser(
-    val userId: Int = 0,
-    val usernameUser: String,
-    val passwordUser: String,
-    val dateOfBirthUser: String,
-    val emailIdUser: String,
-    val userPhotoUser: String? = null, // nullable, default to null
-    val selectedTheme: String = "NEON_SPEEDWAY",
-    val isDarkMode: Boolean = true
+    val user_Id: Int = 0,
+    val username: String,
+    val password: String,
+    val date_Of_Birth: String,
+    val email_Id: String,
+    val profile_Picture : String? = null, // nullable, default to null
+    val selected_Theme: String = "NEON_SPEEDWAY",
+    val is_Dark_Mode: Boolean = true
 )
 
 

@@ -53,7 +53,6 @@ class ApiDao(
         null
     }
 
-
     suspend fun createUser(user: CreateUserRequest): Boolean {
         return try {
             //Use the Ktor HttpClient to send a POST request to my .NET API.
@@ -111,7 +110,7 @@ class ApiDao(
     suspend fun carEdit(car: ApiCar): Boolean {
         return try {
             val response = client.patch("http://10.11.253.70:5214/api/cars/CarEdit") {
-                parameter("carIdFromOutside", car.userCarIdCar)
+                parameter("carIdFromOutside", car.Car_Id)
                 contentType(ContentType.Application.Json)
                 setBody(car)
             }
@@ -123,13 +122,12 @@ class ApiDao(
         }
     }
 
-
     // get the car details
-    suspend fun getCarsByBrandApi(userId: Int, carBrand: String): List<ApiCar> {
+    suspend fun getCarsByBrandApi(userId: Int, carBrandId: Int): List<ApiCar> {
         return try {
             client.get("http://10.11.253.70:5214/api/cars/GetCarInfo") {
                 parameter("userIdFromOutside", userId)
-                parameter("carBrandFromOutside", carBrand)
+                parameter("carBrandIdFromOutside", carBrandId)
             }.body<List<ApiCar>>()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -137,6 +135,17 @@ class ApiDao(
         }
     }
 
+    suspend fun addNewCarApi(): List<AddNewBrandApiUser> {
+        return try {
+            val response = client.get("http://10.11.253.70:5214/api/brand/GetNewBrand")
+            println("BRAND status: ${response.status}")
+            println("BRAND body: ${response.bodyAsText().take(400)}")
+            response.body<List<AddNewBrandApiUser>>()
+        } catch (e: Exception) {
+            println("BRAND ERROR: ${e.message}")
+            emptyList()
+        }
+    }
 
     suspend fun emailExistsApi(email: String) : Boolean{
         return try {
@@ -148,7 +157,6 @@ class ApiDao(
             false
         }
     }
-
 
     suspend fun usernameExistsApi(username: String) : Boolean{
         return try {
@@ -255,7 +263,6 @@ class ApiDao(
         }
     }
 
-
     suspend fun themeUpdateApi(userId: Int, theme: String): Boolean{
         return try {
             val response = client.patch("http://10.11.253.70:5214/api/users/ThemeUpdate"){
@@ -269,7 +276,6 @@ class ApiDao(
             false
         }
     }
-
 
     suspend fun darkModeApi(userId: Int, mode: Boolean): Boolean{
         return try {
@@ -297,7 +303,6 @@ class ApiDao(
             false
         }
     }
-
 
     suspend fun createCarApi(cars: ApiCar): Boolean {
         return try {

@@ -119,7 +119,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cfcici.`in`.project.ImageStorage
 import com.cfcici.`in`.project.viewmodel.UserViewModel
 import coil3.compose.AsyncImage
@@ -229,7 +228,7 @@ fun themeColors(theme: AppTheme, isDark: Boolean): ThemeColors = when ( theme ) 
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Unit, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage)
+fun UserCarCollectionPage( userCCPBrandId: Int, userCCPBrandName: String, userCCPUserId: Int, onBackToLogin: () -> Unit, goBackToProfile: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage)
 {
 
     var deleteCarPermanently by remember { mutableStateOf<Int?>(null) }
@@ -238,11 +237,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
     var showAddCarDialog by remember { mutableStateOf(false) }
 
     var user by remember { mutableStateOf<ApiUser?>(null) }
-    val currentTheme = user?.selectedTheme
+    val currentTheme = user?.selected_Theme
         ?.let { runCatching { AppTheme.valueOf(it) }.getOrNull() }
         ?: AppTheme.NEON_SPEEDWAY
 
-    val isDarkMode = user?.isDarkMode ?: isSystemInDarkTheme()
+    val isDarkMode = user?.is_Dark_Mode ?: isSystemInDarkTheme()
     val colors = themeColors(currentTheme, isDarkMode)
     val iconColor = colors.slots[0].text
 
@@ -261,12 +260,12 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
 
     //val logo = brandBackground[userCCPBrand] ?: Res.drawable.HotWheels // fallback drawable
     val filteringForCarSearch = getCarsFromThisBrand.filter { car -> searchText.isBlank()||
-            car.modelCar.contains(searchText, ignoreCase = true) ||
-            car.yearCar?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
-            car.seriesCar?.contains(searchText, ignoreCase = true)  == true ||
-            car.colourCar.contains(searchText, ignoreCase = true) ||
-            car.typeOfSeriesCar?.contains(searchText, ignoreCase = true) == true ||
-            car.collectorNoCar?.contains(searchText, ignoreCase = true) == true
+            car.Model_Name.contains(searchText, ignoreCase = true) ||
+            car.Year?.toString()?.contains(searchText, ignoreCase = true) == true || // because it's expect result boolean should do == true
+            car.Series?.contains(searchText, ignoreCase = true)  == true ||
+            car.Colour.contains(searchText, ignoreCase = true) ||
+            car.Type_Of_Series?.contains(searchText, ignoreCase = true) == true ||
+            car.Collector_Number?.contains(searchText, ignoreCase = true) == true
     }
 
     var contextMenuCarId by remember { mutableStateOf<Int?>(null) } // you need UserId
@@ -280,7 +279,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
 
 
     fun displayCarFromThisBrand(){
-        userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrand){
+        userViewModel.getUserOwnedCarsByBrandVM(userCCPUserId, userCCPBrandId){
                 cars -> getCarsFromThisBrand = cars
         }
     }
@@ -293,7 +292,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
         reload()
     }
 
-    LaunchedEffect(userCCPBrand) {
+    LaunchedEffect(userCCPBrandId) {
         displayCarFromThisBrand()
     }
 
@@ -525,7 +524,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                             ) {
 
                                 Text(
-                                    text = userCCPBrand,
+                                    text = userCCPBrandName                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ,
                                     color = Color.White,
                                     fontFamily = usernameFont,
                                     fontWeight = FontWeight.Bold,
@@ -753,11 +752,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                             verticalAlignment = Alignment.CenterVertically
                                         )
                                         {
-                                            if (car.carPhotoCar.isNotEmpty()) {
+                                            if (car.Car_Photo.isNotEmpty()) {
                                                 AsyncImage(
                                                     //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
-                                                    model = photoModel(car.carPhotoCar, imageStorage),
-                                                    contentDescription = car.modelCar,
+                                                    model = photoModel(car.Car_Photo, imageStorage),
+                                                    contentDescription = car.Model_Name,
                                                     modifier = Modifier
                                                         .size(70.dp)
                                                         .clip(RoundedCornerShape(10.dp)),
@@ -766,7 +765,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                             }
                                             Spacer(modifier = Modifier.width(10.dp))
                                             Text(
-                                                car.modelCar,
+                                                car.Model_Name,
                                                 color = slot.text,
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
@@ -796,7 +795,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
             }
         }else{
             AddNewCar(
-                userCCPBrand = userCCPBrand,
+                userCCPBrandId = userCCPBrandId,
                 userCCPUserId = userCCPUserId,
                 onBackToLogin = onBackToLogin,
                 userViewModel = userViewModel,
@@ -857,7 +856,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center) {
                             Text(
-                                text = car.modelCar,
+                                text = car.Model_Name,
                                 color = slot.text,
                                 fontFamily = usernameFont,
                                 fontWeight = FontWeight.Bold,
@@ -867,11 +866,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                             )
                             Spacer(Modifier.height(16.dp))
 
-                            CarDetailRow(label = "Year", value = car.yearCar?.toString() ?: "", color = slot.text)
-                            CarDetailRow(label = "Colour", value = car.colourCar, color = slot.text)
-                            CarDetailRow(label = "Series", value = car.seriesCar ?: "", color = slot.text)
-                            CarDetailRow(label = "Type of series", value = car.typeOfSeriesCar ?: "", color = slot.text)
-                            CarDetailRow(label = "Collector no.", value = car.collectorNoCar ?: "", color = slot.text)
+                            CarDetailRow(label = "Year", value = car.Year?.toString() ?: "", color = slot.text)
+                            CarDetailRow(label = "Colour", value = car.Colour, color = slot.text)
+                            CarDetailRow(label = "Series", value = car.Series ?: "", color = slot.text)
+                            CarDetailRow(label = "Type of series", value = car.Type_Of_Series ?: "", color = slot.text)
+                            CarDetailRow(label = "Collector no.", value = car.Collector_Number ?: "", color = slot.text)
 
                             Spacer(Modifier.height(16.dp))
 
@@ -902,7 +901,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                                     tint = slot.text)
                             }
                             IconButton(
-                                onClick = { deleteCarPermanently = car.userCarIdCar },
+                                onClick = { deleteCarPermanently = car.Car_Id },
                                 modifier = Modifier
                                     .background(color = slot.text.copy(alpha = 0.15f), CircleShape)
                             ) {
@@ -914,15 +913,15 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                     }
                 }
 
-                if (deleteCarPermanently == car.userCarIdCar) {
+                if (deleteCarPermanently == car.Car_Id) {
                     AlertDialog(
                         onDismissRequest = { deleteCarPermanently = null },
                         containerColor = slot.bg,
-                        title = { Text(car.modelCar, color = slot.text) },
+                        title = { Text(car.Model_Name, color = slot.text) },
                         text = { Text("Are you sure you want to delete this?", color = slot.text.copy(alpha = 0.6f)) },
                         confirmButton = {
                             TextButton(onClick = {
-                                userViewModel.deleteUserOwnedCarVM(car.userCarIdCar) { displayCarFromThisBrand() }
+                                userViewModel.deleteUserOwnedCarVM(car.Car_Id) { displayCarFromThisBrand() }
                                 showCardDetails = null // ADDED: closes the popup too, since the car it was showing no longer exists
                                 deleteCarPermanently = null
                             }) { Text("Delete",
@@ -982,11 +981,11 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center) {
 
-                            if (car.carPhotoCar.isNotEmpty()) {
+                            if (car.Car_Photo.isNotEmpty()) {
                                 AsyncImage(
                                     //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
-                                    model = photoModel(car.carPhotoCar, imageStorage),
-                                    contentDescription = car.modelCar,
+                                    model = photoModel(car.Car_Photo, imageStorage),
+                                    contentDescription = car.Model_Name,
                                     modifier = Modifier
                                         .size(350.dp)
                                         .clip(RoundedCornerShape(10.dp)),
@@ -1018,15 +1017,15 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
             onDismissRequest = {carBeingViewed = null},
             containerColor = Color(0xFF1A1A1A),
             title = {
-                Text(selectedCarForMenu.modelCar, color = Color(0xFFF0396B), fontSize = 30.sp)
+                Text(selectedCarForMenu.Model_Name, color = Color(0xFFF0396B), fontSize = 30.sp)
             },
             text = {
                 Column {
-                    if (selectedCarForMenu.carPhotoCar.isNotEmpty()) {
+                    if (selectedCarForMenu.Car_Photo.isNotEmpty()) {
                         AsyncImage(
                             //model = imageStorage.getFullPath(fileName = selectedCarForMenu.carPhotoCar),
-                            model = photoModel(selectedCarForMenu.carPhotoCar, imageStorage),
-                            contentDescription = selectedCarForMenu.modelCar,
+                            model = photoModel(selectedCarForMenu.Car_Photo, imageStorage),
+                            contentDescription = selectedCarForMenu.Model_Name,
                             modifier = Modifier
                                 .size(400.dp)
                                 .clip(RectangleShape),
@@ -1046,13 +1045,13 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
     }
 
     if (contextMenuCarId != null) {
-        val selectedCarForMenu = getCarsFromThisBrand.first { it.userCarIdCar == contextMenuCarId }
+        val selectedCarForMenu = getCarsFromThisBrand.first { it.Car_Id == contextMenuCarId }
 
         AlertDialog(
             onDismissRequest = { contextMenuCarId = null },
             containerColor = Color(0xFF1A1A1A),
             title = {
-                Text(selectedCarForMenu.modelCar, color = Color.White)
+                Text(selectedCarForMenu.Model_Name, color = Color.White)
             },
             text = {
                 Text("What would you like to do with this car?", color = Color.LightGray)
@@ -1068,7 +1067,7 @@ fun UserCarCollectionPage( userCCPBrand: String, userCCPUserId: Int, onBackToLog
             },
             dismissButton = {
                 TextButton(onClick = {
-                    userViewModel.deleteUserOwnedCarVM(selectedCarForMenu.userCarIdCar) {
+                    userViewModel.deleteUserOwnedCarVM(selectedCarForMenu.Car_Id) {
                         displayCarFromThisBrand()// refresh it
                     }
                     contextMenuCarId = null
@@ -1118,11 +1117,11 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
 
             )
             {
-                if (selectedCar.carPhotoCar.isNotEmpty()) {
+                if (selectedCar.Car_Photo.isNotEmpty()) {
                     AsyncImage(
                         //model = imageStorage.getFullPath(fileName = selectedCar.carPhotoCar),
-                        model = photoModel(selectedCar.carPhotoCar, imageStorage),
-                        contentDescription = selectedCar.modelCar,
+                        model = photoModel(selectedCar.Car_Photo, imageStorage),
+                        contentDescription = selectedCar.Model_Name,
                         modifier = Modifier
                             .size(90.dp)
                             .clip(RectangleShape),
@@ -1147,7 +1146,7 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
                 // even gap between every child no matter how many rows you have it will automatically space it equally
             ) {
                 Text(
-                    text = selectedCar.modelCar,
+                    text = selectedCar.Model_Name,
                     color = Color.White,
                     fontFamily = usernameFont,
                     fontSize = 20.sp,
@@ -1160,14 +1159,14 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
                 Row {
                     // Because Text expect string you should convert to string
                     Text(
-                        text = selectedCar.yearCar?.toString() ?: "",
+                        text = selectedCar.Year?.toString() ?: "",
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Text(
-                        text = selectedCar.colourCar,
+                        text = selectedCar.Colour,
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1178,7 +1177,7 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
                 Row {
                     // Because Text expect string you should convert to string
                     Text(
-                        text = selectedCar.collectorNoCar.toString(),
+                        text = selectedCar.Collector_Number.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1187,7 +1186,7 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Text(
-                        text = selectedCar.seriesCar.toString(),
+                        text = selectedCar.Series.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1197,7 +1196,7 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
                     Spacer(Modifier.width(30.dp))
 
                     Text(
-                        text = selectedCar.typeOfSeriesCar.toString(),
+                        text = selectedCar.Type_Of_Series.toString(),
                         color = Color.White,
                         fontFamily = usernameFont,
                         fontSize = 15.sp,
@@ -1211,7 +1210,7 @@ fun EachCarTab(selectedCar: ApiCar, imageStorage: ImageStorage, onLongPressCar: 
 }
 
 @Composable
-fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage, colors: ThemeColors,
+fun AddNewCar(userCCPBrandId: Int, userCCPUserId: Int, onBackToLogin: () -> Unit, userViewModel: UserViewModel, imageStorage: ImageStorage, colors: ThemeColors,
               onDismissRequest: () -> Unit, onConfirmation: ()-> Unit, existingCar: ApiCar? = null) // ? = -> we use AddNewCar two ways 1. add new car (empty form) 2. selected car (filled form)
 {
     var oldPhotoDeleted by remember { mutableStateOf(false) }
@@ -1219,21 +1218,21 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
    // New car -> existingCar is null -> ""
     // Edit -> existingCar has a car -> model name appears automatically
     val modelName = rememberTextFieldState(
-        initialText = existingCar?.modelCar?: ""
+        initialText = existingCar?.Model_Name?: ""
     )
     val modelColour = rememberTextFieldState(
-        initialText = existingCar?.colourCar?: ""
+        initialText = existingCar?.Colour?: ""
     )
     val seriesOfModel = rememberTextFieldState(
-        initialText = existingCar?.seriesCar?: ""
+        initialText = existingCar?.Series?: ""
     )
     val typeOfSeries = rememberTextFieldState(
-        initialText = existingCar?.typeOfSeriesCar?: ""
+        initialText = existingCar?.Type_Of_Series?: ""
     )
     val modelCollectionNumber = rememberTextFieldState(
-        initialText = existingCar?.collectorNoCar?: ""
+        initialText = existingCar?.Collector_Number?: ""
     )
-    var selectedYear by remember { mutableStateOf(existingCar?.yearCar?.toString()?: "") }// initially drop down will close
+    var selectedYear by remember { mutableStateOf(existingCar?.Year?.toString()?: "") }// initially drop down will close
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }// ByteArray lowest-level way to represent any file's content the photos, music, and video in byte
     var showCamera by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -1521,7 +1520,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                     }
                 }
             }
-            else if (existingCar?.carPhotoCar?.isNotEmpty() == true && !oldPhotoDeleted)
+            else if (existingCar?.Car_Photo?.isNotEmpty() == true && !oldPhotoDeleted)
             {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
@@ -1530,7 +1529,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                     Box(modifier = Modifier.size(100.dp))
                     {
                         AsyncImage(
-                            model = photoModel(existingCar.carPhotoCar, imageStorage),
+                            model = photoModel(existingCar.Car_Photo, imageStorage),
                             contentDescription = "Selected car photo",
                             modifier = Modifier
                                 .size(100.dp)
@@ -1641,7 +1640,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
 
                     // after deleting the old photo, existingCar.carPhotoUser still contains the old path because existingCar itself hasn't changed.
                     val hasPhoto = selectedImageBytes?.isNotEmpty() == true ||
-                            (existingCar?.carPhotoCar?.isNotEmpty() == true && !oldPhotoDeleted)
+                            (existingCar?.Car_Photo?.isNotEmpty() == true && !oldPhotoDeleted)
 
 
                     if (modelName.text.isEmpty()) {
@@ -1655,7 +1654,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                         modelColourError = null
 
                     if (selectedImageBytes == null &&
-                        existingCar?.carPhotoCar?.isNotEmpty() != true
+                        existingCar?.Car_Photo?.isNotEmpty() != true
                     ) {
                         modelPhotoError = ""
                     } else {
@@ -1678,7 +1677,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                             if (existingCar == null) {
                                 userViewModel.insertUserOwnedCarVM(
                                     userCCPUserId,
-                                    userCCPBrand,
+                                    userCCPBrandId,
                                     modelName.text.toString(),
                                     selectedYear.toIntOrNull(),
                                     modelColour.text.toString(),
@@ -1696,13 +1695,13 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                                 )
                             } else {
                                 val updatedCar = existingCar.copy(
-                                    modelCar = modelName.text.toString(),
-                                    yearCar = selectedYear,
-                                    colourCar = modelColour.text.toString(),
-                                    seriesCar = seriesOfModel.text.toString(),
-                                    typeOfSeriesCar = typeOfSeries.text.toString(),
-                                    collectorNoCar = modelCollectionNumber.text.toString(),
-                                    carPhotoCar = finalPhotoPath
+                                    Model_Name = modelName.text.toString(),
+                                    Year = selectedYear,
+                                    Colour = modelColour.text.toString(),
+                                    Series = seriesOfModel.text.toString(),
+                                    Type_Of_Series = typeOfSeries.text.toString(),
+                                    Collector_Number = modelCollectionNumber.text.toString(),
+                                    Car_Photo = finalPhotoPath
                                 )
                                 userViewModel.updateCarEditVM(updatedCar) { success ->
                                     if (success) onConfirmation()
@@ -1720,7 +1719,7 @@ fun AddNewCar(userCCPBrand: String, userCCPUserId: Int, onBackToLogin: () -> Uni
                                 }
                             }
                         } else {
-                            val initialPhoto = if (oldPhotoDeleted) "" else (existingCar?.carPhotoCar ?: "")
+                            val initialPhoto = if (oldPhotoDeleted) "" else (existingCar?.Car_Photo ?: "")
                             saveCar(initialPhoto)
                         }
                     }
@@ -1836,7 +1835,7 @@ fun CarCoverflowCarousel(
 
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
 
-                val isFlipped = flippedCars[car.userCarIdCar] == true
+                val isFlipped = flippedCars[car.Car_Id] == true
                 val flipRotation by animateFloatAsState(
                     targetValue = if(isFlipped) 180f else 0f,
                     animationSpec = tween(durationMillis = 500),
@@ -1873,7 +1872,7 @@ fun CarCoverflowCarousel(
                         .clip(RoundedCornerShape(24.dp))
                         .background(slot.bg)
                         .clickable {
-                            flippedCars[car.userCarIdCar] = !isFlipped },
+                            flippedCars[car.Car_Id] = !isFlipped },
                     contentAlignment = Alignment.Center
                 )
                 {
@@ -1882,11 +1881,11 @@ fun CarCoverflowCarousel(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally)
                         {
-                            if (car.carPhotoCar.isNotEmpty()) {
+                            if (car.Car_Photo.isNotEmpty()) {
                                 AsyncImage(
                                     //model = imageStorage.getFullPath(fileName = car.carPhotoCar),
-                                    model = photoModel(car.carPhotoCar, imageStorage),
-                                    contentDescription = car.modelCar,
+                                    model = photoModel(car.Car_Photo, imageStorage),
+                                    contentDescription = car.Model_Name,
                                     modifier = Modifier
                                         .size(300.dp)
                                         .clip(RoundedCornerShape(20.dp)),
@@ -1912,7 +1911,7 @@ fun CarCoverflowCarousel(
                             Spacer(Modifier.height(16.dp))
 
                             Text(
-                                text = car.modelCar,
+                                text = car.Model_Name,
                                 color = slot.text,
                                 fontFamily = usernameFont,
                                 fontWeight = FontWeight.Bold,
@@ -1957,7 +1956,7 @@ fun CarCoverflowCarousel(
                                     .padding(horizontal = 20.dp, vertical = 48.dp))
                             {
                                 Text(
-                                    text = car.modelCar,
+                                    text = car.Model_Name,
                                     color = slot.text,
                                     fontFamily = usernameFont,
                                     fontWeight = FontWeight.Bold,
@@ -1966,11 +1965,11 @@ fun CarCoverflowCarousel(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(16.dp))
-                                CarDetailRow(label = "Year", value = car.yearCar?.toString() ?: "", color = slot.text)
-                                CarDetailRow(label = "Colour", value = car.colourCar, color = slot.text)
-                                CarDetailRow(label = "Series", value = car.seriesCar ?: "", color = slot.text)
-                                CarDetailRow(label = "Type of series", value = car.typeOfSeriesCar ?: "", color = slot.text)
-                                CarDetailRow(label = "Collector no.", value = car.collectorNoCar?: "—", color = slot.text)
+                                CarDetailRow(label = "Year", value = car.Year?.toString() ?: "", color = slot.text)
+                                CarDetailRow(label = "Colour", value = car.Colour, color = slot.text)
+                                CarDetailRow(label = "Series", value = car.Series ?: "", color = slot.text)
+                                CarDetailRow(label = "Type of series", value = car.Type_Of_Series ?: "", color = slot.text)
+                                CarDetailRow(label = "Collector no.", value = car.Collector_Number?: "—", color = slot.text)
                                 Spacer(Modifier.height(20.dp))
                                 Text(
                                     text = "Tap to flip back",
@@ -1980,7 +1979,7 @@ fun CarCoverflowCarousel(
                                 )
                             }
                             IconButton(
-                                onClick = {deleteCarPermanently = car.userCarIdCar},
+                                onClick = {deleteCarPermanently = car.Car_Id},
                                 modifier = Modifier
                                     .align(Alignment.BottomStart)
                                     .graphicsLayer{rotationY = 180f}
@@ -1994,19 +1993,19 @@ fun CarCoverflowCarousel(
                                 )
                             }
 
-                            if (deleteCarPermanently == car.userCarIdCar){
+                            if (deleteCarPermanently == car.Car_Id){
                                 AlertDialog(
                                     onDismissRequest = { deleteCarPermanently = null },
                                     containerColor = slot.bg,
                                     title = {
-                                        Text(car.modelCar, color = slot.text)
+                                        Text(car.Model_Name, color = slot.text)
                                     },
                                     text = {
                                         Text("Are you sure you want to delete this?", color = slot.text.copy(alpha = 0.6f))
                                     },
                                     confirmButton = {
                                         TextButton(onClick = {
-                                            userViewModel.deleteUserOwnedCarVM(car.userCarIdCar){
+                                            userViewModel.deleteUserOwnedCarVM(car.Car_Id){
                                                 onDeleteClick()
                                             }
                                         }) {
